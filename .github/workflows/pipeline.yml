@@ -20,8 +20,20 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - name: index.html y style.css existen
-        run: test -s index.html && test -s style.css
+      - name: revisar
+        run: |
+          set -eu
+          PUBLICOS="index.html style.css cancion.html guias.html acordia.js"
+          for f in $PUBLICOS; do
+            test -s "$f" || { echo "Falta o está vacío: $f"; exit 1; }
+          done
+          for ref in $(grep -oh 'href="[a-z0-9-]*\.html' *.html | sed 's/href="//' | sort -u); do
+            test -f "$ref" || { echo "Enlace roto: $ref"; exit 1; }
+          done
+          for p in *.html; do
+            grep -q 'href="style.css"' "$p" || { echo "$p no carga style.css"; exit 1; }
+            grep -q 'src="acordia.js"' "$p"  || { echo "$p no carga acordia.js"; exit 1; }
+          done
 
   deploy:
     name: publicar
@@ -39,7 +51,9 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
       - name: preparar solo los archivos públicos
-        run: mkdir _site && cp index.html style.css _site/
+        run: |
+          mkdir -p _site
+          cp index.html style.css cancion.html guias.html acordia.js _site/
       - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
         with:
           path: _site
