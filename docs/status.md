@@ -61,4 +61,5 @@ AAAA-MM-DD · paso · qué se hizo · qué quedó pendiente · decisiones nuevas
 2026-10-30 · plan etapa A · decisión de desplegar en Cloud Run desde este repo y plan documentado; sin código · pendiente: aprobación del plan · S1, S2
 2026-10-30 · panel de guías · rama feat/panel-profes: profes.toml (reglas por artista, tema o todo), musicsite.profes, panel en las 16 páginas de tema y guias.html generado con filtro ?tema= (216 tests, ruff limpio) · pendiente: revisión visual por el usuario, merge · S3
 2026-10-30 · migración a la organización saul-music · remotos movidos; condición del proveedor WIF y binding de la cuenta del deployer cambiados a saul-music/<repo> en GCP (los dos), y GITHUB_REPO del bootstrap actualizado · pendiente: comprobar el pipeline en el repo nuevo
+2026-10-30 · Cámara lenta Intermedio · notación de varios acordes por compás (F#-F#7, F#-%-F#7-B7; PR #16, 224 tests) y página regenerada con el modo Intermedio; el panel de guías (PR #14) quedó revisado y mergeado · pendiente: Avanzado de Cámara lenta, V2 (asesoría legal)
 ```
