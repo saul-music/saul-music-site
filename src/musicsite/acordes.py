@@ -7,6 +7,7 @@ sin extensiones y procedencia declarada. No lee ningún sitio externo ni publica
 Uso:
     python -m musicsite.acordes init --dir ../acordes-local
     python -m musicsite.acordes validate --dir ../acordes-local
+    python -m musicsite.acordes pages --dir ../acordes-local --out ../vista-previa --preview
 """
 
 import argparse
@@ -223,9 +224,20 @@ def validate(directory: Path) -> list[Report]:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="musicsite.acordes", description=__doc__.split("\n")[0])
-    parser.add_argument("command", choices=["init", "validate"])
+    parser.add_argument("command", choices=["init", "validate", "pages"])
     parser.add_argument("--dir", required=True, type=Path, help="carpeta local (fuera de git)")
+    parser.add_argument("--out", type=Path, help="carpeta de salida de las páginas (pages)")
+    parser.add_argument("--preview", action="store_true", help="incluye borradores, con noindex")
     args = parser.parse_args(argv)
+
+    if args.command == "pages":
+        if not args.out:
+            parser.error("pages exige --out")
+        from musicsite.songpages import build
+
+        written = build(args.dir, args.out, preview=args.preview)
+        print(f"{len(written)} páginas escritas en {args.out}")
+        return 0
 
     if args.command == "init":
         created = init(args.dir)
