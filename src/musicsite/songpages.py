@@ -145,7 +145,8 @@ def render(song: dict, status: str, preview: bool) -> str:
     structure_html = structure(sections) if sections else ""
     note = (
         f'<p class="small text-body-secondary m-0">Cada casilla es un compás. {REPEAT} repite el '
-        "compás anterior. Escucha la grabación original para seguir la letra.</p>"
+        "compás anterior. Versión básica de Acordia: solo acordes mayores y menores. Escucha la "
+        "grabación original para seguir la letra.</p>"
     )
     main = f"""<main class="container py-4 py-lg-5">
     <header class="d-grid gap-3 pb-4 mb-4 border-bottom">
