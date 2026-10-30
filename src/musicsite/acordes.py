@@ -157,6 +157,25 @@ fecha = ""       # Ejemplo: "2026-10-30"
 [revision]
 revisado = false
 v2_resuelto = false
+
+# ==========================================================================
+#  OPCIONAL: versiones Intermedio y Avanzado
+#  Para usar una, borra el # del comienzo de cada una de sus líneas
+#  y escribe tus acordes entre las comillas triples.
+#  Si no la usas, déjala como está: el sitio dirá "Próximamente".
+# ==========================================================================
+
+# --- Intermedio: los mismos acordes, pero completos (G7, Em7, Cadd9...) ---
+#[intermedio]
+#partitura = '''
+#'''
+
+# --- Avanzado: acordes completos, bajos (G/B) y, si quieres, la tab ---
+#[avanzado]
+#partitura = '''
+#'''
+#tab = '''
+#'''
 """
 
 

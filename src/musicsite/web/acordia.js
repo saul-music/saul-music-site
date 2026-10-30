@@ -88,16 +88,21 @@
      <form data-ac-filter="#resultados" data-ac-count="#conteo" data-ac-empty="#sin-resultados">
        <select data-ac-key="barrio">…  <input type="checkbox" data-ac-key="hoy" value="1">
      Cada tarjeta: <div class="col" data-barrio="Rock,Pop" data-hoy="1">
-     Un valor coincide si está en la lista separada por comas de la tarjeta. */
+     Un valor coincide si está en la lista separada por comas de la tarjeta.
+     Con ?tema=slug en la URL solo quedan las tarjetas cuyo data-temas incluye ese tema. */
   document.querySelectorAll("form[data-ac-filter]").forEach(function (form) {
     var items = document.querySelectorAll(form.getAttribute("data-ac-filter") + " > *");
     var count = document.querySelector(form.getAttribute("data-ac-count"));
     var empty = document.querySelector(form.getAttribute("data-ac-empty"));
     var fields = form.querySelectorAll("[data-ac-key]");
+    var tema = new URLSearchParams(window.location.search).get("tema");
+    var aviso = document.getElementById("aviso-tema");
+    if (tema && aviso) aviso.classList.remove("d-none");
     function run() {
       var n = 0;
       items.forEach(function (it) {
         var ok = true;
+        if (tema && (it.getAttribute("data-temas") || "").split(",").indexOf(tema) === -1) ok = false;
         fields.forEach(function (f) {
           var v = f.type === "checkbox" ? (f.checked ? f.value : "") : f.value;
           if (!v) return;

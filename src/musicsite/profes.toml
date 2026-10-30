@@ -1,0 +1,118 @@
+# Quién enseña qué. Perfiles de ejemplo (mock = true) salvo las dos personas que lo aceptaron.
+# Cada regla de «ensena» es explícita:
+#   { artista = "Los Tres" }                       todos los temas de ese artista
+#   { artista = "Los Bunkers", tema = "ven-aqui" } un tema (slug del repertorio)
+#   { artista = "*" }                              todo el repertorio
+# modo: "linea" y/o "presencial". hoy: disponible hoy. Sin precio: «Precio por definir».
+
+[[profe]]
+id = "gonzalo-pincheira"
+nombre = "Gonzalo Pincheira"
+lugar = "Santiago · en línea"
+modo = ["linea"]
+barrios = ["Rock", "Pop", "Indie"]
+instrumentos = ["Guitarra"]
+hoy = true
+nota = "Enseña todo el repertorio de la Biblioteca."
+ensena = [{ artista = "*" }]
+
+[[profe]]
+id = "alejandro-bustos"
+nombre = "Alejandro Bustos"
+lugar = "Santiago · en línea"
+modo = ["linea"]
+barrios = ["Rock", "Pop", "Indie"]
+instrumentos = ["Guitarra"]
+hoy = false
+proxima = "mañana"
+nota = "Enseña todo el repertorio de la Biblioteca."
+ensena = [{ artista = "*" }]
+
+[[profe]]
+id = "camila-r"
+nombre = "Camila R."
+mock = true
+lugar = "Valparaíso · en línea"
+modo = ["linea"]
+barrios = ["Rock", "Pop"]
+instrumentos = ["Guitarra"]
+hoy = true
+precio = 12000
+nota = "Clases de 45 minutos."
+ensena = [{ artista = "Los Tres" }, { artista = "Los Bunkers" }, { artista = "Gepe", tema = "hablar-de-ti" }]
+
+[[profe]]
+id = "joaquin-m"
+nombre = "Joaquín M."
+mock = true
+lugar = "Ñuñoa · presencial y en línea"
+modo = ["presencial", "linea"]
+barrios = ["Pop", "Indie"]
+instrumentos = ["Guitarra", "Teclado"]
+hoy = false
+proxima = "mañana"
+precio = 15000
+nota = "Trabaja con principiantes adultos."
+ensena = [{ artista = "Javiera Mena" }, { artista = "Gepe" }]
+
+[[profe]]
+id = "valentina-t"
+nombre = "Valentina T."
+mock = true
+lugar = "Valdivia · en línea"
+modo = ["linea"]
+barrios = ["Rock"]
+instrumentos = ["Guitarra", "Bajo"]
+hoy = true
+precio = 10000
+nota = "Toca en una banda local."
+ensena = [{ artista = "Los Bunkers" }, { artista = "Los Tres", tema = "he-barrido-el-sol" }]
+
+[[profe]]
+id = "diego-p"
+nombre = "Diego P."
+mock = true
+lugar = "Puente Alto · presencial"
+modo = ["presencial"]
+barrios = ["Indie"]
+instrumentos = ["Guitarra"]
+hoy = true
+precio = 11000
+nota = "Guitarra indie paso a paso."
+ensena = [
+  { artista = "Javiera Mena", tema = "otra-era" },
+  { artista = "Javiera Mena", tema = "esquemas-juveniles" },
+  { artista = "Gepe" },
+]
+
+[[profe]]
+id = "rosa-s"
+nombre = "Rosa S."
+mock = true
+lugar = "Talca · presencial y en línea"
+modo = ["presencial", "linea"]
+barrios = ["Pop"]
+instrumentos = ["Guitarra"]
+hoy = false
+proxima = "jueves"
+precio = 13000
+nota = "Rasgueo de pop desde cero."
+ensena = [
+  { artista = "Los Tres" },
+  { artista = "Los Bunkers", tema = "llueve-sobre-la-ciudad" },
+  { artista = "Los Bunkers", tema = "bailando-solo" },
+]
+
+[[profe]]
+id = "tomas-a"
+nombre = "Tomás A."
+mock = true
+lugar = "Antofagasta · en línea"
+modo = ["linea"]
+barrios = ["Indie", "Pop"]
+instrumentos = ["Teclado"]
+hoy = false
+proxima = "sábado"
+precio = 12000
+nota = "Teclado para quien ya toca guitarra."
+ensena = [{ artista = "Javiera Mena" }, { artista = "Los Jaivas" }]

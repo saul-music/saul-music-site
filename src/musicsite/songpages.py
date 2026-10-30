@@ -20,6 +20,7 @@ from pathlib import Path
 
 from musicsite.acordes import REPEAT, REPERTOIRE, parse_score, validate_file
 from musicsite.app import WEB_DIR
+from musicsite.profes import avatar, teachers_for
 
 LIBRARY_START = "<!-- biblioteca:inicio -->"
 LIBRARY_END = "<!-- biblioteca:fin -->"
@@ -100,6 +101,41 @@ def mode_pane(key: str, song: dict, no_harmony: bool) -> str:
     return body
 
 
+def teacher_panel(slug: str, title: str) -> str:
+    """Panel fijo bajo la cabecera: quién puede enseñar este tema, según lo que cada profe declaró."""
+    teachers = teachers_for(slug)
+    if not teachers:
+        return (
+            '    <aside class="card mb-4" aria-label="Guías de este tema"><div class="card-body">'
+            '<p class="m-0 text-body-secondary">Aún no hay guías que enseñen este tema.</p>'
+            "</div></aside>\n"
+        )
+    count = len(teachers)
+    names = ", ".join(esc(t["nombre"]) for t in teachers[:2])
+    more = f" y {count - 2} más" if count > 2 else ""
+    example = (
+        ' · <span class="ac-chip ac-chip-example">Perfiles de ejemplo</span>'
+        if any(t.get("mock") for t in teachers)
+        else ""
+    )
+    avatars = "".join(avatar(t, i) for i, t in enumerate(teachers[:3]))
+    noun = "guía puede" if count == 1 else "guías pueden"
+    return f"""    <aside class="card mb-4 ac-plan-featured" aria-label="Guías de este tema">
+      <div class="card-body d-flex flex-wrap gap-3 align-items-center justify-content-between">
+        <div class="d-flex gap-3 align-items-center">
+          <div class="d-flex gap-2">{avatars}</div>
+          <div class="d-grid">
+            <strong>{count} {noun} enseñarte «{esc(title)}»</strong>
+            <span class="small text-body-secondary">{names}{more}{example}</span>
+          </div>
+        </div>
+        <a class="btn btn-primary" href="guias.html?tema={esc(slug)}">Ver guías</a>
+      </div>
+    </aside>
+
+"""
+
+
 def render(song: dict, status: str, preview: bool) -> str:
     head, foot = shell()
     title = esc(song["titulo"])
@@ -166,7 +202,7 @@ def render(song: dict, status: str, preview: bool) -> str:
       </dl>
     </header>
 
-    <ul class="nav nav-pills mb-4 flex-wrap" id="tabs" role="tablist">
+{teacher_panel(song["slug"], song["titulo"])}    <ul class="nav nav-pills mb-4 flex-wrap" id="tabs" role="tablist">
 {chr(10).join(tabs)}
     </ul>
 

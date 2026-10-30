@@ -92,6 +92,8 @@
       </div>
     </form>
 
+    <p class="alert alert-info d-none" id="aviso-tema" role="status">Mostrando solo los guías que enseñan el tema que mirabas. <a href="guias.html">Ver todos</a></p>
+
     <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
       <p class="m-0 text-body-secondary ac-mono" id="conteo" aria-live="polite">6 guías</p>
       <span class="ac-chip ac-chip-example">Perfiles de ejemplo</span>
@@ -99,90 +101,120 @@
 
     <!-- Resultados -->
     <div class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-3" id="resultados">
-      <div class="col" data-barrio="Rock,Pop" data-inst="Guitarra" data-modo="linea" data-hoy="1">
+      <!-- guias:inicio -->
+      <div class="col" data-barrio="Rock,Pop,Indie" data-inst="Guitarra" data-modo="linea" data-hoy="1" data-temas="esquemas-juveniles,yo-no-te-pido-la-luna,otra-era,camara-lenta,luz-de-piedra-de-luna,un-amor-violento,dejate-caer,he-barrido-el-sol,cantar-y-amar,la-primera-vez,llueve-sobre-la-ciudad,bailando-solo,ven-aqui,entre-mis-brazos,corre-que-te-pillo,la-vida-magica-ay-si,takirari-del-puerto,el-errante,norte-y-cal,hablar-de-ti">
+        <div class="card h-100"><div class="card-body d-grid gap-3 align-content-start">
+          <div class="d-flex gap-3 align-items-center">
+            <span class="ac-avatar" aria-hidden="true">GP</span>
+            <div class="d-grid"><h2 class="h5 m-0">Gonzalo Pincheira</h2><span class="small text-body-secondary">Santiago · en línea</span></div>
+          </div>
+          <div class="d-flex flex-wrap gap-2"><span class="ac-chip">Rock</span><span class="ac-chip">Pop</span><span class="ac-chip">Indie</span><span class="ac-chip">Guitarra</span></div>
+          <p class="m-0 small text-body-secondary"><strong>Enseña:</strong> Todo el repertorio (20 temas). Enseña todo el repertorio de la Biblioteca.</p>
+          <div class="d-flex justify-content-between align-items-center gap-2">
+            <span class="ac-chip ac-chip-ok">Disponible hoy</span><span class="small text-body-secondary">Precio por definir</span>
+          </div>
+          <button class="btn btn-primary" type="button" data-bs-toggle="modal" data-bs-target="#conectar" data-guia="Gonzalo Pincheira" data-precio="Por definir">Conectar</button>
+        </div></div>
+      </div>
+      <div class="col" data-barrio="Rock,Pop,Indie" data-inst="Guitarra" data-modo="linea" data-hoy="0" data-temas="esquemas-juveniles,yo-no-te-pido-la-luna,otra-era,camara-lenta,luz-de-piedra-de-luna,un-amor-violento,dejate-caer,he-barrido-el-sol,cantar-y-amar,la-primera-vez,llueve-sobre-la-ciudad,bailando-solo,ven-aqui,entre-mis-brazos,corre-que-te-pillo,la-vida-magica-ay-si,takirari-del-puerto,el-errante,norte-y-cal,hablar-de-ti">
+        <div class="card h-100"><div class="card-body d-grid gap-3 align-content-start">
+          <div class="d-flex gap-3 align-items-center">
+            <span class="ac-avatar is-oro" aria-hidden="true">AB</span>
+            <div class="d-grid"><h2 class="h5 m-0">Alejandro Bustos</h2><span class="small text-body-secondary">Santiago · en línea</span></div>
+          </div>
+          <div class="d-flex flex-wrap gap-2"><span class="ac-chip">Rock</span><span class="ac-chip">Pop</span><span class="ac-chip">Indie</span><span class="ac-chip">Guitarra</span></div>
+          <p class="m-0 small text-body-secondary"><strong>Enseña:</strong> Todo el repertorio (20 temas). Enseña todo el repertorio de la Biblioteca.</p>
+          <div class="d-flex justify-content-between align-items-center gap-2">
+            <span class="small text-body-secondary">Próxima hora: mañana</span><span class="small text-body-secondary">Precio por definir</span>
+          </div>
+          <button class="btn btn-outline-primary" type="button" data-bs-toggle="modal" data-bs-target="#conectar" data-guia="Alejandro Bustos" data-precio="Por definir">Conectar</button>
+        </div></div>
+      </div>
+      <div class="col" data-barrio="Rock,Pop" data-inst="Guitarra" data-modo="linea" data-hoy="1" data-temas="un-amor-violento,dejate-caer,he-barrido-el-sol,cantar-y-amar,la-primera-vez,llueve-sobre-la-ciudad,bailando-solo,ven-aqui,entre-mis-brazos,hablar-de-ti">
         <div class="card h-100"><div class="card-body d-grid gap-3 align-content-start">
           <div class="d-flex gap-3 align-items-center">
             <span class="ac-avatar" aria-hidden="true">CR</span>
             <div class="d-grid"><h2 class="h5 m-0">Camila R.</h2><span class="small text-body-secondary">Valparaíso · en línea</span></div>
           </div>
-          <div class="d-flex flex-wrap gap-2"><span class="ac-chip">Rock</span><span class="ac-chip">Pop</span><span class="ac-chip">Guitarra</span></div>
-          <p class="m-0 small text-body-secondary">Enseña 14 temas de la Biblioteca. Clases de 45 minutos.</p>
+          <div class="d-flex flex-wrap gap-2"><span class="ac-chip">Rock</span><span class="ac-chip">Pop</span><span class="ac-chip">Guitarra</span><span class="ac-chip ac-chip-example">Ejemplo</span></div>
+          <p class="m-0 small text-body-secondary"><strong>Enseña:</strong> Los Tres (todos), Los Bunkers (todos), Hablar de ti (10 temas). Clases de 45 minutos.</p>
           <div class="d-flex justify-content-between align-items-center gap-2">
             <span class="ac-chip ac-chip-ok">Disponible hoy</span><span class="ac-mono fw-semibold">$12.000 <span class="small fw-normal text-body-secondary">/ clase</span></span>
           </div>
           <button class="btn btn-primary" type="button" data-bs-toggle="modal" data-bs-target="#conectar" data-guia="Camila R." data-precio="$12.000">Conectar</button>
         </div></div>
       </div>
-      <div class="col" data-barrio="Pop,Indie" data-inst="Guitarra,Teclado" data-modo="presencial,linea" data-hoy="0">
+      <div class="col" data-barrio="Pop,Indie" data-inst="Guitarra,Teclado" data-modo="presencial,linea" data-hoy="0" data-temas="esquemas-juveniles,yo-no-te-pido-la-luna,otra-era,camara-lenta,luz-de-piedra-de-luna,hablar-de-ti">
         <div class="card h-100"><div class="card-body d-grid gap-3 align-content-start">
           <div class="d-flex gap-3 align-items-center">
             <span class="ac-avatar is-oro" aria-hidden="true">JM</span>
             <div class="d-grid"><h2 class="h5 m-0">Joaquín M.</h2><span class="small text-body-secondary">Ñuñoa · presencial y en línea</span></div>
           </div>
-          <div class="d-flex flex-wrap gap-2"><span class="ac-chip">Pop</span><span class="ac-chip">Indie</span><span class="ac-chip">Guitarra</span><span class="ac-chip">Teclado</span></div>
-          <p class="m-0 small text-body-secondary">Enseña 9 temas. Trabaja con principiantes adultos.</p>
+          <div class="d-flex flex-wrap gap-2"><span class="ac-chip">Pop</span><span class="ac-chip">Indie</span><span class="ac-chip">Guitarra</span><span class="ac-chip">Teclado</span><span class="ac-chip ac-chip-example">Ejemplo</span></div>
+          <p class="m-0 small text-body-secondary"><strong>Enseña:</strong> Javiera Mena (todos), Gepe (todos) (6 temas). Trabaja con principiantes adultos.</p>
           <div class="d-flex justify-content-between align-items-center gap-2">
             <span class="small text-body-secondary">Próxima hora: mañana</span><span class="ac-mono fw-semibold">$15.000 <span class="small fw-normal text-body-secondary">/ clase</span></span>
           </div>
           <button class="btn btn-outline-primary" type="button" data-bs-toggle="modal" data-bs-target="#conectar" data-guia="Joaquín M." data-precio="$15.000">Conectar</button>
         </div></div>
       </div>
-      <div class="col" data-barrio="Rock" data-inst="Guitarra,Bajo" data-modo="linea" data-hoy="1">
+      <div class="col" data-barrio="Rock" data-inst="Guitarra,Bajo" data-modo="linea" data-hoy="1" data-temas="he-barrido-el-sol,llueve-sobre-la-ciudad,bailando-solo,ven-aqui,entre-mis-brazos">
         <div class="card h-100"><div class="card-body d-grid gap-3 align-content-start">
           <div class="d-flex gap-3 align-items-center">
             <span class="ac-avatar" aria-hidden="true">VT</span>
             <div class="d-grid"><h2 class="h5 m-0">Valentina T.</h2><span class="small text-body-secondary">Valdivia · en línea</span></div>
           </div>
-          <div class="d-flex flex-wrap gap-2"><span class="ac-chip">Rock</span><span class="ac-chip">Guitarra</span><span class="ac-chip">Bajo</span></div>
-          <p class="m-0 small text-body-secondary">Enseña 11 temas. Toca en una banda local.</p>
+          <div class="d-flex flex-wrap gap-2"><span class="ac-chip">Rock</span><span class="ac-chip">Guitarra</span><span class="ac-chip">Bajo</span><span class="ac-chip ac-chip-example">Ejemplo</span></div>
+          <p class="m-0 small text-body-secondary"><strong>Enseña:</strong> Los Bunkers (todos), He barrido el sol (5 temas). Toca en una banda local.</p>
           <div class="d-flex justify-content-between align-items-center gap-2">
             <span class="ac-chip ac-chip-ok">Disponible hoy</span><span class="ac-mono fw-semibold">$10.000 <span class="small fw-normal text-body-secondary">/ clase</span></span>
           </div>
           <button class="btn btn-primary" type="button" data-bs-toggle="modal" data-bs-target="#conectar" data-guia="Valentina T." data-precio="$10.000">Conectar</button>
         </div></div>
       </div>
-      <div class="col" data-barrio="Indie" data-inst="Guitarra" data-modo="presencial" data-hoy="1">
+      <div class="col" data-barrio="Indie" data-inst="Guitarra" data-modo="presencial" data-hoy="1" data-temas="esquemas-juveniles,otra-era,hablar-de-ti">
         <div class="card h-100"><div class="card-body d-grid gap-3 align-content-start">
           <div class="d-flex gap-3 align-items-center">
             <span class="ac-avatar is-oro" aria-hidden="true">DP</span>
             <div class="d-grid"><h2 class="h5 m-0">Diego P.</h2><span class="small text-body-secondary">Puente Alto · presencial</span></div>
           </div>
-          <div class="d-flex flex-wrap gap-2"><span class="ac-chip">Indie</span><span class="ac-chip">Guitarra</span></div>
-          <p class="m-0 small text-body-secondary">Enseña 7 temas. Guitarra indie paso a paso.</p>
+          <div class="d-flex flex-wrap gap-2"><span class="ac-chip">Indie</span><span class="ac-chip">Guitarra</span><span class="ac-chip ac-chip-example">Ejemplo</span></div>
+          <p class="m-0 small text-body-secondary"><strong>Enseña:</strong> Otra era, Esquemas juveniles, Gepe (todos) (3 temas). Guitarra indie paso a paso.</p>
           <div class="d-flex justify-content-between align-items-center gap-2">
             <span class="ac-chip ac-chip-ok">Disponible hoy</span><span class="ac-mono fw-semibold">$11.000 <span class="small fw-normal text-body-secondary">/ clase</span></span>
           </div>
           <button class="btn btn-primary" type="button" data-bs-toggle="modal" data-bs-target="#conectar" data-guia="Diego P." data-precio="$11.000">Conectar</button>
         </div></div>
       </div>
-      <div class="col" data-barrio="Pop" data-inst="Guitarra" data-modo="presencial,linea" data-hoy="0">
+      <div class="col" data-barrio="Pop" data-inst="Guitarra" data-modo="presencial,linea" data-hoy="0" data-temas="un-amor-violento,dejate-caer,he-barrido-el-sol,cantar-y-amar,la-primera-vez,llueve-sobre-la-ciudad,bailando-solo">
         <div class="card h-100"><div class="card-body d-grid gap-3 align-content-start">
           <div class="d-flex gap-3 align-items-center">
             <span class="ac-avatar" aria-hidden="true">RS</span>
             <div class="d-grid"><h2 class="h5 m-0">Rosa S.</h2><span class="small text-body-secondary">Talca · presencial y en línea</span></div>
           </div>
-          <div class="d-flex flex-wrap gap-2"><span class="ac-chip">Pop</span><span class="ac-chip">Guitarra</span></div>
-          <p class="m-0 small text-body-secondary">Enseña 16 temas. Rasgueo de pop desde cero.</p>
+          <div class="d-flex flex-wrap gap-2"><span class="ac-chip">Pop</span><span class="ac-chip">Guitarra</span><span class="ac-chip ac-chip-example">Ejemplo</span></div>
+          <p class="m-0 small text-body-secondary"><strong>Enseña:</strong> Los Tres (todos), Llueve sobre la ciudad, Bailando solo (7 temas). Rasgueo de pop desde cero.</p>
           <div class="d-flex justify-content-between align-items-center gap-2">
             <span class="small text-body-secondary">Próxima hora: jueves</span><span class="ac-mono fw-semibold">$13.000 <span class="small fw-normal text-body-secondary">/ clase</span></span>
           </div>
           <button class="btn btn-outline-primary" type="button" data-bs-toggle="modal" data-bs-target="#conectar" data-guia="Rosa S." data-precio="$13.000">Conectar</button>
         </div></div>
       </div>
-      <div class="col" data-barrio="Indie,Pop" data-inst="Teclado" data-modo="linea" data-hoy="0">
+      <div class="col" data-barrio="Indie,Pop" data-inst="Teclado" data-modo="linea" data-hoy="0" data-temas="esquemas-juveniles,yo-no-te-pido-la-luna,otra-era,camara-lenta,luz-de-piedra-de-luna,corre-que-te-pillo,la-vida-magica-ay-si,takirari-del-puerto">
         <div class="card h-100"><div class="card-body d-grid gap-3 align-content-start">
           <div class="d-flex gap-3 align-items-center">
             <span class="ac-avatar is-oro" aria-hidden="true">TA</span>
             <div class="d-grid"><h2 class="h5 m-0">Tomás A.</h2><span class="small text-body-secondary">Antofagasta · en línea</span></div>
           </div>
-          <div class="d-flex flex-wrap gap-2"><span class="ac-chip">Indie</span><span class="ac-chip">Pop</span><span class="ac-chip">Teclado</span></div>
-          <p class="m-0 small text-body-secondary">Enseña 8 temas. Teclado para quien ya toca guitarra.</p>
+          <div class="d-flex flex-wrap gap-2"><span class="ac-chip">Indie</span><span class="ac-chip">Pop</span><span class="ac-chip">Teclado</span><span class="ac-chip ac-chip-example">Ejemplo</span></div>
+          <p class="m-0 small text-body-secondary"><strong>Enseña:</strong> Javiera Mena (todos), Los Jaivas (todos) (8 temas). Teclado para quien ya toca guitarra.</p>
           <div class="d-flex justify-content-between align-items-center gap-2">
             <span class="small text-body-secondary">Próxima hora: sábado</span><span class="ac-mono fw-semibold">$12.000 <span class="small fw-normal text-body-secondary">/ clase</span></span>
           </div>
           <button class="btn btn-outline-primary" type="button" data-bs-toggle="modal" data-bs-target="#conectar" data-guia="Tomás A." data-precio="$12.000">Conectar</button>
         </div></div>
       </div>
+      <!-- guias:fin -->
     </div>
 
     <div class="card mt-3 d-none" id="sin-resultados">
