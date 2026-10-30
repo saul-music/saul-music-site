@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>He barrido el sol · Acordia</title>
-  <meta name="description" content="He barrido el sol: acordes básicos y estructura.">
+  <meta name="description" content="He barrido el sol: estructura por compases, con versiones básica, intermedia y avanzada.">
   <meta name="theme-color" content="#191430">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 56'%3E%3Crect width='48' height='56' fill='%23191430'/%3E%3Cpath d='M6 54V24a18 18 0 0 1 36 0v30' fill='none' stroke='%23D4A64A' stroke-width='5'/%3E%3Ccircle cx='24' cy='16' r='4' fill='%235FB39B'/%3E%3C/svg%3E">
   <script>(function(){var t="dark";try{t=localStorage.getItem("acordia-tema")||"dark"}catch(e){}document.documentElement.setAttribute("data-bs-theme",t)})();</script>
@@ -70,53 +70,57 @@
     </header>
 
     <ul class="nav nav-pills mb-4 flex-wrap" id="tabs" role="tablist">
-      <li class="nav-item" role="presentation"><button class="nav-link active" id="t-acordes" data-bs-toggle="pill" data-bs-target="#p-acordes" type="button" role="tab" aria-controls="p-acordes" aria-selected="true">Acordes</button></li>
-      <li class="nav-item" role="presentation"><button class="nav-link" id="t-estructura" data-bs-toggle="pill" data-bs-target="#p-estructura" type="button" role="tab" aria-controls="p-estructura" aria-selected="false">Estructura</button></li>
+      <li class="nav-item" role="presentation"><button class="nav-link active" id="t-basico" data-bs-toggle="pill" data-bs-target="#p-basico" type="button" role="tab" aria-controls="p-basico" aria-selected="true">Básico</button></li>
+      <li class="nav-item" role="presentation"><button class="nav-link" id="t-intermedio" data-bs-toggle="pill" data-bs-target="#p-intermedio" type="button" role="tab" aria-controls="p-intermedio" aria-selected="false">Intermedio</button></li>
+      <li class="nav-item" role="presentation"><button class="nav-link" id="t-avanzado" data-bs-toggle="pill" data-bs-target="#p-avanzado" type="button" role="tab" aria-controls="p-avanzado" aria-selected="false">Avanzado</button></li>
     </ul>
 
     <div class="tab-content">
-      <section class="tab-pane fade show active" id="p-acordes" role="tabpanel" aria-labelledby="t-acordes" tabindex="0">
-            <div class="row row-cols-2 row-cols-sm-4 g-4 py-3">
-              <div class="col"><div class="ac-chord" data-name="G" data-frets="3 2 0 0 0 3"></div></div>
-              <div class="col"><div class="ac-chord" data-name="D" data-frets="x x 0 2 3 2"></div></div>
-              <div class="col"><div class="ac-chord" data-name="Em" data-frets="0 2 2 0 0 0"></div></div>
-              <div class="col"><div class="ac-chord" data-name="B" data-frets="x 2 4 4 4 2"></div></div>
-              <div class="col"><div class="ac-chord" data-name="C" data-frets="x 3 2 0 1 0"></div></div>
-              <div class="col"><div class="ac-chord" data-name="E" data-frets="0 2 2 1 0 0"></div></div>
-              <div class="col"><div class="ac-chord" data-name="A" data-frets="x 0 2 2 2 0"></div></div>
-              <div class="col"><div class="ac-chord" data-name="Bm" data-frets="x 2 4 4 3 2"></div></div>
-              <div class="col"><div class="ac-chord" data-name="F" data-frets="1 3 3 2 1 1"></div></div>
-            </div>
-            <p class="small text-body-secondary m-0">Cuerdas de 6ª (grave) a 1ª (aguda). Círculo vacío: al aire. Cruz: no suena.</p>
-      </section>
-      <section class="tab-pane fade" id="p-estructura" role="tabpanel" aria-labelledby="t-estructura" tabindex="0">
+      <section class="tab-pane fade show active" id="p-basico" role="tabpanel" aria-labelledby="t-basico" tabindex="0">
         <div class="d-grid gap-4">
+          <p class="text-body-secondary m-0">Acordes mayores y menores, sin extensiones.</p>
           <p class="text-body-secondary m-0">Intro – Estrofa – Estrofa – Coro – Estrofa – Coro – Solo – Estrofa – Coro – Final</p>
-              <div class="d-grid gap-2">
-                <h2 class="h5 m-0">Intro</h2>
-                <div class="ac-bars"><div class="ac-bar">G</div><div class="ac-bar">D</div><div class="ac-bar">G</div><div class="ac-bar">D</div></div>
-              </div>
-              <div class="d-grid gap-2">
-                <h2 class="h5 m-0">Estrofa <span class="text-body-secondary fw-normal ac-mono">× 2</span></h2>
-                <div class="ac-bars"><div class="ac-bar">G</div><div class="ac-bar">D</div><div class="ac-bar">G</div><div class="ac-bar">D</div><div class="ac-bar">Em</div><div class="ac-bar">B</div><div class="ac-bar">C</div><div class="ac-bar">E</div><div class="ac-bar">A</div><div class="ac-bar">D</div><div class="ac-bar">G</div></div>
-              </div>
-              <div class="d-grid gap-2">
-                <h2 class="h5 m-0">Segunda parte de estrofa</h2>
-                <div class="ac-bars"><div class="ac-bar">G</div><div class="ac-bar">D</div><div class="ac-bar">Em</div><div class="ac-bar">B</div><div class="ac-bar">C</div><div class="ac-bar">E</div><div class="ac-bar">A</div><div class="ac-bar">D</div><div class="ac-bar">G</div></div>
-              </div>
-              <div class="d-grid gap-2">
-                <h2 class="h5 m-0">Coro <span class="text-body-secondary fw-normal ac-mono">× 2</span></h2>
-                <div class="ac-bars"><div class="ac-bar">C</div><div class="ac-bar">Bm</div><div class="ac-bar">Em</div><div class="ac-bar">C</div><div class="ac-bar">Bm</div><div class="ac-bar">D</div><div class="ac-bar">F</div><div class="ac-bar">Em</div><div class="ac-bar">F</div><div class="ac-bar">Em</div><div class="ac-bar">D</div></div>
-              </div>
-              <div class="d-grid gap-2">
-                <h2 class="h5 m-0">Solo</h2>
-                <div class="ac-bars"><div class="ac-bar">G</div><div class="ac-bar">D</div><div class="ac-bar">Em</div><div class="ac-bar">B</div><div class="ac-bar">C</div></div>
-              </div>
-              <div class="d-grid gap-2">
-                <h2 class="h5 m-0">Final</h2>
-                <div class="ac-bars"><div class="ac-bar">F</div><div class="ac-bar">Em</div><div class="ac-bar">D</div></div>
-              </div>
-          <p class="small text-body-secondary m-0">Cada casilla es un compás. % repite el compás anterior. Versión básica de Acordia: solo acordes mayores y menores. Escucha la grabación original para seguir la letra.</p>
+          <div class="d-grid gap-2">
+            <h2 class="h5 m-0">Intro</h2>
+            <div class="ac-bars"><div class="ac-bar">G</div><div class="ac-bar">D</div><div class="ac-bar">G</div><div class="ac-bar">D</div></div>
+          </div>
+          <div class="d-grid gap-2">
+            <h2 class="h5 m-0">Estrofa <span class="text-body-secondary fw-normal ac-mono">× 2</span></h2>
+            <div class="ac-bars"><div class="ac-bar">G</div><div class="ac-bar">D</div><div class="ac-bar">G</div><div class="ac-bar">D</div><div class="ac-bar">Em</div><div class="ac-bar">B</div><div class="ac-bar">C</div><div class="ac-bar">E</div><div class="ac-bar">A</div><div class="ac-bar">D</div><div class="ac-bar">G</div></div>
+          </div>
+          <div class="d-grid gap-2">
+            <h2 class="h5 m-0">Segunda parte de estrofa</h2>
+            <div class="ac-bars"><div class="ac-bar">G</div><div class="ac-bar">D</div><div class="ac-bar">Em</div><div class="ac-bar">B</div><div class="ac-bar">C</div><div class="ac-bar">E</div><div class="ac-bar">A</div><div class="ac-bar">D</div><div class="ac-bar">G</div></div>
+          </div>
+          <div class="d-grid gap-2">
+            <h2 class="h5 m-0">Coro <span class="text-body-secondary fw-normal ac-mono">× 2</span></h2>
+            <div class="ac-bars"><div class="ac-bar">C</div><div class="ac-bar">Bm</div><div class="ac-bar">Em</div><div class="ac-bar">C</div><div class="ac-bar">Bm</div><div class="ac-bar">D</div><div class="ac-bar">F</div><div class="ac-bar">Em</div><div class="ac-bar">F</div><div class="ac-bar">Em</div><div class="ac-bar">D</div></div>
+          </div>
+          <div class="d-grid gap-2">
+            <h2 class="h5 m-0">Solo</h2>
+            <div class="ac-bars"><div class="ac-bar">G</div><div class="ac-bar">D</div><div class="ac-bar">Em</div><div class="ac-bar">B</div><div class="ac-bar">C</div></div>
+          </div>
+          <div class="d-grid gap-2">
+            <h2 class="h5 m-0">Final</h2>
+            <div class="ac-bars"><div class="ac-bar">F</div><div class="ac-bar">Em</div><div class="ac-bar">D</div></div>
+          </div>
+          <p class="small text-body-secondary m-0">Cada casilla es un compás. % repite el compás anterior. Escucha la grabación original para seguir la letra.</p>
+        </div>
+      </section>
+      <section class="tab-pane fade" id="p-intermedio" role="tabpanel" aria-labelledby="t-intermedio" tabindex="0">
+        <div class="d-grid gap-4">
+          <p class="text-body-secondary m-0">Con extensiones: séptimas, sus, add y similares.</p>
+          
+<p class="text-body-secondary m-0"><span class="ac-chip">Próximamente</span></p>
+          
+        </div>
+      </section>
+      <section class="tab-pane fade" id="p-avanzado" role="tabpanel" aria-labelledby="t-avanzado" tabindex="0">
+        <div class="d-grid gap-4">
+          <p class="text-body-secondary m-0">Extensiones, bajos e inversiones, y arreglos con tab.</p>
+          
+<p class="text-body-secondary m-0"><span class="ac-chip">Próximamente</span></p>
+          
         </div>
       </section>
     </div>

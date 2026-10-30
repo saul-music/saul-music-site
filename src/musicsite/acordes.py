@@ -8,6 +8,7 @@ Uso:
     python -m musicsite.acordes init --dir ../acordes-local
     python -m musicsite.acordes validate --dir ../acordes-local
     python -m musicsite.acordes pages --dir ../acordes-local --out ../vista-previa --preview
+    python -m musicsite.acordes library --dir ../acordes-local --index src/musicsite/web/index.html
 """
 
 import argparse
@@ -43,6 +44,15 @@ REPERTOIRE = [
 
 # Versión básica: nota, sostenido o bemol opcional y "m" para menor. Nada de 7, sus, add, 9, etc.
 BASIC_CHORD = re.compile(r"^[A-G][#b]?m?$")
+# Intermedio: con extensiones (7, maj7, sus4, add9, m7b5...). Avanzado: además bajos e inversiones.
+EXTENDED_CHORD = re.compile(
+    r"^[A-G][#b]?(?:maj|min|m|dim|aug|\+)?(?:\d{1,2}|(?:sus|add|b|#)\d{0,2})*$"
+)
+SLASH_CHORD = re.compile(
+    r"^[A-G][#b]?(?:maj|min|m|dim|aug|\+)?(?:\d{1,2}|(?:sus|add|b|#)\d{0,2})*(?:/[A-G][#b]?)?$"
+)
+BARRIOS = {"", "Rock", "Pop", "Indie"}
+MODES = {"intermedio": EXTENDED_CHORD, "avanzado": SLASH_CHORD}
 TIME_SIGNATURE = re.compile(r"^\d{1,2}/\d{1,2}$")
 LEVELS = {"", "inicial", "medio", "avanzado"}
 KINDS = {"cancion", "instrumental"}
@@ -58,6 +68,7 @@ slug = "{slug}"
 titulo = "{title}"
 artista = "{artist}"
 tipo = "{kind}"
+barrio = ""      # Rock, Pop o Indie (vacío si no aplica)
 
 tono = ""        # por ejemplo "Sol mayor"
 cejilla = ""     # por ejemplo "Sin cejilla" o "Cejilla 3"
@@ -86,6 +97,16 @@ fecha = ""       # AAAA-MM-DD
 [revision]
 revisado = false      # true cuando la transcripción está terminada y revisada
 v2_resuelto = false   # true solo cuando los derechos (V2) estén resueltos
+
+# Versiones con más detalle (opcionales). Si no existen, la página muestra «Próximamente».
+# [intermedio]     # con extensiones: G7, Dsus4, Am9
+# partitura = '''
+# '''
+# [avanzado]       # con extensiones, bajos e inversiones (G/B) y arreglos con tab
+# partitura = '''
+# '''
+# tab = '''
+# '''
 """
 
 
@@ -189,6 +210,20 @@ def validate_file(path: Path) -> Report:
                 errors.append(f"sección «{name}»: «{token}» no está en la lista de acordes")
             previous = token
 
+    if data.get("barrio", "") not in BARRIOS:
+        errors.append("barrio debe ser Rock, Pop o Indie")
+    for mode, pattern in MODES.items():
+        score = data.get(mode, {}).get("partitura", "")
+        mode_sections, mode_errors = parse_score(score)
+        errors.extend(f"{mode}: {error}" for error in mode_errors)
+        for section in mode_sections:
+            for token in section["compases"]:
+                if token != REPEAT and not pattern.match(token):
+                    errors.append(f"{mode}: «{token}» no es un acorde válido para este modo")
+    tab = data.get("avanzado", {}).get("tab", "")
+    if not isinstance(tab, str):
+        errors.append("avanzado: tab debe ser texto")
+
     origin = data.get("procedencia", {})
     review = data.get("revision", {})
     reviewed = bool(review.get("revisado", False))
@@ -224,11 +259,22 @@ def validate(directory: Path) -> list[Report]:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="musicsite.acordes", description=__doc__.split("\n")[0])
-    parser.add_argument("command", choices=["init", "validate", "pages"])
+    parser.add_argument("command", choices=["init", "validate", "pages", "library"])
     parser.add_argument("--dir", required=True, type=Path, help="carpeta local (fuera de git)")
     parser.add_argument("--out", type=Path, help="carpeta de salida de las páginas (pages)")
+    parser.add_argument(
+        "--index", type=Path, help="index.html cuyas tarjetas se actualizan (library)"
+    )
     parser.add_argument("--preview", action="store_true", help="incluye borradores, con noindex")
     args = parser.parse_args(argv)
+
+    if args.command == "library":
+        if not args.index:
+            parser.error("library exige --index")
+        from musicsite.songpages import update_library
+
+        print(f"{update_library(args.dir, args.index)} tarjetas escritas en {args.index}")
+        return 0
 
     if args.command == "pages":
         if not args.out:

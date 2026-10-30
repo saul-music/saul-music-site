@@ -26,7 +26,7 @@ PORT=8080 uv --no-config run python -m musicsite.app    # http://localhost:8080
 |---|---|
 | `index.html` | Inicio de Acordia |
 | `cancion.html` | Mockup de una canción de ejemplo (sin enlaces, con noindex) |
-| `cancion-<tema>.html` | Una página por tema con acordes básicos y estructura, generada con `python -m musicsite.acordes pages` |
+| `cancion-<tema>.html` | Una página por tema, solo con la sección Estructura y tres pestañas (Básico, Intermedio, Avanzado), generada con `python -m musicsite.acordes pages`. Las tarjetas de la Biblioteca en `index.html` se actualizan con `python -m musicsite.acordes library` |
 | `guias.html` | Directorio de guías (mockup) |
 | `artistas.html` | Artistas del repertorio inicial, con enlace a su perfil en MusicaPopular.cl (solo enlaces, sin copiar sus textos) |
 | `style.css` | Tema de marca sobre Bootstrap 5.3.3 |
