@@ -16,7 +16,7 @@ set -euo pipefail
 
 PROJECT_ID="${PROJECT_ID:-saulapp-music}"
 REGION="${REGION:-southamerica-west1}"            # explícita, nunca por defecto
-GITHUB_REPO="${GITHUB_REPO:-saulapp-legal/saul-music-site}"
+GITHUB_REPO="${GITHUB_REPO:-saul-music/saul-music-site}"
 AR_REPO="${AR_REPO:-musicsite}"
 DEPLOYER="${DEPLOYER:-musicsite-deployer}"
 RUNTIME="${RUNTIME:-musicsite-runtime}"

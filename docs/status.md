@@ -60,4 +60,5 @@ AAAA-MM-DD · paso · qué se hizo · qué quedó pendiente · decisiones nuevas
 2026-10-30 · despliegue · bootstrap/gcp.sh ejecutado en saulapp-music (un reintento por cuota de lecturas), variable GCP_WIF_PROVIDER, PR #2 mergeado, pipeline ci→image→publish→deploy verde en main, servicio musicsite en Cloud Run verificado con curl · pendiente: S2, revisión visual, bootstrap desde cero · S1
 2026-10-30 · plan etapa A · decisión de desplegar en Cloud Run desde este repo y plan documentado; sin código · pendiente: aprobación del plan · S1, S2
 2026-10-30 · panel de guías · rama feat/panel-profes: profes.toml (reglas por artista, tema o todo), musicsite.profes, panel en las 16 páginas de tema y guias.html generado con filtro ?tema= (216 tests, ruff limpio) · pendiente: revisión visual por el usuario, merge · S3
+2026-10-30 · migración a la organización saul-music · remotos movidos; condición del proveedor WIF y binding de la cuenta del deployer cambiados a saul-music/<repo> en GCP (los dos), y GITHUB_REPO del bootstrap actualizado · pendiente: comprobar el pipeline en el repo nuevo
 ```
