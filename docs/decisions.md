@@ -3,6 +3,9 @@
 Las decisiones no se borran: se reemplazan con una nueva que referencia la anterior.
 Este repo es público: aquí no van datos de usuarios ni de investigación.
 
+> Las decisiones **globales** de SAÚL música (M1, M2, M6, M7 y M9) viven en el repo de control
+> privado, no aquí. Las del sitio (S1 y S2) se quedan completas en este archivo.
+
 ## S1 · El sitio se despliega en Cloud Run desde este repo (2026-10-30)
 
 El sitio sigue en su propio repo (`saulapp-legal/saul-music-site`) y deja GitHub Pages por un
