@@ -1,43 +1,472 @@
+/* =========================================================================
+   Acordia · Tema de marca sobre Bootstrap 5.3.3
+   Paleta "Atacama dorada" · Marcellus (títulos) + Work Sans (texto)
+   Estilo: plano, tipo serigrafía/linóleo. Sin degradados, sin sombras,
+   sin brillos. Formas geométricas y mucho espacio vacío.
+
+   Cómo se usa:
+   1. Cargar bootstrap.min.css ANTES de este archivo.
+   2. <html data-bs-theme="dark"> es el modo por defecto (Noche).
+      data-bs-theme="light" activa el modo Marfil.
+   3. Todo color sale de los tokens --ac-*. Bootstrap lee sus --bs-*,
+      que aquí apuntan a los tokens. Para cambiar la marca, cambia
+      solo el bloque 1.
+   ========================================================================= */
+
+/* 1. Tokens de marca (valores fijos, no cambian con el tema) ------------- */
 :root {
-  --bg: #faf8f5;
-  --text: #1f1b16;
-  --muted: #6b6258;
-  --accent: #b4441f;
+  --ac-noche:       #191430;
+  --ac-noche-2:     #221c40;   /* superficie sobre noche */
+  --ac-noche-3:     #342c5c;   /* línea sobre noche */
+  --ac-marfil:      #f1ece2;
+  --ac-marfil-2:    #e7e0d1;   /* superficie sobre marfil */
+  --ac-marfil-3:    #d3c9b4;   /* línea sobre marfil */
+  --ac-oro:         #d4a64a;
+  --ac-oro-claro:   #e2bb69;
+  --ac-oro-osc:     #7a5712;
+  --ac-jade:        #5fb39b;
+  --ac-jade-osc:    #2e6f5e;
+
+  --ac-font-display: "Marcellus", "Trajan Pro", Georgia, "Times New Roman", serif;
+  --ac-font-text:    "Work Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+
+  --ac-radius:      4px;       /* esquinas casi rectas: grabado, no app genérica */
+  --ac-arch:        999px 999px 0 0; /* el portal: forma firma de Acordia */
+  --ac-space:       clamp(4rem, 8vw, 7rem); /* respiro entre secciones */
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #17140f;
-    --text: #f1ece4;
-    --muted: #a39a8d;
-    --accent: #e8825c;
-  }
+/* 2. Roles semánticos · modo Noche (por defecto) ------------------------- */
+:root,
+:root[data-bs-theme="dark"] {
+  color-scheme: dark;
+  --ac-bg:          var(--ac-noche);
+  --ac-surface:     var(--ac-noche-2);
+  --ac-line:        var(--ac-noche-3);
+  --ac-fg:          var(--ac-marfil);
+  --ac-fg-muted:    #bcb5cc;
+  --ac-accent:      var(--ac-oro);        /* oro para texto y enlaces */
+  --ac-accent-rgb:  212, 166, 74;
+  --ac-accent-hover:var(--ac-oro-claro);
+  --ac-accent-hover-rgb: 226, 187, 105;
+  --ac-second:      var(--ac-jade);       /* jade para texto */
+  --ac-second-rgb:  95, 179, 155;
+  --ac-fill:        var(--ac-oro);        /* rellenos de botón */
+  --ac-on-fill:     var(--ac-noche);
+  --ac-fill-2:      var(--ac-jade);
+  --ac-on-fill-2:   var(--ac-noche);
 }
 
-* { box-sizing: border-box; }
-
-body {
-  margin: 0;
-  min-height: 100vh;
-  display: grid;
-  place-items: center;
-  padding: 24px 16px;
-  background: var(--bg);
-  color: var(--text);
-  font: 18px/1.6 system-ui, -apple-system, "Segoe UI", sans-serif;
+/* 3. Roles semánticos · modo Marfil ------------------------------------- */
+:root[data-bs-theme="light"] {
+  color-scheme: light;
+  --ac-bg:          var(--ac-marfil);
+  --ac-surface:     var(--ac-marfil-2);
+  --ac-line:        var(--ac-marfil-3);
+  --ac-fg:          var(--ac-noche);
+  --ac-fg-muted:    #57506d;
+  --ac-accent:      var(--ac-oro-osc);
+  --ac-accent-rgb:  122, 87, 18;
+  --ac-accent-hover:#5a3f0b;
+  --ac-accent-hover-rgb: 90, 63, 11;
+  --ac-second:      var(--ac-jade-osc);
+  --ac-second-rgb:  46, 111, 94;
+  --ac-fill:        var(--ac-oro);
+  --ac-on-fill:     var(--ac-noche);
+  --ac-fill-2:      var(--ac-jade-osc);
+  --ac-on-fill-2:   var(--ac-marfil);
 }
 
-main { max-width: 34rem; }
+/* 4. Bootstrap ← tokens --------------------------------------------------- */
+:root,
+:root[data-bs-theme="dark"],
+:root[data-bs-theme="light"] {
+  --bs-font-sans-serif: var(--ac-font-text);
+  --bs-body-font-family: var(--ac-font-text);
+  --bs-body-font-size: 1.0625rem;
+  --bs-body-line-height: 1.6;
+  --bs-body-bg: var(--ac-bg);
+  --bs-body-bg-rgb: 25, 20, 48;
+  --bs-body-color: var(--ac-fg);
+  --bs-emphasis-color: var(--ac-fg);
+  --bs-heading-color: var(--ac-fg);
+  --bs-secondary-color: var(--ac-fg-muted);
+  --bs-tertiary-color: var(--ac-fg-muted);
+  --bs-secondary-bg: var(--ac-surface);
+  --bs-tertiary-bg: var(--ac-surface);
+  --bs-border-color: var(--ac-line);
+  --bs-border-color-translucent: var(--ac-line);
+  --bs-border-radius: var(--ac-radius);
+  --bs-border-radius-sm: 2px;
+  --bs-border-radius-lg: 6px;
+  --bs-border-radius-xl: 8px;
+  --bs-border-radius-pill: 999px;
+  --bs-box-shadow: none;
+  --bs-box-shadow-sm: none;
+  --bs-box-shadow-lg: none;
 
-.eyebrow {
-  margin: 0 0 8px;
-  color: var(--accent);
-  font-size: 0.8rem;
-  font-weight: 600;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
+  --bs-primary: var(--ac-oro);
+  --bs-primary-rgb: 212, 166, 74;
+  --bs-primary-text-emphasis: var(--ac-accent);
+  --bs-primary-bg-subtle: var(--ac-surface);
+  --bs-primary-border-subtle: var(--ac-fill);
+  --bs-success: var(--ac-jade);
+  --bs-success-rgb: var(--ac-second-rgb);
+  --bs-success-text-emphasis: var(--ac-second);
+  --bs-success-bg-subtle: var(--ac-surface);
+  --bs-success-border-subtle: var(--ac-second);
+
+  --bs-link-color: var(--ac-accent);
+  --bs-link-color-rgb: var(--ac-accent-rgb);
+  --bs-link-hover-color: var(--ac-accent-hover);
+  --bs-link-hover-color-rgb: var(--ac-accent-hover-rgb);
+  --bs-link-decoration: underline;
+  --bs-focus-ring-color: rgba(212, 166, 74, .55);
+  --bs-focus-ring-width: 2px;
+}
+:root[data-bs-theme="light"] { --bs-body-bg-rgb: 241, 236, 226; }
+
+body { background: var(--ac-bg); color: var(--ac-fg); }
+
+/* Tipografía */
+h1, h2, h3, h4, .h1, .h2, .h3, .h4, .display-1, .display-2, .display-3,
+.display-4, .display-5, .display-6, .ac-display {
+  font-family: var(--ac-font-display);
+  font-weight: 400;
+  letter-spacing: .01em;
+  text-wrap: balance;
+}
+h5, h6, .h5, .h6 { font-family: var(--ac-font-text); font-weight: 600; }
+.lead { font-weight: 400; color: var(--ac-fg-muted); max-width: 38rem; }
+p { max-width: 65ch; }
+.ac-eyebrow {
+  font-size: .78rem; font-weight: 600; letter-spacing: .18em;
+  text-transform: uppercase; color: var(--ac-second);
+}
+.ac-mono { font-variant-numeric: tabular-nums; }
+a { text-underline-offset: .2em; text-decoration-thickness: 1px; }
+
+/* Selección y foco: anillo sólido, sin difuminado */
+::selection { background: var(--ac-fill); color: var(--ac-on-fill); }
+:focus-visible { outline: 2px solid var(--ac-fill); outline-offset: 2px; }
+
+/* 5. Botones -------------------------------------------------------------- */
+.btn {
+  --bs-btn-font-family: var(--ac-font-text);
+  --bs-btn-font-weight: 600;
+  --bs-btn-padding-x: 1.25rem;
+  --bs-btn-padding-y: .625rem;
+  --bs-btn-border-width: 2px;
+  --bs-btn-box-shadow: none;
+  --bs-btn-focus-box-shadow: 0 0 0 2px var(--ac-bg), 0 0 0 4px var(--ac-fill);
+  letter-spacing: .01em;
+  background-image: none;      /* regla de marca: nunca degradados */
+}
+.btn-primary {
+  --bs-btn-color: var(--ac-on-fill);
+  --bs-btn-bg: var(--ac-fill);
+  --bs-btn-border-color: var(--ac-fill);
+  --bs-btn-hover-color: var(--ac-on-fill);
+  --bs-btn-hover-bg: var(--ac-oro-claro);
+  --bs-btn-hover-border-color: var(--ac-oro-claro);
+  --bs-btn-active-color: var(--ac-on-fill);
+  --bs-btn-active-bg: #c0913a;
+  --bs-btn-active-border-color: #c0913a;
+  --bs-btn-disabled-color: var(--ac-on-fill);
+  --bs-btn-disabled-bg: var(--ac-fill);
+  --bs-btn-disabled-border-color: var(--ac-fill);
+}
+.btn-outline-primary {
+  --bs-btn-color: var(--ac-accent);
+  --bs-btn-border-color: var(--ac-accent);
+  --bs-btn-hover-color: var(--ac-on-fill);
+  --bs-btn-hover-bg: var(--ac-fill);
+  --bs-btn-hover-border-color: var(--ac-fill);
+  --bs-btn-active-color: var(--ac-on-fill);
+  --bs-btn-active-bg: var(--ac-fill);
+  --bs-btn-active-border-color: var(--ac-fill);
+  --bs-btn-disabled-color: var(--ac-accent);
+  --bs-btn-disabled-border-color: var(--ac-accent);
+}
+.btn-jade {
+  --bs-btn-color: var(--ac-on-fill-2);
+  --bs-btn-bg: var(--ac-fill-2);
+  --bs-btn-border-color: var(--ac-fill-2);
+  --bs-btn-hover-color: var(--ac-on-fill-2);
+  --bs-btn-hover-bg: var(--ac-second);
+  --bs-btn-hover-border-color: var(--ac-second);
+  --bs-btn-active-color: var(--ac-on-fill-2);
+  --bs-btn-active-bg: var(--ac-fill-2);
+  --bs-btn-active-border-color: var(--ac-fill-2);
+}
+.btn-ghost {
+  --bs-btn-color: var(--ac-fg);
+  --bs-btn-border-color: var(--ac-line);
+  --bs-btn-hover-color: var(--ac-fg);
+  --bs-btn-hover-bg: var(--ac-surface);
+  --bs-btn-hover-border-color: var(--ac-fg-muted);
+  --bs-btn-active-bg: var(--ac-surface);
+  --bs-btn-active-border-color: var(--ac-fg);
+  --bs-btn-active-color: var(--ac-fg);
 }
 
-h1 { margin: 0 0 16px; font-size: clamp(2rem, 8vw, 3rem); line-height: 1.1; }
-.lead { margin: 0 0 24px; }
-.note { margin: 0; color: var(--muted); font-size: 0.95rem; }
+/* 6. Componentes Bootstrap ---------------------------------------------- */
+.navbar {
+  --bs-navbar-color: var(--ac-fg-muted);
+  --bs-navbar-hover-color: var(--ac-fg);
+  --bs-navbar-active-color: var(--ac-accent);
+  --bs-navbar-brand-color: var(--ac-fg);
+  --bs-navbar-brand-hover-color: var(--ac-fg);
+  --bs-navbar-toggler-border-color: var(--ac-line);
+  --bs-navbar-toggler-focus-width: 2px;
+  background: var(--ac-bg);
+  border-bottom: 1px solid var(--ac-line);
+}
+.navbar .nav-link { font-weight: 500; }
+.navbar .nav-link.active { text-decoration: underline; text-underline-offset: .5em; text-decoration-thickness: 2px; }
+
+.card {
+  --bs-card-bg: var(--ac-surface);
+  --bs-card-border-color: var(--ac-line);
+  --bs-card-border-radius: var(--ac-radius);
+  --bs-card-inner-border-radius: var(--ac-radius);
+  --bs-card-cap-bg: transparent;
+  --bs-card-color: var(--ac-fg);
+  --bs-card-spacer-y: 1.5rem;
+  --bs-card-spacer-x: 1.5rem;
+}
+a.card { text-decoration: none; transition: border-color .15s ease, transform .15s ease; }
+a.card:hover { border-color: var(--ac-fill); transform: translateY(-2px); }
+
+.nav-pills {
+  --bs-nav-pills-link-active-bg: var(--ac-fill);
+  --bs-nav-pills-link-active-color: var(--ac-on-fill);
+  --bs-nav-pills-border-radius: 999px;
+  --bs-nav-link-color: var(--ac-fg-muted);
+  --bs-nav-link-hover-color: var(--ac-fg);
+  --bs-nav-link-font-weight: 600;
+  gap: .25rem;
+}
+.nav-pills .nav-link { border: 1px solid var(--ac-line); }
+.nav-pills .nav-link.active { border-color: var(--ac-fill); }
+
+.form-control, .form-select {
+  --bs-border-color: var(--ac-line);
+  background-color: var(--ac-surface);
+  color: var(--ac-fg);
+  border-width: 2px;
+  padding: .625rem .875rem;
+}
+.form-control::placeholder { color: var(--ac-fg-muted); opacity: 1; }
+.form-control:focus, .form-select:focus {
+  background-color: var(--ac-surface);
+  color: var(--ac-fg);
+  border-color: var(--ac-fill);
+  box-shadow: none;
+}
+.form-label { font-weight: 600; font-size: .9rem; }
+.form-check-input {
+  --bs-form-check-bg: var(--ac-surface);
+  border: 2px solid var(--ac-line);
+}
+.form-check-input:checked { background-color: var(--ac-fill-2); border-color: var(--ac-fill-2); }
+.form-check-input:focus { border-color: var(--ac-fill); box-shadow: none; }
+.form-switch .form-check-input:focus { --bs-form-switch-bg: none; }
+
+.progress {
+  --bs-progress-bg: var(--ac-surface);
+  --bs-progress-bar-bg: var(--ac-fill-2);
+  --bs-progress-height: .5rem;
+  --bs-progress-border-radius: 0;
+  border: 1px solid var(--ac-line);
+}
+
+.modal {
+  --bs-modal-bg: var(--ac-bg);
+  --bs-modal-color: var(--ac-fg);
+  --bs-modal-border-color: var(--ac-fill);
+  --bs-modal-border-width: 2px;
+  --bs-modal-border-radius: var(--ac-radius);
+  --bs-modal-header-border-color: var(--ac-line);
+  --bs-modal-footer-border-color: var(--ac-line);
+}
+.modal-backdrop { --bs-backdrop-bg: #0b0918; --bs-backdrop-opacity: .8; }
+
+.breadcrumb {
+  --bs-breadcrumb-divider-color: var(--ac-fg-muted);
+  --bs-breadcrumb-item-active-color: var(--ac-fg-muted);
+  font-size: .9rem;
+}
+.list-group {
+  --bs-list-group-bg: transparent;
+  --bs-list-group-border-color: var(--ac-line);
+  --bs-list-group-color: var(--ac-fg);
+}
+.table {
+  --bs-table-bg: transparent;
+  --bs-table-color: var(--ac-fg);
+  --bs-table-border-color: var(--ac-line);
+}
+.btn-close { --bs-btn-close-focus-shadow: 0 0 0 2px var(--ac-fill); }
+:root[data-bs-theme="dark"] .btn-close { filter: invert(1) grayscale(100%) brightness(200%); }
+
+/* 7. Piezas propias de Acordia ------------------------------------------ */
+
+/* Aviso de prototipo */
+.ac-proto {
+  background: var(--ac-fill-2); color: var(--ac-on-fill-2);
+  font-size: .85rem; font-weight: 500; text-align: center;
+  padding: .4rem 1rem;
+}
+
+/* Marca */
+.ac-brand { display: inline-flex; align-items: center; gap: .6rem; text-decoration: none; }
+.ac-brand svg { width: 28px; height: 33px; flex: none; }
+.ac-brand-name {
+  font-family: var(--ac-font-display); font-size: 1.35rem;
+  letter-spacing: .22em; color: var(--ac-fg);
+}
+.ac-logo-arch { stroke: var(--ac-fill); }
+.ac-logo-string { stroke: var(--ac-fg); }
+.ac-logo-dot { fill: var(--ac-jade); }
+
+/* Secciones con respiro */
+.ac-section { padding-block: var(--ac-space); }
+.ac-section + .ac-section { border-top: 1px solid var(--ac-line); }
+.ac-section-head { display: grid; gap: .75rem; margin-bottom: 2.5rem; }
+.ac-section-head h2 { margin: 0; font-size: clamp(1.9rem, 3.5vw, 2.6rem); }
+.ac-section-head p { margin: 0; color: var(--ac-fg-muted); }
+
+/* Hero */
+.ac-hero { padding-block: clamp(3rem, 7vw, 6rem); }
+.ac-hero h1 { font-size: clamp(2.6rem, 6vw, 4.6rem); line-height: 1.05; margin: 0; }
+.ac-hero-art { width: 100%; max-width: 520px; height: auto; display: block; margin-inline: auto; }
+
+/* Ventana en arco: el portal como marco */
+.ac-arch {
+  border-radius: var(--ac-arch);
+  border: 2px solid var(--ac-fill);
+  background: var(--ac-surface);
+}
+
+/* Fichas (acordes, barrios, filtros) */
+.ac-chip {
+  display: inline-flex; align-items: center; gap: .35rem;
+  padding: .2rem .65rem; border: 1px solid var(--ac-line);
+  border-radius: 999px; font-size: .82rem; font-weight: 500;
+  color: var(--ac-fg); background: transparent; white-space: nowrap;
+}
+.ac-chip-chord {
+  font-family: var(--ac-font-display); font-size: .95rem;
+  border-color: var(--ac-fill); color: var(--ac-accent);
+}
+.ac-chip-ok::before {
+  content: ""; width: .5rem; height: .5rem; border-radius: 50%;
+  background: var(--ac-second);
+}
+.ac-chip-example {
+  border-style: dashed; color: var(--ac-fg-muted); font-size: .72rem;
+  letter-spacing: .06em; text-transform: uppercase;
+}
+
+/* Pasos numerados (sí son una secuencia) */
+.ac-step-num {
+  font-family: var(--ac-font-display); font-size: 2.75rem; line-height: 1;
+  color: var(--ac-accent);
+}
+
+/* Barrios: tarjeta con arco geométrico arriba */
+.ac-barrio-icon { width: 64px; height: 64px; display: block; }
+
+.i-oro  { fill: var(--ac-fill); }
+.i-jade { fill: var(--ac-fill-2); }
+.i-fg   { fill: var(--ac-fg); }
+.i-line { fill: none; stroke: var(--ac-fg); }
+.i-arch { fill: none; stroke: var(--ac-fill); }
+
+/* Avatar de guía: arco con iniciales, sin fotos */
+.ac-avatar {
+  width: 56px; height: 64px; flex: none;
+  display: grid; place-items: end center; padding-bottom: .55rem;
+  border-radius: var(--ac-arch);
+  background: var(--ac-fill-2); color: var(--ac-on-fill-2);
+  font-family: var(--ac-font-display); font-size: 1.2rem;
+}
+.ac-avatar.is-oro { background: var(--ac-fill); color: var(--ac-on-fill); }
+
+/* Precios */
+.ac-price { font-family: var(--ac-font-display); font-size: 2.4rem; line-height: 1; }
+.ac-price small { font-family: var(--ac-font-text); font-size: .95rem; color: var(--ac-fg-muted); }
+.ac-plan-featured { border: 2px solid var(--ac-fill-2) !important; }
+.ac-list { list-style: none; padding: 0; margin: 0; display: grid; gap: .6rem; }
+.ac-list li { display: grid; grid-template-columns: 1rem 1fr; gap: .6rem; }
+.ac-list li::before {
+  content: ""; width: .55rem; height: .55rem; margin-top: .55em;
+  background: var(--ac-second); transform: rotate(45deg);
+}
+
+/* Friso de arcos (divisor decorativo de color fijo) */
+.ac-frieze {
+  height: 18px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='18'%3E%3Cpath d='M4 18V11a10 10 0 0 1 20 0v7' fill='none' stroke='%23D4A64A' stroke-width='2'/%3E%3C/svg%3E");
+  background-repeat: repeat-x; background-position: center;
+  opacity: .7;
+}
+
+/* Diagrama de acorde (lo dibuja acordia.js) */
+.ac-chord { display: grid; justify-items: center; gap: .25rem; }
+.ac-chord-name { font-family: var(--ac-font-display); font-size: 1.4rem; color: var(--ac-accent); }
+.ac-chord svg { width: 92px; height: auto; }
+.ac-chord .grid { stroke: var(--ac-fg-muted); }
+.ac-chord .nut { stroke: var(--ac-fg); }
+.ac-chord .dot { fill: var(--ac-fill); }
+.ac-chord .open { fill: none; stroke: var(--ac-second); }
+.ac-chord .mute { stroke: var(--ac-fg-muted); }
+
+/* Estructura de la canción: compases */
+.ac-bars { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border-left: 2px solid var(--ac-line); }
+.ac-bar {
+  padding: .7rem .5rem; border-right: 2px solid var(--ac-line);
+  border-block: 1px solid var(--ac-line);
+  font-family: var(--ac-font-display); font-size: 1.15rem; text-align: center;
+}
+.ac-bar.is-repeat { color: var(--ac-fg-muted); }
+
+/* Rasgueo: 8 tiempos */
+.ac-strum { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: .35rem; }
+.ac-strum-cell {
+  aspect-ratio: 3 / 4; display: grid; place-items: center; gap: 0;
+  border: 2px solid var(--ac-line); border-radius: var(--ac-radius);
+  font-size: 1.3rem; font-weight: 600;
+}
+.ac-strum-cell.is-down { background: var(--ac-fill); border-color: var(--ac-fill); color: var(--ac-on-fill); }
+.ac-strum-cell.is-up { border-color: var(--ac-fill-2); color: var(--ac-second); }
+.ac-strum-count { font-size: .75rem; color: var(--ac-fg-muted); text-align: center; }
+
+/* Footer */
+.ac-footer { border-top: 1px solid var(--ac-line); padding-block: 3rem; color: var(--ac-fg-muted); font-size: .92rem; }
+.ac-footer-brand { font-family: var(--ac-font-display); font-size: 1.5rem; color: var(--ac-fg); }
+
+/* Utilidades pequeñas (evitan estilos en línea) */
+.ac-h2 { font-size: clamp(1.9rem, 3.5vw, 2.6rem); }
+.ac-self-start { justify-self: start; }
+.ac-min-0 { min-width: 0; }
+.ac-illus { max-width: 100%; height: auto; }
+
+/* Botón de tema */
+.ac-theme-toggle { width: 2.5rem; height: 2.5rem; padding: 0; display: inline-grid; place-items: center; }
+.ac-theme-toggle svg { width: 1.1rem; height: 1.1rem; }
+:root[data-bs-theme="dark"] .ac-icon-sun, :root:not([data-bs-theme="light"]) .ac-icon-sun { display: block; }
+:root[data-bs-theme="dark"] .ac-icon-moon, :root:not([data-bs-theme="light"]) .ac-icon-moon { display: none; }
+:root[data-bs-theme="light"] .ac-icon-sun { display: none; }
+:root[data-bs-theme="light"] .ac-icon-moon { display: block; }
+
+/* Movimiento */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition: none !important; animation: none !important; }
+}
+
+/* Teléfono */
+@media (max-width: 575.98px) {
+  .ac-bars { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .ac-strum-cell { font-size: 1rem; }
+}

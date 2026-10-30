@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="es-CL" data-bs-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>[Tema de ejemplo] · Acordia</title>
+  <meta name="description" content="Acordes, estructura, rasgueo y pasos de práctica.">
+  <meta name="theme-color" content="#191430">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 56'%3E%3Crect width='48' height='56' fill='%23191430'/%3E%3Cpath d='M6 54V24a18 18 0 0 1 36 0v30' fill='none' stroke='%23D4A64A' stroke-width='5'/%3E%3Ccircle cx='24' cy='16' r='4' fill='%235FB39B'/%3E%3C/svg%3E">
+  <script>(function(){var t="dark";try{t=localStorage.getItem("acordia-tema")||"dark"}catch(e){}document.documentElement.setAttribute("data-bs-theme",t)})();</script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Marcellus&family=Work+Sans:wght@400;500;600&display=swap">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <div class="ac-proto">Prototipo en investigación · los temas y guías que ves son de ejemplo</div>
+
+  <nav class="navbar navbar-expand-md sticky-top" aria-label="Principal">
+    <div class="container">
+      <a class="ac-brand navbar-brand" href="index.html" aria-label="Acordia, inicio">
+        <svg viewBox="0 0 48 56" aria-hidden="true">
+          <path class="ac-logo-arch" d="M6 54V24a18 18 0 0 1 36 0v30" fill="none" stroke-width="4"/>
+          <g class="ac-logo-string" stroke-width="1.6">
+            <line x1="14" y1="26" x2="14" y2="54"/><line x1="19" y1="26" x2="19" y2="54"/>
+            <line x1="24" y1="26" x2="24" y2="54"/><line x1="29" y1="26" x2="29" y2="54"/>
+            <line x1="34" y1="26" x2="34" y2="54"/>
+          </g>
+          <circle class="ac-logo-dot" cx="24" cy="16" r="3"/>
+        </svg>
+        <span class="ac-brand-name">ACORDIA</span>
+      </a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#nav" aria-controls="nav" aria-expanded="false" aria-label="Abrir menú">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="nav">
+        <ul class="navbar-nav ms-md-4 me-auto gap-md-2">
+          <li class="nav-item"><a class="nav-link active" aria-current="page" href="cancion.html">Biblioteca</a></li>
+          <li class="nav-item"><a class="nav-link" href="guias.html">Guías</a></li>
+          <li class="nav-item"><a class="nav-link" href="index.html#planes">Planes</a></li>
+        </ul>
+        <div class="d-flex align-items-center gap-2 pb-3 pb-md-0">
+          <button class="btn btn-ghost ac-theme-toggle" type="button" data-ac-theme-toggle aria-label="Cambiar tema">
+            <svg class="ac-icon-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="5" fill="currentColor"/><g stroke="currentColor" stroke-width="2"><path d="M12 1v3M12 20v3M1 12h3M20 12h3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/></g></svg>
+            <svg class="ac-icon-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 15A9 9 0 0 1 9 4a9 9 0 1 0 11 11z" fill="currentColor"/></svg>
+          </button>
+          <a class="btn btn-outline-primary" href="index.html#planes">Entrar a Acordia</a>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <main class="container py-4 py-lg-5">
+    <nav aria-label="Ruta">
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="index.html#biblioteca">Biblioteca</a></li>
+        <li class="breadcrumb-item"><a href="index.html#barrios">Nueva Canción</a></li>
+        <li class="breadcrumb-item active" aria-current="page">[Tema de ejemplo]</li>
+      </ol>
+    </nav>
+
+    <!-- Cabecera de la canción -->
+    <header class="d-grid gap-3 pb-4 mb-4 border-bottom">
+      <div class="d-flex flex-wrap gap-2 align-items-center">
+        <span class="ac-chip ac-chip-example">Ejemplo</span>
+        <span class="ac-eyebrow">Nueva Canción</span>
+      </div>
+      <h1 class="display-5 m-0">[Tema de ejemplo]</h1>
+      <p class="m-0 fs-5 text-body-secondary">[Artista de ejemplo]</p>
+      <dl class="d-flex flex-wrap gap-4 m-0 ac-mono">
+        <div><dt class="small text-body-secondary fw-normal">Tono</dt><dd class="m-0 fw-semibold">Sol mayor</dd></div>
+        <div><dt class="small text-body-secondary fw-normal">Cejilla</dt><dd class="m-0 fw-semibold">Sin cejilla</dd></div>
+        <div><dt class="small text-body-secondary fw-normal">Compás</dt><dd class="m-0 fw-semibold">4/4</dd></div>
+        <div><dt class="small text-body-secondary fw-normal">Tempo</dt><dd class="m-0 fw-semibold">92 bpm</dd></div>
+        <div><dt class="small text-body-secondary fw-normal">Nivel</dt><dd class="m-0 fw-semibold">Inicial</dd></div>
+      </dl>
+    </header>
+
+    <div class="row gx-4 gy-5 gx-lg-5">
+      <!-- Contenido principal -->
+      <div class="col-lg-8 ac-min-0">
+        <ul class="nav nav-pills mb-4 flex-wrap" id="tabs" role="tablist">
+          <li class="nav-item" role="presentation"><button class="nav-link active" id="t-acordes" data-bs-toggle="pill" data-bs-target="#p-acordes" type="button" role="tab" aria-controls="p-acordes" aria-selected="true">Acordes</button></li>
+          <li class="nav-item" role="presentation"><button class="nav-link" id="t-estructura" data-bs-toggle="pill" data-bs-target="#p-estructura" type="button" role="tab" aria-controls="p-estructura" aria-selected="false">Estructura</button></li>
+          <li class="nav-item" role="presentation"><button class="nav-link" id="t-rasgueo" data-bs-toggle="pill" data-bs-target="#p-rasgueo" type="button" role="tab" aria-controls="p-rasgueo" aria-selected="false">Rasgueo</button></li>
+          <li class="nav-item" role="presentation"><button class="nav-link" id="t-practica" data-bs-toggle="pill" data-bs-target="#p-practica" type="button" role="tab" aria-controls="p-practica" aria-selected="false">Práctica</button></li>
+        </ul>
+
+        <div class="tab-content">
+          <!-- Acordes -->
+          <section class="tab-pane fade show active" id="p-acordes" role="tabpanel" aria-labelledby="t-acordes" tabindex="0">
+            <p class="text-body-secondary">Cuatro acordes abiertos. El cambio que más cuesta es de <strong>D</strong> a <strong>Em</strong>: practícalo solo antes de tocar el tema completo.</p>
+            <div class="row row-cols-2 row-cols-sm-4 g-4 py-3">
+              <div class="col"><div class="ac-chord" data-name="G" data-frets="3 2 0 0 0 3"></div></div>
+              <div class="col"><div class="ac-chord" data-name="D" data-frets="x x 0 2 3 2"></div></div>
+              <div class="col"><div class="ac-chord" data-name="Em" data-frets="0 2 2 0 0 0"></div></div>
+              <div class="col"><div class="ac-chord" data-name="C" data-frets="x 3 2 0 1 0"></div></div>
+            </div>
+            <p class="small text-body-secondary m-0">Cuerdas de 6ª (grave) a 1ª (aguda). Círculo vacío: al aire. Cruz: no suena.</p>
+          </section>
+
+          <!-- Estructura -->
+          <section class="tab-pane fade" id="p-estructura" role="tabpanel" aria-labelledby="t-estructura" tabindex="0">
+            <div class="d-grid gap-4">
+              <div class="d-grid gap-2">
+                <h2 class="h5 m-0">Intro <span class="text-body-secondary fw-normal ac-mono">× 2</span></h2>
+                <div class="ac-bars"><div class="ac-bar">G</div><div class="ac-bar">D</div><div class="ac-bar">Em</div><div class="ac-bar">C</div></div>
+              </div>
+              <div class="d-grid gap-2">
+                <h2 class="h5 m-0">Estrofa <span class="text-body-secondary fw-normal ac-mono">× 2</span></h2>
+                <div class="ac-bars"><div class="ac-bar">G</div><div class="ac-bar">G</div><div class="ac-bar">C</div><div class="ac-bar">G</div><div class="ac-bar">Em</div><div class="ac-bar">C</div><div class="ac-bar">D</div><div class="ac-bar">D</div></div>
+              </div>
+              <div class="d-grid gap-2">
+                <h2 class="h5 m-0">Coro <span class="text-body-secondary fw-normal ac-mono">× 2</span></h2>
+                <div class="ac-bars"><div class="ac-bar">C</div><div class="ac-bar">G</div><div class="ac-bar">D</div><div class="ac-bar">Em</div><div class="ac-bar">C</div><div class="ac-bar">G</div><div class="ac-bar">D</div><div class="ac-bar is-repeat">%</div></div>
+              </div>
+              <p class="small text-body-secondary m-0">Cada casilla es un compás. % repite el compás anterior. Escucha la grabación original para ubicar la letra.</p>
+            </div>
+          </section>
+
+          <!-- Rasgueo -->
+          <section class="tab-pane fade" id="p-rasgueo" role="tabpanel" aria-labelledby="t-rasgueo" tabindex="0">
+            <p class="text-body-secondary">Un compás de 4/4 en corcheas. Oro: rasgueo hacia abajo. Jade: hacia arriba. Vacío: la mano pasa sin tocar.</p>
+            <div class="ac-strum" role="img" aria-label="Patrón: abajo, nada, abajo, arriba, nada, arriba, abajo, arriba">
+              <div class="ac-strum-cell is-down">↓</div><div class="ac-strum-cell"></div>
+              <div class="ac-strum-cell is-down">↓</div><div class="ac-strum-cell is-up">↑</div>
+              <div class="ac-strum-cell"></div><div class="ac-strum-cell is-up">↑</div>
+              <div class="ac-strum-cell is-down">↓</div><div class="ac-strum-cell is-up">↑</div>
+            </div>
+            <div class="ac-strum mt-2 ac-mono" aria-hidden="true">
+              <span class="ac-strum-count">1</span><span class="ac-strum-count">y</span><span class="ac-strum-count">2</span><span class="ac-strum-count">y</span>
+              <span class="ac-strum-count">3</span><span class="ac-strum-count">y</span><span class="ac-strum-count">4</span><span class="ac-strum-count">y</span>
+            </div>
+          </section>
+
+          <!-- Práctica -->
+          <section class="tab-pane fade" id="p-practica" role="tabpanel" aria-labelledby="t-practica" tabindex="0">
+            <div class="d-flex justify-content-between align-items-center gap-3 mb-2">
+              <h2 class="h5 m-0">Tu ruta de práctica</h2>
+              <span class="small text-body-secondary ac-mono" id="practica-label">0 de 5 pasos</span>
+            </div>
+            <div class="progress mb-4" role="progressbar" aria-label="Avance de práctica" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+              <div class="progress-bar" id="practica-bar" style="width:0%"></div>
+            </div>
+            <div class="list-group" data-ac-practice="tema-ejemplo" data-ac-progress="#practica-bar" data-ac-progress-label="#practica-label">
+              <label class="list-group-item d-flex gap-3 py-3"><input class="form-check-input flex-shrink-0" type="checkbox" id="paso1"><span><strong>Arma los cuatro acordes</strong><br><span class="small text-body-secondary">Cada uno limpio, cuerda por cuerda.</span></span></label>
+              <label class="list-group-item d-flex gap-3 py-3"><input class="form-check-input flex-shrink-0" type="checkbox" id="paso2"><span><strong>Cambio D → Em</strong><br><span class="small text-body-secondary">Un minuto seguido, sin rasguear.</span></span></label>
+              <label class="list-group-item d-flex gap-3 py-3"><input class="form-check-input flex-shrink-0" type="checkbox" id="paso3"><span><strong>Rasgueo sobre G</strong><br><span class="small text-body-secondary">Lento, contando en voz alta.</span></span></label>
+              <label class="list-group-item d-flex gap-3 py-3"><input class="form-check-input flex-shrink-0" type="checkbox" id="paso4"><span><strong>Intro y estrofa a 70 bpm</strong><br><span class="small text-body-secondary">Más lento que la grabación.</span></span></label>
+              <label class="list-group-item d-flex gap-3 py-3"><input class="form-check-input flex-shrink-0" type="checkbox" id="paso5"><span><strong>Tema completo a 92 bpm</strong><br><span class="small text-body-secondary">Tocando encima de la grabación.</span></span></label>
+            </div>
+          </section>
+        </div>
+      </div>
+
+      <!-- Lateral: guías -->
+      <aside class="col-lg-4 d-grid gap-3 align-content-start">
+        <div class="card ac-plan-featured">
+          <div class="card-body d-grid gap-3">
+            <span class="ac-eyebrow">¿Te trabaste?</span>
+            <h2 class="h4 m-0">Guías que enseñan este tema</h2>
+            <div class="d-flex gap-3 align-items-center">
+              <span class="ac-avatar" aria-hidden="true">CR</span>
+              <div class="d-grid">
+                <strong>Camila R.</strong>
+                <span class="small text-body-secondary">Guitarra · Valparaíso · en línea</span>
+                <span class="ac-chip ac-chip-ok mt-1 ac-self-start">Disponible hoy</span>
+              </div>
+            </div>
+            <div class="d-flex gap-3 align-items-center">
+              <span class="ac-avatar is-oro" aria-hidden="true">JM</span>
+              <div class="d-grid">
+                <strong>Joaquín M.</strong>
+                <span class="small text-body-secondary">Guitarra y charango · Ñuñoa</span>
+                <span class="small text-body-secondary">Próxima hora: mañana</span>
+              </div>
+            </div>
+            <span class="ac-chip ac-chip-example ac-self-start">Perfiles de ejemplo</span>
+            <a class="btn btn-primary" href="guias.html">Encontrar a tu guía</a>
+            <p class="small text-body-secondary m-0">Conexión $3.990 la primera vez con cada guía. Con Plus, una al mes va incluida.</p>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-body d-grid gap-2">
+            <span class="small text-body-secondary">Versión de</span>
+            <strong>Camila R. · revisada por la guía</strong>
+            <span class="small text-body-secondary">Generada con el asistente de Acordia a partir de su versión.</span>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </main>
+
+  <footer class="ac-footer">
+    <div class="container d-grid gap-3">
+      <div class="d-flex flex-wrap justify-content-between gap-3 align-items-center">
+        <span class="ac-footer-brand">Acordia. Donde se respira música.</span>
+        <nav class="d-flex flex-wrap gap-3" aria-label="Pie de página">
+          <a href="cancion.html">Biblioteca</a><a href="guias.html">Guías</a><a href="index.html#planes">Planes</a>
+        </nav>
+      </div>
+      <p class="m-0">Acordia publica acordes, estructura y rasgueo. No publica letras de terceros. Un proyecto de SAÚL.</p>
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+  <script src="acordia.js"></script>
+</body>
+</html>

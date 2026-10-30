@@ -1,19 +1,362 @@
 <!doctype html>
-<html lang="es">
+<html lang="es-CL" data-bs-theme="dark">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>SAÚL música</title>
-  <meta name="description" content="Aprende canciones con quienes las tocan. Próximamente.">
+  <title>Acordia · Donde se respira música</title>
+  <meta name="description" content="Aprende canciones chilenas. Acordes gratis y profes disponibles.">
+  <meta name="theme-color" content="#191430">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 56'%3E%3Crect width='48' height='56' fill='%23191430'/%3E%3Cpath d='M6 54V24a18 18 0 0 1 36 0v30' fill='none' stroke='%23D4A64A' stroke-width='5'/%3E%3Ccircle cx='24' cy='16' r='4' fill='%235FB39B'/%3E%3C/svg%3E">
+  <!-- Tema antes de pintar: evita parpadeo -->
+  <script>(function(){var t="dark";try{t=localStorage.getItem("acordia-tema")||"dark"}catch(e){}document.documentElement.setAttribute("data-bs-theme",t)})();</script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Marcellus&family=Work+Sans:wght@400;500;600&display=swap">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
+
+  <div class="ac-proto">Prototipo en investigación · los temas y guías que ves son de ejemplo</div>
+
+  <!-- Navegación -->
+  <nav class="navbar navbar-expand-md sticky-top" aria-label="Principal">
+    <div class="container">
+      <a class="ac-brand navbar-brand" href="index.html" aria-label="Acordia, inicio">
+        <svg viewBox="0 0 48 56" aria-hidden="true">
+          <path class="ac-logo-arch" d="M6 54V24a18 18 0 0 1 36 0v30" fill="none" stroke-width="4"/>
+          <g class="ac-logo-string" stroke-width="1.6">
+            <line x1="14" y1="26" x2="14" y2="54"/><line x1="19" y1="26" x2="19" y2="54"/>
+            <line x1="24" y1="26" x2="24" y2="54"/><line x1="29" y1="26" x2="29" y2="54"/>
+            <line x1="34" y1="26" x2="34" y2="54"/>
+          </g>
+          <circle class="ac-logo-dot" cx="24" cy="16" r="3"/>
+        </svg>
+        <span class="ac-brand-name">ACORDIA</span>
+      </a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#nav" aria-controls="nav" aria-expanded="false" aria-label="Abrir menú">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="nav">
+        <ul class="navbar-nav ms-md-4 me-auto gap-md-2">
+          <li class="nav-item"><a class="nav-link" href="cancion.html">Biblioteca</a></li>
+          <li class="nav-item"><a class="nav-link" href="guias.html">Guías</a></li>
+          <li class="nav-item"><a class="nav-link" href="#planes">Planes</a></li>
+        </ul>
+        <div class="d-flex align-items-center gap-2 pb-3 pb-md-0">
+          <button class="btn btn-ghost ac-theme-toggle" type="button" data-ac-theme-toggle aria-label="Cambiar tema">
+            <svg class="ac-icon-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="5" fill="currentColor"/><g stroke="currentColor" stroke-width="2"><path d="M12 1v3M12 20v3M1 12h3M20 12h3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/></g></svg>
+            <svg class="ac-icon-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 15A9 9 0 0 1 9 4a9 9 0 1 0 11 11z" fill="currentColor"/></svg>
+          </button>
+          <a class="btn btn-outline-primary" href="#planes">Entrar a Acordia</a>
+        </div>
+      </div>
+    </div>
+  </nav>
+
   <main>
-    <p class="eyebrow">Próximamente</p>
-    <h1>SAÚL música</h1>
-    <p class="lead">Aprende las canciones que quieres tocar, con una clase hecha a tu medida:
-      el tema que elijas y la profundidad que necesites.</p>
-    <p class="note">Estamos preparando el sitio. Vuelve pronto.</p>
+    <!-- Hero -->
+    <section class="ac-hero">
+      <div class="container">
+        <div class="row align-items-center gy-5">
+          <div class="col-lg-6 d-grid gap-4">
+            <span class="ac-eyebrow">Acordia empieza en Chile</span>
+            <h1>Donde se respira música.</h1>
+            <p class="lead m-0">Aprende canciones chilenas. Acordes gratis y profes disponibles cuando te trabas.</p>
+
+            <form class="d-flex flex-column flex-sm-row gap-2" role="search" data-ac-demo="cancion.html">
+              <label class="visually-hidden" for="buscar">Busca una canción o artista</label>
+              <input class="form-control" id="buscar" type="search" placeholder="Busca una canción o artista">
+              <button class="btn btn-primary text-nowrap" type="submit">Buscar acordes</button>
+            </form>
+
+            <div class="d-flex flex-wrap gap-2 align-items-center">
+              <span class="text-body-secondary small">Barrios:</span>
+              <a class="ac-chip text-decoration-none" href="#barrios">Cueca</a>
+              <a class="ac-chip text-decoration-none" href="#barrios">Nueva Canción</a>
+              <a class="ac-chip text-decoration-none" href="#barrios">Rock del Sur</a>
+              <a class="ac-chip text-decoration-none" href="#barrios">Cumbia</a>
+            </div>
+          </div>
+
+          <div class="col-lg-6">
+            <svg class="ac-hero-art" viewBox="0 0 520 600" role="img" aria-label="Ilustración: un portal en arco con cinco cuerdas bajo la noche de Atacama">
+              <defs><clipPath id="ventana"><path d="M20 600V260A240 240 0 0 1 500 260V600Z"/></clipPath></defs>
+              <g clip-path="url(#ventana)">
+                <rect width="520" height="600" fill="#191430"/>
+                <g fill="#F1ECE2">
+                  <circle cx="110" cy="190" r="2"/><circle cx="160" cy="120" r="1.5"/><circle cx="230" cy="80" r="2.2"/>
+                  <circle cx="290" cy="150" r="1.4"/><circle cx="430" cy="230" r="2"/><circle cx="80" cy="280" r="1.6"/>
+                  <circle cx="200" cy="230" r="1.3"/><circle cx="460" cy="300" r="1.5"/><circle cx="140" cy="330" r="1.2"/>
+                  <circle cx="330" cy="250" r="1.8"/><circle cx="250" cy="300" r="1.2"/><circle cx="400" cy="90" r="1.4"/>
+                </g>
+                <g fill="#D4A64A">
+                  <rect x="186" y="156" width="7" height="7" transform="rotate(45 189.5 159.5)"/>
+                  <rect x="70" y="236" width="6" height="6" transform="rotate(45 73 239)"/>
+                  <rect x="440" y="160" width="6" height="6" transform="rotate(45 443 163)"/>
+                </g>
+                <circle cx="362" cy="160" r="40" fill="#D4A64A"/>
+                <circle cx="380" cy="148" r="36" fill="#191430"/>
+                <polygon points="0,440 90,350 150,395 240,300 330,385 400,335 520,425 520,600 0,600" fill="#2a2350"/>
+                <polygon points="0,490 120,420 210,468 300,410 420,478 520,446 520,600 0,600" fill="#342c5c"/>
+                <rect y="522" width="520" height="78" fill="#221c40"/>
+                <path d="M196 522V418a64 64 0 0 1 128 0v104" fill="none" stroke="#D4A64A" stroke-width="9"/>
+                <g stroke="#F1ECE2" stroke-width="2.4">
+                  <line x1="228" y1="430" x2="228" y2="522"/><line x1="244" y1="430" x2="244" y2="522"/>
+                  <line x1="260" y1="430" x2="260" y2="522"/><line x1="276" y1="430" x2="276" y2="522"/>
+                  <line x1="292" y1="430" x2="292" y2="522"/>
+                </g>
+                <circle cx="260" cy="398" r="7" fill="#5FB39B"/>
+                <g fill="#D4A64A">
+                  <rect x="172" y="530" width="176" height="6"/>
+                  <rect x="152" y="546" width="216" height="6"/>
+                  <rect x="132" y="562" width="256" height="6"/>
+                </g>
+                <g fill="#5FB39B">
+                  <rect x="72" y="500" width="8" height="26"/><rect x="62" y="508" width="6" height="12"/><rect x="84" y="504" width="6" height="12"/>
+                  <rect x="440" y="496" width="8" height="30"/><rect x="452" y="504" width="6" height="12"/>
+                </g>
+              </g>
+              <path d="M20 600V260A240 240 0 0 1 500 260V600" fill="none" stroke="#D4A64A" stroke-width="3"/>
+            </svg>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="ac-frieze" aria-hidden="true"></div>
+
+    <!-- Cómo funciona: es una secuencia real -->
+    <section class="ac-section" id="como">
+      <div class="container">
+        <div class="ac-section-head">
+          <span class="ac-eyebrow">Cómo funciona</span>
+          <h2>De la búsqueda a tocarla entera</h2>
+        </div>
+        <div class="row g-4 g-lg-5">
+          <div class="col-md-4 d-grid gap-2 align-content-start">
+            <span class="ac-step-num ac-mono">1</span>
+            <h3 class="h4 m-0">Busca la canción</h3>
+            <p class="m-0 text-body-secondary">En la Biblioteca encuentras acordes, estructura y rasgueo. Gratis y sin registrarte.</p>
+          </div>
+          <div class="col-md-4 d-grid gap-2 align-content-start">
+            <span class="ac-step-num ac-mono">2</span>
+            <h3 class="h4 m-0">Practícala por pasos</h3>
+            <p class="m-0 text-body-secondary">Cada tema trae una ruta corta: primero los acordes, después el cambio difícil y al final la canción entera.</p>
+          </div>
+          <div class="col-md-4 d-grid gap-2 align-content-start">
+            <span class="ac-step-num ac-mono">3</span>
+            <h3 class="h4 m-0">Si te trabas, llama a un guía</h3>
+            <p class="m-0 text-body-secondary">Profes y músicos que ya enseñan esa canción, disponibles para una clase en línea o en tu comuna.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Barrios -->
+    <section class="ac-section" id="barrios">
+      <div class="container">
+        <div class="ac-section-head">
+          <span class="ac-eyebrow">La primera región: Chile</span>
+          <h2>Recorre los barrios</h2>
+          <p>Cada barrio es un género. Empezamos por cuatro y crecemos según lo que pidan los habitantes.</p>
+        </div>
+        <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-4 g-3">
+          <div class="col">
+            <a class="card h-100" href="cancion.html">
+              <div class="card-body d-grid gap-3">
+                <svg class="ac-barrio-icon" viewBox="0 0 64 64" aria-hidden="true"><path class="i-arch" d="M6 62V30a26 26 0 0 1 52 0v32" stroke-width="3"/><path class="i-oro" d="M20 30l12-10 12 10-12 22z"/><circle class="i-jade" cx="32" cy="14" r="3"/></svg>
+                <div><h3 class="h5 mb-1">Cueca</h3><p class="m-0 small text-body-secondary">Compás de 6/8 y el rasgueo que se aprende escuchando.</p></div>
+              </div>
+            </a>
+          </div>
+          <div class="col">
+            <a class="card h-100" href="cancion.html">
+              <div class="card-body d-grid gap-3">
+                <svg class="ac-barrio-icon" viewBox="0 0 64 64" aria-hidden="true"><path class="i-arch" d="M6 62V30a26 26 0 0 1 52 0v32" stroke-width="3"/><circle class="i-oro" cx="32" cy="42" r="12"/><circle class="i-jade" cx="32" cy="42" r="4"/><rect class="i-fg" x="30" y="16" width="4" height="16"/></svg>
+                <div><h3 class="h5 mb-1">Nueva Canción</h3><p class="m-0 small text-body-secondary">Guitarra, charango y acordes que cuentan historias.</p></div>
+              </div>
+            </a>
+          </div>
+          <div class="col">
+            <a class="card h-100" href="cancion.html">
+              <div class="card-body d-grid gap-3">
+                <svg class="ac-barrio-icon" viewBox="0 0 64 64" aria-hidden="true"><path class="i-arch" d="M6 62V30a26 26 0 0 1 52 0v32" stroke-width="3"/><path class="i-jade" d="M10 58l14-20 8 10 10-16 14 26z"/><path class="i-oro" d="M34 14l-6 12h6l-4 10 10-14h-6l4-8z"/></svg>
+                <div><h3 class="h5 mb-1">Rock del Sur</h3><p class="m-0 small text-body-secondary">Power chords, lluvia y bandas de garaje.</p></div>
+              </div>
+            </a>
+          </div>
+          <div class="col">
+            <a class="card h-100" href="cancion.html">
+              <div class="card-body d-grid gap-3">
+                <svg class="ac-barrio-icon" viewBox="0 0 64 64" aria-hidden="true"><path class="i-arch" d="M6 62V30a26 26 0 0 1 52 0v32" stroke-width="3"/><circle class="i-oro" cx="32" cy="40" r="14"/><circle cx="32" cy="40" r="9" fill="none" class="i-line" stroke-width="2"/><circle class="i-jade" cx="32" cy="40" r="4"/></svg>
+                <div><h3 class="h5 mb-1">Cumbia</h3><p class="m-0 small text-body-secondary">La güira, el bajo y la guitarra que hacen bailar.</p></div>
+              </div>
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Biblioteca -->
+    <section class="ac-section" id="biblioteca">
+      <div class="container">
+        <div class="ac-section-head">
+          <span class="ac-eyebrow">La Biblioteca · abierta a todos</span>
+          <h2>Acordes, estructura y rasgueo</h2>
+          <p>Publicamos lo que necesitas para tocar. Las letras quedan con sus autores.</p>
+        </div>
+        <div class="row row-cols-1 row-cols-md-3 g-3">
+          <div class="col">
+            <a class="card h-100" href="cancion.html">
+              <div class="card-body d-grid gap-3">
+                <div class="d-flex justify-content-between align-items-start gap-2">
+                  <span class="ac-chip ac-chip-example">Ejemplo</span>
+                  <span class="small text-body-secondary">Nueva Canción</span>
+                </div>
+                <div><h3 class="h4 mb-1">[Tema de ejemplo]</h3><p class="m-0 text-body-secondary">[Artista de ejemplo]</p></div>
+                <div class="d-flex flex-wrap gap-2">
+                  <span class="ac-chip ac-chip-chord">G</span><span class="ac-chip ac-chip-chord">D</span><span class="ac-chip ac-chip-chord">Em</span><span class="ac-chip ac-chip-chord">C</span>
+                </div>
+                <div class="d-flex flex-wrap gap-3 small text-body-secondary ac-mono"><span>Nivel inicial</span><span>4/4 · 92 bpm</span></div>
+              </div>
+            </a>
+          </div>
+          <div class="col">
+            <a class="card h-100" href="cancion.html">
+              <div class="card-body d-grid gap-3">
+                <div class="d-flex justify-content-between align-items-start gap-2">
+                  <span class="ac-chip ac-chip-example">Ejemplo</span>
+                  <span class="small text-body-secondary">Cueca</span>
+                </div>
+                <div><h3 class="h4 mb-1">[Tema de ejemplo]</h3><p class="m-0 text-body-secondary">[Artista de ejemplo]</p></div>
+                <div class="d-flex flex-wrap gap-2">
+                  <span class="ac-chip ac-chip-chord">A</span><span class="ac-chip ac-chip-chord">E7</span><span class="ac-chip ac-chip-chord">D</span>
+                </div>
+                <div class="d-flex flex-wrap gap-3 small text-body-secondary ac-mono"><span>Nivel medio</span><span>6/8</span></div>
+              </div>
+            </a>
+          </div>
+          <div class="col">
+            <a class="card h-100" href="cancion.html">
+              <div class="card-body d-grid gap-3">
+                <div class="d-flex justify-content-between align-items-start gap-2">
+                  <span class="ac-chip ac-chip-example">Ejemplo</span>
+                  <span class="small text-body-secondary">Rock del Sur</span>
+                </div>
+                <div><h3 class="h4 mb-1">[Tema de ejemplo]</h3><p class="m-0 text-body-secondary">[Artista de ejemplo]</p></div>
+                <div class="d-flex flex-wrap gap-2">
+                  <span class="ac-chip ac-chip-chord">E5</span><span class="ac-chip ac-chip-chord">G5</span><span class="ac-chip ac-chip-chord">A5</span><span class="ac-chip ac-chip-chord">C5</span>
+                </div>
+                <div class="d-flex flex-wrap gap-3 small text-body-secondary ac-mono"><span>Nivel inicial</span><span>4/4 · 128 bpm</span></div>
+              </div>
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Guías -->
+    <section class="ac-section" id="guias">
+      <div class="container">
+        <div class="row gx-4 gy-5 gx-lg-5 align-items-center">
+          <div class="col-lg-6 d-grid gap-3">
+            <span class="ac-eyebrow">Los guías</span>
+            <h2 class="ac-h2 m-0">Quien conoce el camino te acompaña</h2>
+            <p class="m-0 text-body-secondary">Profes y músicos chilenos que enseñan canciones concretas. Eliges por canción, barrio, comuna o disponibilidad, y reservas directo.</p>
+            <div><a class="btn btn-primary" href="guias.html">Encontrar a tu guía</a></div>
+          </div>
+          <div class="col-lg-6">
+            <div class="card">
+              <div class="card-body d-grid gap-3">
+                <span class="ac-eyebrow">¿Enseñas guitarra o charango?</span>
+                <h3 class="h4 m-0">Sube tu versión. Acordia arma la guía de práctica.</h3>
+                <ul class="ac-list">
+                  <li>La IA convierte tu versión en acordes, estructura y pasos con el formato de Acordia. Tú revisas y publicas.</li>
+                  <li>Decides qué material es gratis y quién ve el resto.</li>
+                  <li>Lo gratis es tu vitrina: los alumnos te encuentran por las canciones que enseñas.</li>
+                </ul>
+                <div><a class="btn btn-jade" href="guias.html#ser-guia">Quiero ser guía</a></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Planes -->
+    <section class="ac-section" id="planes">
+      <div class="container">
+        <div class="ac-section-head">
+          <span class="ac-eyebrow">Planes</span>
+          <h2>Cobramos por la conexión, no por el contenido</h2>
+          <p>Precios en pesos chilenos, IVA incluido.</p>
+        </div>
+        <div class="row row-cols-1 row-cols-lg-3 g-3">
+          <div class="col">
+            <div class="card h-100">
+              <div class="card-body d-grid gap-3 align-content-start">
+                <h3 class="h4 m-0">Biblioteca</h3>
+                <p class="ac-price ac-mono m-0">$0</p>
+                <ul class="ac-list">
+                  <li>Acordes, estructura y rasgueo de canciones chilenas</li>
+                  <li>Ruta de práctica por pasos</li>
+                  <li>Sin registro para empezar</li>
+                </ul>
+                <a class="btn btn-ghost mt-2" href="cancion.html">Abrir la Biblioteca</a>
+              </div>
+            </div>
+          </div>
+          <div class="col">
+            <div class="card h-100">
+              <div class="card-body d-grid gap-3 align-content-start">
+                <h3 class="h4 m-0">Conexión con un guía</h3>
+                <p class="ac-price ac-mono m-0">$3.990 <small>una vez por guía</small></p>
+                <ul class="ac-list">
+                  <li>Se paga la primera vez que reservas con cada guía</li>
+                  <li>La clase se la pagas directo al guía, a su precio</li>
+                  <li>Las siguientes clases con ese guía no tienen cargo de Acordia</li>
+                </ul>
+                <a class="btn btn-outline-primary mt-2" href="guias.html">Ver guías</a>
+              </div>
+            </div>
+          </div>
+          <div class="col">
+            <div class="card h-100 ac-plan-featured">
+              <div class="card-body d-grid gap-3 align-content-start">
+                <div class="d-flex justify-content-between align-items-center gap-2">
+                  <h3 class="h4 m-0">Acordia Plus</h3>
+                  <span class="ac-chip ac-chip-ok">Recomendado</span>
+                </div>
+                <p class="ac-price ac-mono m-0">$2.990 <small>al mes</small></p>
+                <p class="small text-body-secondary m-0 ac-mono">o $24.990 al año</p>
+                <ul class="ac-list">
+                  <li>1 conexión al mes incluida</li>
+                  <li>Garantía: si el guía no te sirve, te conectamos con otro sin costo</li>
+                  <li>Herramientas de práctica, a medida que lleguen</li>
+                </ul>
+                <a class="btn btn-jade mt-2" href="#planes">Quiero Plus</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
   </main>
+
+  <footer class="ac-footer">
+    <div class="container d-grid gap-3">
+      <div class="d-flex flex-wrap justify-content-between gap-3 align-items-center">
+        <span class="ac-footer-brand">Acordia. Donde se respira música.</span>
+        <nav class="d-flex flex-wrap gap-3" aria-label="Pie de página">
+          <a href="cancion.html">Biblioteca</a><a href="guias.html">Guías</a><a href="#planes">Planes</a>
+        </nav>
+      </div>
+      <p class="m-0">Acordia publica acordes, estructura y rasgueo. No publica letras de terceros. Un proyecto de SAÚL.</p>
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+  <script src="acordia.js"></script>
 </body>
 </html>
