@@ -8,7 +8,9 @@ from musicsite.app import HEADERS, WEB_DIR
 
 PAGES = sorted(WEB_DIR.glob("*.html"))
 FORBIDDEN = ["musicres", "run.app", "dashboard", "saulapp-music", "youtube", "bigquery", "secret"]
-HOST = re.compile(r"""(?:href|src)=["'](https://[^/"']+)""")
+HOST = re.compile(r"""(?:<link[^>]*\shref|\ssrc)=["'](https://[^/"']+)""")
+LINK_HOST = re.compile(r"""<a[^>]*\shref=["'](https://[^/"']+)""")
+ALLOWED_LINKS = {"https://www.musicapopular.cl"}
 
 
 def text(path) -> str:
@@ -46,3 +48,9 @@ def test_external_hosts_are_allowed_by_csp(path):
 def test_forms_do_not_submit_anywhere(path):
     for form in re.findall(r"<form[^>]*>", text(path)):
         assert "action=" not in form, f"{path.name} tiene un formulario que envía datos"
+
+
+@pytest.mark.parametrize("path", PAGES, ids=lambda p: p.name)
+def test_outbound_links_only_to_allowed_hosts(path):
+    # La CSP no limita enlaces: los permitidos se declaran aquí.
+    assert set(LINK_HOST.findall(text(path))) <= ALLOWED_LINKS

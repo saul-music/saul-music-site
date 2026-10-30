@@ -78,4 +78,11 @@ def test_load_files_skips_hidden_unknown_and_subdirectories(tmp_path: Path):
 def test_every_file_in_web_dir_is_public_content():
     # Lo que está en web/ se publica entero: un archivo nuevo ahí debe ser contenido del sitio.
     names = {p.name for p in WEB_DIR.iterdir()}
-    assert names == {"index.html", "cancion.html", "guias.html", "style.css", "acordia.js"}
+    assert names == {
+        "index.html",
+        "cancion.html",
+        "guias.html",
+        "artistas.html",
+        "style.css",
+        "acordia.js",
+    }
