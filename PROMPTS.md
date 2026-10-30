@@ -1,5 +1,11 @@
 # Acordia · Prompts para integrar y seguir construyendo
 
+> **Nota (S1):** el sitio ya no se publica con GitHub Pages ni vive en la raíz del repo. Las páginas
+> están en `src/musicsite/web/` y se sirven con FastAPI en Cloud Run. Donde este documento diga
+> "raíz del repo" o "paso preparar solo los archivos públicos", léase `src/musicsite/web/`; ya no hay
+> que editar el pipeline para publicar una página nueva (basta con dejarla en esa carpeta y que pasen
+> los tests).
+
 Paquete de mockups para `saul-music-site`: tres páginas en HTML sobre **Bootstrap 5.3.3** con un tema de marca hecho solo con variables CSS (`--ac-*` → `--bs-*`). No hay build: se copian a la raíz y se publican con el pipeline actual.
 
 ## 1. Qué trae y dónde va

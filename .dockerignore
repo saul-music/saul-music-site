@@ -1,0 +1,8 @@
+.git
+.github
+.venv
+docs
+bootstrap
+tests
+PROMPTS.md
+**/__pycache__

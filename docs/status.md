@@ -4,8 +4,11 @@
 
 ## Paso actual
 
-Mockups de Acordia listos en la rama `feat/acordia-mockups` (PR sin mergear). **Etapa A y plan aprobados
-por el usuario (S1); canción de ejemplo se mantiene (S2). Aún no hay código.**
+Mockups mergeados a `main` (PR #1). **GitHub Pages desactivado** por el usuario (2026-10-30): el
+sitio no tiene URL pública hasta el primer despliegue en Cloud Run. Código de la etapa A escrito en
+`feat/cloud-run` (PR pendiente): app, tests, Dockerfile, pipeline y `bootstrap/gcp.sh`.
+**Pendiente:** ejecutar `bootstrap/gcp.sh` (con confirmación), crear la variable `GCP_WIF_PROVIDER`,
+mergear y verificar el despliegue.
 
 ## Plan de la etapa A (rama `feat/cloud-run`, desde `main` tras mergear los mockups)
 
@@ -29,20 +32,22 @@ archivo y `decisions.md`.
 
 | Criterio | Estado |
 |---|---|
-| Pruebas y `ruff` pasan | Pendiente |
+| Pruebas y `ruff` pasan | Local: 39 pruebas, ruff y format en verde. CI: pendiente |
 | `/`, `/cancion.html`, `/guias.html` responden 200 en la URL pública | Pendiente |
 | `/docs` y rutas ajenas responden 404 | Pendiente |
 | `min-instances=0` y región `southamerica-west1` | Pendiente |
-| `bootstrap/gcp.sh` recrea el entorno desde cero | Pendiente (solo dry-run al principio) |
+| `bootstrap/gcp.sh` recrea el entorno desde cero | Dry-run correcto; ejecución real pendiente. "Desde cero" no se comprobará |
+| La imagen construye y sirve | Pendiente: Docker local no estaba activo; lo comprueba el paso `image` del CI. Servidor probado en local con uvicorn (200 y 404 esperados) |
 | La imagen con Python 3.14 y FastAPI arranca en Cloud Run | Pendiente de verificación |
 | Contraste, aspecto y celular | Pendiente (a ojo, por el usuario) |
 
 ## Puntos abiertos
 
 1. **S2:** canción ajena en `cancion.html` se mantiene; derechos de autor pendientes antes de anunciar.
-2. Dominio propio: hoy sería una URL `*.run.app`; un dominio es una decisión aparte.
-3. No anunciar el sitio antes de resolver S2 y de proteger cualquier servicio interno vinculado.
-4. Etapa B (primera interacción, "pide una canción"): requiere decidir datos, almacenamiento en
+2. El deployer tiene `run.admin` a nivel de proyecto (necesario para fijar la política pública), así que también podría administrar otros servicios del mismo proyecto. Riesgo aceptado como en el otro nicho.
+3. Dominio propio: hoy sería una URL `*.run.app`; un dominio es una decisión aparte.
+4. No anunciar el sitio antes de resolver S2 y de proteger cualquier servicio interno vinculado.
+5. Etapa B (primera interacción, "pide una canción"): requiere decidir datos, almacenamiento en
    `southamerica-west1`, consentimiento, aviso de privacidad y límite de envíos. No se adelanta.
 
 ## Bitácora
@@ -50,5 +55,7 @@ archivo y `decisions.md`.
 ```text
 AAAA-MM-DD · paso · qué se hizo · qué quedó pendiente · decisiones nuevas
 2026-10-30 · mockups · Acordia (index, cancion, guias) sobre Bootstrap, PR pendiente · S2 abierta
+2026-10-30 · mockups mergeados · PR #1 a main; GitHub Pages desactivado por el usuario (sin URL pública hasta Cloud Run) · pendiente: despliegue · S1
+2026-10-30 · código etapa A · app FastAPI, 39 tests, Dockerfile, pipeline ci→image→publish→deploy, bootstrap/gcp.sh (dry-run) en feat/cloud-run · pendiente: ejecutar bootstrap, CI, despliegue real, Python 3.14 en Cloud Run
 2026-10-30 · plan etapa A · decisión de desplegar en Cloud Run desde este repo y plan documentado; sin código · pendiente: aprobación del plan · S1, S2
 ```
