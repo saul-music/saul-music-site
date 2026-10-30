@@ -9,6 +9,7 @@ Uso:
     python -m musicsite.acordes validate --dir ../acordes-local
     python -m musicsite.acordes pages --dir ../acordes-local --out ../vista-previa --preview
     python -m musicsite.acordes library --dir ../acordes-local --index src/musicsite/web/index.html
+    python -m musicsite.acordes simple --dir ../acordes-local --out ../para-enviar [--slug otra-era]
 """
 
 import argparse
@@ -108,6 +109,89 @@ v2_resuelto = false   # true solo cuando los derechos (V2) estén resueltos
 # tab = '''
 # '''
 """
+
+
+SIMPLE_TEMPLATE = """\
+# ==========================================================================
+#  {title} · {artist}
+#  Completa solo lo que está entre comillas o corchetes.
+#  Las líneas que empiezan con # son notas: no las cambies ni las borres.
+# ==========================================================================
+
+# --- No cambies estas líneas ---
+slug = "{slug}"
+titulo = "{title}"
+artista = "{artist}"
+tipo = "{kind}"
+barrio = "{barrio}"
+{no_base}
+# --- 1) Datos del tema ---
+tono = ""        # Ejemplo: "Sol mayor"
+compas = ""      # Ejemplo: "4/4"
+bpm = 0          # Qué tan rápido va, un número. Ejemplo: 96
+nivel = ""       # Escribe "inicial", "medio" o "avanzado"
+
+# --- 2) Los acordes que usa el tema (todos, entre corchetes y comillas) ---
+acordes = []     # Ejemplo: ["G", "Em", "C", "D"]
+
+# --- 3) El orden de las partes ---
+forma = ""       # Ejemplo: "Intro – Estrofa – Coro – Estrofa – Coro – Final"
+
+# --- 4) Los acordes de cada parte: un acorde por compás, una línea por parte ---
+#   "%" repite el acorde anterior. "x2" quiere decir que se toca dos veces.
+#   Ejemplo:   Estrofa x2: G % Em C
+#   Escribe tus líneas entre las dos líneas de comillas triples.
+partitura = '''
+'''
+
+# --- 5) Lo que no sepas con certeza (nadie lo ve) ---
+dudas = ""
+
+# --- 6) Quién lo hizo y cómo ---
+[procedencia]
+metodo = ""      # Ejemplo: "De oído"
+autor = ""       # Tu nombre
+fecha = ""       # Ejemplo: "2026-10-30"
+
+# --- No toques estas líneas: las completa quien te envió el archivo ---
+[revision]
+revisado = false
+v2_resuelto = false
+"""
+
+
+def simple_template(song: dict) -> str:
+    """Archivo limpio para quien no es informático: datos fijos puestos, sin acordes."""
+    no_base = ""
+    if song.get("tipo") == "instrumental":
+        no_base = (
+            "\n# Si el tema no tiene acordes fijos, cambia false por true y deja acordes vacío.\n"
+            "sin_base_armonica = false\n"
+        )
+    return SIMPLE_TEMPLATE.format(
+        slug=song["slug"],
+        title=song["titulo"],
+        artist=song["artista"],
+        kind=song.get("tipo", "cancion"),
+        barrio=song.get("barrio", ""),
+        no_base=no_base,
+    )
+
+
+def export_simple(directory: Path, out: Path, slug: str | None = None) -> list[Path]:
+    """Crea un .txt limpio por tema (o solo el indicado). Nunca sobrescribe y no copia acordes."""
+    out.mkdir(parents=True, exist_ok=True)
+    created = []
+    for path in sorted(directory.glob("*.toml")):
+        if slug and path.stem != slug:
+            continue
+        target = out / f"{path.stem}.txt"
+        if target.exists():
+            continue
+        data = tomllib.loads(path.read_text(encoding="utf-8"))
+        target.write_text(simple_template(data), encoding="utf-8")
+        created.append(target)
+    return created
 
 
 @dataclass
@@ -259,14 +343,22 @@ def validate(directory: Path) -> list[Report]:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="musicsite.acordes", description=__doc__.split("\n")[0])
-    parser.add_argument("command", choices=["init", "validate", "pages", "library"])
+    parser.add_argument("command", choices=["init", "validate", "pages", "library", "simple"])
     parser.add_argument("--dir", required=True, type=Path, help="carpeta local (fuera de git)")
     parser.add_argument("--out", type=Path, help="carpeta de salida de las páginas (pages)")
     parser.add_argument(
         "--index", type=Path, help="index.html cuyas tarjetas se actualizan (library)"
     )
+    parser.add_argument("--slug", help="un solo tema (simple)")
     parser.add_argument("--preview", action="store_true", help="incluye borradores, con noindex")
     args = parser.parse_args(argv)
+
+    if args.command == "simple":
+        if not args.out:
+            parser.error("simple exige --out")
+        created = export_simple(args.dir, args.out, args.slug)
+        print(f"{len(created)} archivos limpios escritos en {args.out}")
+        return 0
 
     if args.command == "library":
         if not args.index:

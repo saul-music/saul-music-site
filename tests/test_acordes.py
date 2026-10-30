@@ -168,3 +168,52 @@ def test_instrumental_without_stable_harmony_can_be_reviewed(tmp_path):
         + GOOD.split("[procedencia]")[1]
     )
     assert validate_file(write(tmp_path, "tema", body)).errors == []
+
+
+def test_simple_template_is_valid_empty_and_has_no_chords(tmp_path):
+    song = {
+        "slug": "tema",
+        "titulo": "Tema",
+        "artista": "Artista",
+        "tipo": "cancion",
+        "barrio": "Pop",
+    }
+    path = write(tmp_path, "tema", acordes.simple_template(song))
+    report = validate_file(path)
+    assert report.errors == [] and report.status == "vacío"
+    text = path.read_text(encoding="utf-8")
+    assert 'barrio = "Pop"' in text and "revisado = false" in text and "v2_resuelto = false" in text
+
+
+def test_simple_template_for_instrumental_offers_the_no_harmony_switch(tmp_path):
+    song = {"slug": "tema", "titulo": "Tema", "artista": "Artista", "tipo": "instrumental"}
+    path = write(tmp_path, "tema", acordes.simple_template(song))
+    assert "sin_base_armonica = false" in path.read_text(encoding="utf-8")
+    assert validate_file(path).errors == []
+
+
+def test_export_simple_never_copies_chords_or_overwrites(tmp_path):
+    source = tmp_path / "src"
+    source.mkdir()
+    write(source, "tema", GOOD)
+    out = tmp_path / "out"
+    created = acordes.export_simple(source, out)
+    assert [p.name for p in created] == ["tema.txt"]
+    text = created[0].read_text(encoding="utf-8")
+    assert "acordes = []" in text
+    # Los acordes del archivo de origen no se copian: solo queda el ejemplo de la nota.
+    assert "G % D Em C" not in text and 'tono = "Sol mayor"' not in text
+    created[0].write_text("editado", encoding="utf-8")
+    assert (
+        acordes.export_simple(source, out) == []
+        and created[0].read_text(encoding="utf-8") == "editado"
+    )
+
+
+def test_export_simple_for_one_slug(tmp_path):
+    source = tmp_path / "src"
+    source.mkdir()
+    write(source, "tema", GOOD)
+    write(source, "otro", GOOD.replace('slug = "tema"', 'slug = "otro"'))
+    created = acordes.export_simple(source, tmp_path / "out", slug="otro")
+    assert [p.name for p in created] == ["otro.txt"]
