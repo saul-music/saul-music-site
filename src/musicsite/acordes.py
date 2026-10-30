@@ -84,7 +84,9 @@ dudas = ""       # qué hay que verificar de oído
 sin_base_armonica = false   # true en un instrumental sin progresión estable
 
 # Secciones en notación compacta, una por línea: «Nombre xN: acordes». Un acorde por compás;
-# «%» repite el compás anterior. Por ejemplo:
+# «%» repite el compás anterior. Varios acordes en un compás se separan con guion y se reparten en
+# partes iguales (en 4/4, 4 partes son negras): «F#-F#7» son 2 y 2; «F#-%-F#7-B7» son 2, 1 y 1
+# («%» dentro del compás alarga el acorde anterior). Por ejemplo:
 #   Intro x1: G D
 #   Estrofa x2: G % D Em C
 partitura = '''
@@ -259,6 +261,22 @@ def parse_score(text: str) -> tuple[list[dict], list[str]]:
     return sections, errors
 
 
+def bar_parts(token: str) -> list[str]:
+    """Partes iguales de un compás: «F#-%-F#7-B7» son 4 partes; «%» alarga el acorde anterior."""
+    return token.split("-") if token != REPEAT else [token]
+
+
+def check_bar(token: str, where: str, errors: list[str]) -> list[str]:
+    """Errores de forma de un compás con varias partes; devuelve las partes que son acordes."""
+    parts = bar_parts(token)
+    if "" in parts:
+        errors.append(f"{where}: «{token}» tiene un guion sin acorde")
+        return []
+    if len(parts) > 1 and parts[0] == REPEAT:
+        errors.append(f"{where}: «{token}» no puede empezar con «%» (no hay acorde que alargar)")
+    return [part for part in parts if part != REPEAT]
+
+
 def check_chord(token: str, where: str, errors: list[str]) -> None:
     if BASIC_CHORD.match(token):
         return
@@ -308,10 +326,11 @@ def validate_file(path: Path) -> Report:
                 if previous is None:
                     errors.append(f"sección «{name}»: «%» no puede ser el primer compás")
                 continue
-            check_chord(token, f"sección «{name}»", errors)
-            if BASIC_CHORD.match(token) and token not in chords:
-                errors.append(f"sección «{name}»: «{token}» no está en la lista de acordes")
-            previous = token
+            for chord in check_bar(token, f"sección «{name}»", errors):
+                check_chord(chord, f"sección «{name}»", errors)
+                if BASIC_CHORD.match(chord) and chord not in chords:
+                    errors.append(f"sección «{name}»: «{chord}» no está en la lista de acordes")
+                previous = chord
 
     if data.get("barrio", "") not in BARRIOS:
         errors.append("barrio debe ser Rock, Pop o Indie")
@@ -321,8 +340,9 @@ def validate_file(path: Path) -> Report:
         errors.extend(f"{mode}: {error}" for error in mode_errors)
         for section in mode_sections:
             for token in section["compases"]:
-                if token != REPEAT and not pattern.match(token):
-                    errors.append(f"{mode}: «{token}» no es un acorde válido para este modo")
+                for chord in check_bar(token, mode, errors):
+                    if not pattern.match(chord):
+                        errors.append(f"{mode}: «{chord}» no es un acorde válido para este modo")
     tab = data.get("avanzado", {}).get("tab", "")
     if not isinstance(tab, str):
         errors.append("avanzado: tab debe ser texto")
