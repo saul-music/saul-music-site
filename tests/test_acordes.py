@@ -217,3 +217,16 @@ def test_export_simple_for_one_slug(tmp_path):
     write(source, "otro", GOOD.replace('slug = "tema"', 'slug = "otro"'))
     created = acordes.export_simple(source, tmp_path / "out", slug="otro")
     assert [p.name for p in created] == ["otro.txt"]
+
+
+def test_simple_template_optional_levels_are_commented_and_safe_to_enable(tmp_path):
+    song = {"slug": "tema", "titulo": "Tema", "artista": "Artista", "tipo": "cancion"}
+    text = acordes.simple_template(song)
+    assert "#[intermedio]" in text and "#[avanzado]" in text
+    # Quien los activa (borrando el # de esas líneas) obtiene un archivo válido y sin contenido.
+    on = text
+    for line in ("[intermedio]", "[avanzado]", "partitura = '''", "tab = '''", "'''"):
+        on = on.replace("#" + line, line)
+    assert "\n[intermedio]\n" in on and "\n[avanzado]\n" in on
+    report = validate_file(write(tmp_path, "tema", on))
+    assert report.errors == []
