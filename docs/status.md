@@ -4,13 +4,12 @@
 
 ## Paso actual
 
-Mockups mergeados a `main` (PR #1). **GitHub Pages desactivado** por el usuario (2026-10-30): el
-sitio no tiene URL pública hasta el primer despliegue en Cloud Run. Código de la etapa A escrito en
-`feat/cloud-run` (PR pendiente): app, tests, Dockerfile, pipeline y `bootstrap/gcp.sh`.
-**Pendiente:** ejecutar `bootstrap/gcp.sh` (con confirmación), crear la variable `GCP_WIF_PROVIDER`,
-mergear y verificar el despliegue.
+**Etapa A cerrada (2026-10-30).** El sitio se sirve desde Cloud Run, `musicsite`, en
+`https://musicsite-ufi63f4rva-tl.a.run.app` (URL de `run.app`, sin dominio propio). GitHub Pages
+está desactivado. Siguiente: S2 (derechos de la canción de ejemplo) antes de anunciar, y decidir la
+etapa B. No se adelanta.
 
-## Plan de la etapa A (rama `feat/cloud-run`, desde `main` tras mergear los mockups)
+## Plan de la etapa A (ejecutado; PR #2)
 
 | Archivo | Contenido |
 |---|---|
@@ -32,14 +31,15 @@ archivo y `decisions.md`.
 
 | Criterio | Estado |
 |---|---|
-| Pruebas y `ruff` pasan | Local: 39 pruebas, ruff y format en verde. CI: pendiente |
-| `/`, `/cancion.html`, `/guias.html` responden 200 en la URL pública | Pendiente |
-| `/docs` y rutas ajenas responden 404 | Pendiente |
-| `min-instances=0` y región `southamerica-west1` | Pendiente |
-| `bootstrap/gcp.sh` recrea el entorno desde cero | Dry-run correcto; ejecución real pendiente. "Desde cero" no se comprobará |
-| La imagen construye y sirve | Pendiente: Docker local no estaba activo; lo comprueba el paso `image` del CI. Servidor probado en local con uvicorn (200 y 404 esperados) |
-| La imagen con Python 3.14 y FastAPI arranca en Cloud Run | Pendiente de verificación |
-| Contraste, aspecto y celular | Pendiente (a ojo, por el usuario) |
+| Pruebas y `ruff` pasan | Cumplido: 39 pruebas, ruff y format en verde en el CI (PR #2 y `main`) |
+| `/`, `/cancion.html`, `/guias.html` responden 200 en la URL pública | Cumplido (comprobado con `curl` tras el despliegue) |
+| `/docs` y `/dashboard/latest` responden 404 | Cumplido (`curl`) |
+| `min-instances=0` y región `southamerica-west1` | Cumplido (`gcloud run services describe`: sin `minScale`, región correcta) |
+| La imagen construye, sirve y arranca en Cloud Run con Python 3.14 | Cumplido: smoke del CI y del despliegue |
+| Runtime sin roles, imagen con tag de git sha | Cumplido (`describe` del servicio) |
+| `bootstrap/gcp.sh` recrea el entorno desde cero | **Pendiente**: se ejecutó sobre un proyecto con el pool `github` ya creado y se reintentó una vez por cuota de lecturas; no se probó en un proyecto vacío |
+| Contraste, aspecto y celular | **Pendiente** (a ojo, por el usuario) |
+| GitHub Pages desactivado | Cumplido (la API de Pages responde 404) |
 
 ## Puntos abiertos
 
@@ -57,5 +57,6 @@ AAAA-MM-DD · paso · qué se hizo · qué quedó pendiente · decisiones nuevas
 2026-10-30 · mockups · Acordia (index, cancion, guias) sobre Bootstrap, PR pendiente · S2 abierta
 2026-10-30 · mockups mergeados · PR #1 a main; GitHub Pages desactivado por el usuario (sin URL pública hasta Cloud Run) · pendiente: despliegue · S1
 2026-10-30 · código etapa A · app FastAPI, 39 tests, Dockerfile, pipeline ci→image→publish→deploy, bootstrap/gcp.sh (dry-run) en feat/cloud-run · pendiente: ejecutar bootstrap, CI, despliegue real, Python 3.14 en Cloud Run
+2026-10-30 · despliegue · bootstrap/gcp.sh ejecutado en saulapp-music (un reintento por cuota de lecturas), variable GCP_WIF_PROVIDER, PR #2 mergeado, pipeline ci→image→publish→deploy verde en main, servicio musicsite en Cloud Run verificado con curl · pendiente: S2, revisión visual, bootstrap desde cero · S1
 2026-10-30 · plan etapa A · decisión de desplegar en Cloud Run desde este repo y plan documentado; sin código · pendiente: aprobación del plan · S1, S2
 ```
