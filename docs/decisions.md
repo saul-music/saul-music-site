@@ -29,3 +29,16 @@ acordes o letras de terceros puede requerir licencias (SCD, editores). **Decisi�
 deja la canción actual. **Riesgo aceptado:** el contenido ya es público; no se publican letras.
 **Pendiente:** resolver los derechos (reemplazar por dominio público o pieza original, o licenciar)
 antes de anunciar o promocionar el sitio.
+
+## S3 · Cada profe declara qué enseña; cada tema muestra quién puede (2026-10-30)
+
+El modelo de oferta es `src/musicsite/profes.toml`: cada profe lista reglas explícitas de
+`ensena`: un artista (todos sus temas, también los futuros), un tema puntual de ese artista, o `*`
+(todo el repertorio). `musicsite.profes` las valida contra el repertorio y resuelve quién puede
+enseñar cada tema. Cada página de tema lleva un panel fijo, sobre las pestañas, con cuántos guías
+pueden enseñarlo y un enlace a `guias.html?tema=<slug>`. Las tarjetas de `guias.html` se generan
+del mismo archivo.
+
+**Los perfiles son mockups.** Gonzalo Pincheira y Alejandro Bustos (lo saben y lo aceptaron)
+enseñan todo el repertorio, sin precio ni datos inventados; el resto lleva `mock = true` y se rotula
+"Ejemplo". Nada de esto es una oferta real de clases hasta que exista el marketplace (M2, M6).
