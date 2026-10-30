@@ -4,6 +4,7 @@ Sitio público de SAÚL música (Acordia). Servicio FastAPI en Cloud Run (`south
 `min-instances=0`), desplegado desde este repo (decisión S1 en `docs/decisions.md`).
 
 - Este repo es público: nada de datos de usuarios ni de investigación entra aquí.
+- Estrategia, decisiones y verificaciones comunes de SAÚL música viven en un repo de control privado.
 - Los cambios van por rama y PR hacia `main`. El pipeline es uno solo y secuencial:
   `ci` (lint y tests) → `image` → `publish` → `deploy`. Los PR terminan en `image`.
 - Infraestructura manual en GCP: `bootstrap/gcp.sh` (ver `bootstrap/README.md`).

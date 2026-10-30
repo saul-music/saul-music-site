@@ -43,7 +43,7 @@ archivo y `decisions.md`.
 
 ## Puntos abiertos
 
-1. **S2:** canción ajena en `cancion.html` se mantiene; derechos de autor pendientes antes de anunciar.
+1. **S2:** canción ajena en `cancion.html` se mantiene; derechos de autor pendientes antes de anunciar. La verificación global V2 (derechos de autor) se lleva en el repo de control.
 2. El deployer tiene `run.admin` a nivel de proyecto (necesario para fijar la política pública), así que también podría administrar otros servicios del mismo proyecto. Riesgo aceptado como en el otro nicho.
 3. Dominio propio: hoy sería una URL `*.run.app`; un dominio es una decisión aparte.
 4. No anunciar el sitio antes de resolver S2 y de proteger cualquier servicio interno vinculado.
