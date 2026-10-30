@@ -121,6 +121,15 @@ def test_build_publishes_only_publishable_unless_preview(tmp_path):
     assert [p.name for p in build(folder, tmp_path / "c")] == ["cancion-tema.html"]
 
 
+def test_preview_copies_theme_and_script_next_to_the_pages(tmp_path):
+    folder = tmp_path / "src"
+    write(folder, "tema", SAMPLE)
+    build(folder, tmp_path / "p", preview=True)
+    assert (tmp_path / "p" / "style.css").exists() and (tmp_path / "p" / "acordia.js").exists()
+    build(folder, tmp_path / "q")  # sin preview no copia nada
+    assert not (tmp_path / "q" / "style.css").exists()
+
+
 def test_build_skips_files_with_errors(tmp_path):
     folder = tmp_path / "src"
     write(folder, "tema", SAMPLE.replace('"G", "D"', '"G7", "D"'))

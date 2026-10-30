@@ -9,6 +9,7 @@ Uso:
 """
 
 import html
+import shutil
 import tomllib
 from pathlib import Path
 
@@ -195,4 +196,8 @@ def build(directory: Path, out: Path, preview: bool = False) -> list[Path]:
         target = out / f"cancion-{path.stem}.html"
         target.write_text(render(song, report.status, preview), encoding="utf-8")
         written.append(target)
+    if preview and written:
+        # La vista previa se abre desde el disco: necesita el tema y el script junto a las páginas.
+        for asset in ("style.css", "acordia.js"):
+            shutil.copy(WEB_DIR / asset, out / asset)
     return written
