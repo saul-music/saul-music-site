@@ -1,61 +1,116 @@
 name: pipeline
 
-# Un solo pipeline, secuencial: check -> deploy (solo en main).
+# Un solo pipeline, secuencial (D45 de saul): ci (lint y tests) -> image (build amd64 + smoke)
+# -> publish (imagen a Artifact Registry) -> deploy (sitio en Cloud Run).
+# publish y deploy solo corren en main; los PR terminan en image. Todo lo que necesitan en GCP
+# lo crea bootstrap/gcp.sh (D56). Sin llaves JSON: WIF restringido a este repo y a main.
 on:
   pull_request:
+    paths-ignore: ["**/*.md"]
   push:
     branches: [main]
+    paths-ignore: ["**/*.md"]
   workflow_dispatch:
 
 permissions:
   contents: read
+
+env:
+  PROJECT_ID: saulapp-music
+  REGION: southamerica-west1
+  IMAGE: southamerica-west1-docker.pkg.dev/saulapp-music/musicsite/musicsite
+  SERVICE: musicsite
+  DEPLOYER: musicsite-deployer@saulapp-music.iam.gserviceaccount.com
+  RUNTIME: musicsite-runtime@saulapp-music.iam.gserviceaccount.com
 
 concurrency:
   group: pipeline-${{ github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
-  check:
-    name: revisar
+  ci:
+    name: lint y tests
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - name: revisar
-        run: |
-          set -eu
-          PUBLICOS="index.html style.css cancion.html guias.html acordia.js"
-          for f in $PUBLICOS; do
-            test -s "$f" || { echo "Falta o está vacío: $f"; exit 1; }
-          done
-          for ref in $(grep -oh 'href="[a-z0-9-]*\.html' *.html | sed 's/href="//' | sort -u); do
-            test -f "$ref" || { echo "Enlace roto: $ref"; exit 1; }
-          done
-          for p in *.html; do
-            grep -q 'href="style.css"' "$p" || { echo "$p no carga style.css"; exit 1; }
-            grep -q 'src="acordia.js"' "$p"  || { echo "$p no carga acordia.js"; exit 1; }
-          done
+      - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+        with:
+          enable-cache: true
+      - run: uv sync --locked
+      - run: uv run ruff check
+      - run: uv run ruff format --check
+      - run: uv run pytest
 
-  deploy:
-    name: publicar
+  image:
+    name: imagen
     runs-on: ubuntu-latest
-    needs: [check]
-    if: github.event_name != 'pull_request'
+    needs: [ci]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: construir
+        run: docker build --platform linux/amd64 -t saul-music-site:ci .
+      - name: smoke (la imagen sirve el sitio y /docs es 404)
+        run: |
+          docker run -d --rm --name site -p 8080:8080 saul-music-site:ci
+          for i in $(seq 1 20); do
+            curl -sf -o /dev/null http://localhost:8080/ && break
+            sleep 1
+          done
+          code() { curl -s -o /dev/null -w '%{http_code}' "http://localhost:8080$1"; }
+          test "$(code /)" = "200"
+          test "$(code /cancion.html)" = "200"
+          test "$(code /docs)" = "404"
+          docker stop site
+
+  publish:
+    name: publicar imagen
+    runs-on: ubuntu-latest
+    needs: [image]
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
     permissions:
       contents: read
-      pages: write
       id-token: write
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
-      - name: preparar solo los archivos públicos
-        run: |
-          mkdir -p _site
-          cp index.html style.css cancion.html guias.html acordia.js _site/
-      - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
+      - uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093 # v3
         with:
-          path: _site
-      - id: deployment
-        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1
+          workload_identity_provider: ${{ vars.GCP_WIF_PROVIDER }}
+          service_account: ${{ env.DEPLOYER }}
+      - uses: google-github-actions/setup-gcloud@aa5489c8933f4cc7a4f7d45035b3b1440c9c10db # v3.0.1
+      - run: gcloud auth configure-docker "${REGION}-docker.pkg.dev" --quiet
+      - name: construir y subir (tag = git sha, nunca latest)
+        run: |
+          docker build --platform linux/amd64 -t "${IMAGE}:${GITHUB_SHA}" .
+          docker push "${IMAGE}:${GITHUB_SHA}"
+
+  deploy:
+    name: desplegar
+    runs-on: ubuntu-latest
+    needs: [publish]
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093 # v3
+        with:
+          workload_identity_provider: ${{ vars.GCP_WIF_PROVIDER }}
+          service_account: ${{ env.DEPLOYER }}
+      - uses: google-github-actions/setup-gcloud@aa5489c8933f4cc7a4f7d45035b3b1440c9c10db # v3.0.1
+      - name: desplegar el sitio (público; sin volúmenes, sin secretos, sin acceso a datos)
+        run: |
+          gcloud run deploy "$SERVICE" \
+            --project "$PROJECT_ID" --region "$REGION" \
+            --image "${IMAGE}:${GITHUB_SHA}" \
+            --service-account "$RUNTIME" \
+            --min-instances 0 --max-instances 2 --cpu 1 --memory 512Mi \
+            --allow-unauthenticated --quiet
+      - name: smoke (/ y /cancion.html dan 200; /docs y /dashboard/latest dan 404)
+        run: |
+          url="$(gcloud run services describe "$SERVICE" --project "$PROJECT_ID" \
+            --region "$REGION" --format='value(status.url)')"
+          code() { curl -s -o /dev/null -w '%{http_code}' "${url}$1"; }
+          test "$(code /)" = "200"
+          test "$(code /cancion.html)" = "200"
+          test "$(code /docs)" = "404"
+          test "$(code /dashboard/latest)" = "404"
