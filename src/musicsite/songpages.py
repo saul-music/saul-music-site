@@ -1,4 +1,8 @@
-"""Genera las páginas de canción a partir de las transcripciones propias (carpeta local).
+"""Genera las páginas de canción y las tarjetas de la Biblioteca desde las transcripciones propias.
+
+Cada página tiene solo la sección Estructura, con tres pestañas: Básico (acordes mayores y menores),
+Intermedio (con extensiones) y Avanzado (extensiones, bajos e inversiones, y arreglos con tab). Una
+versión sin contenido muestra «Próximamente».
 
 Por defecto solo incluye los temas publicables: revisados y con los derechos resueltos (V2).
 Con preview = True incluye también los borradores, marcados como tales y con noindex, para
@@ -6,6 +10,7 @@ revisarlos en local; esa salida no debe copiarse al sitio.
 
 Uso:
     python -m musicsite.acordes pages --dir ../acordes-local --out ../vista-previa --preview
+    python -m musicsite.acordes library --dir ../acordes-local --index src/musicsite/web/index.html
 """
 
 import html
@@ -13,53 +18,22 @@ import shutil
 import tomllib
 from pathlib import Path
 
-from musicsite.acordes import REPEAT, parse_score, validate_file
+from musicsite.acordes import REPEAT, REPERTOIRE, parse_score, validate_file
 from musicsite.app import WEB_DIR
 
-ENHARMONIC = {"Db": "C#", "Eb": "D#", "Gb": "F#", "Ab": "G#", "Bb": "A#"}
-# Posiciones abiertas; el resto se arma con cejilla (forma de Mi o de La).
-OPEN = {
-    "C": "x 3 2 0 1 0",
-    "D": "x x 0 2 3 2",
-    "E": "0 2 2 1 0 0",
-    "G": "3 2 0 0 0 3",
-    "A": "x 0 2 2 2 0",
-    "Am": "x 0 2 2 1 0",
-    "Dm": "x x 0 2 3 1",
-    "Em": "0 2 2 0 0 0",
-}
-E_SHAPE = {"F": 1, "F#": 2, "G": 3, "G#": 4}  # raíz en la 6ª cuerda
-A_SHAPE = {"A#": 1, "B": 2, "C": 3, "C#": 4, "D": 5, "D#": 6}  # raíz en la 5ª cuerda
+LIBRARY_START = "<!-- biblioteca:inicio -->"
+LIBRARY_END = "<!-- biblioteca:fin -->"
+SHOWN_CHORDS = 4
 
-
-def fingering(chord: str) -> str:
-    """Trastes de la 6ª a la 1ª cuerda para un acorde básico (mayor o menor)."""
-    minor = chord.endswith("m")
-    root = chord[:-1] if minor else chord
-    root = ENHARMONIC.get(root, root)
-    name = root + ("m" if minor else "")
-    if name in OPEN:
-        return OPEN[name]
-    if root in E_SHAPE:
-        n = E_SHAPE[root]
-        frets = [n, n + 2, n + 2, n if minor else n + 1, n, n]
-    else:
-        n = A_SHAPE[root]
-        frets = ["x", n, n + 2, n + 2, n + 1 if minor else n + 2, n]
-    return " ".join(str(fret) for fret in frets)
+MODES = [
+    ("basico", "Básico", "Acordes mayores y menores, sin extensiones."),
+    ("intermedio", "Intermedio", "Con extensiones: séptimas, sus, add y similares."),
+    ("avanzado", "Avanzado", "Extensiones, bajos e inversiones, y arreglos con tab."),
+]
 
 
 def esc(value) -> str:
     return html.escape(str(value), quote=True)
-
-
-def chord_grid(chords: list[str]) -> str:
-    cells = "\n".join(
-        f'              <div class="col"><div class="ac-chord" data-name="{esc(c)}" '
-        f'data-frets="{fingering(c)}"></div></div>'
-        for c in chords
-    )
-    return f'<div class="row row-cols-2 row-cols-sm-4 g-4 py-3">\n{cells}\n            </div>'
 
 
 def structure(sections: list[dict]) -> str:
@@ -73,10 +47,10 @@ def structure(sections: list[dict]) -> str:
         )
         bars = "".join(f'<div class="ac-bar">{esc(t)}</div>' for t in section.get("compases", []))
         blocks.append(
-            '              <div class="d-grid gap-2">\n'
-            f'                <h2 class="h5 m-0">{esc(section.get("nombre", ""))}{label}</h2>\n'
-            f'                <div class="ac-bars">{bars}</div>\n'
-            "              </div>"
+            '          <div class="d-grid gap-2">\n'
+            f'            <h2 class="h5 m-0">{esc(section.get("nombre", ""))}{label}</h2>\n'
+            f'            <div class="ac-bars">{bars}</div>\n'
+            "          </div>"
         )
     return "\n".join(blocks)
 
@@ -85,6 +59,9 @@ def load_song(path: Path) -> dict:
     data = tomllib.loads(path.read_text(encoding="utf-8"))
     compact, _ = parse_score(data.get("partitura", ""))
     data["secciones"] = list(data.get("secciones", [])) + compact
+    for mode in ("intermedio", "avanzado"):
+        data[mode + "_secciones"], _ = parse_score(data.get(mode, {}).get("partitura", ""))
+    data["tab"] = data.get("avanzado", {}).get("tab", "").strip("\n")
     return data
 
 
@@ -100,13 +77,36 @@ def shell() -> tuple[str, str]:
     return head, foot
 
 
+def mode_pane(key: str, song: dict, no_harmony: bool) -> str:
+    """Contenido de una pestaña: solo la estructura de ese modo, o «Próximamente»."""
+    if key == "basico":
+        sections = song.get("secciones", [])
+        body = structure(sections) if sections else ""
+        if no_harmony and not sections:
+            body = (
+                '<p class="text-body-secondary m-0">Este tema no tiene una base armónica estable '
+                "que podamos mostrar.</p>"
+            )
+    else:
+        sections = song.get(key + "_secciones", [])
+        tab = song.get("tab", "") if key == "avanzado" else ""
+        body = structure(sections) if sections else ""
+        if tab:
+            body += f'\n          <pre class="ac-mono small m-0">{esc(tab)}</pre>'
+        if not body:
+            body = (
+                '<p class="text-body-secondary m-0"><span class="ac-chip">Próximamente</span></p>'
+            )
+    return body
+
+
 def render(song: dict, status: str, preview: bool) -> str:
     head, foot = shell()
     title = esc(song["titulo"])
     head = head.replace("<title>Artistas · Acordia</title>", f"<title>{title} · Acordia</title>")
     head = head.replace(
         "Los artistas del repertorio inicial de la Biblioteca de Acordia, con enlace a su perfil en MusicaPopular.cl.",
-        f"{title}: acordes básicos y estructura.",
+        f"{title}: estructura por compases, con versiones básica, intermedia y avanzada.",
     )
     if preview:
         head = head.replace("</head>", '  <meta name="robots" content="noindex">\n</head>')
@@ -127,27 +127,32 @@ def render(song: dict, status: str, preview: bool) -> str:
         for label, value in facts
         if value
     )
-    chords = song.get("acordes", [])
-    sections = song.get("secciones", [])
-    no_harmony = bool(song.get("sin_base_armonica")) and not chords
-    if no_harmony:
-        chords_html = (
-            '<p class="text-body-secondary">Este tema no tiene una base armónica estable que '
-            "podamos mostrar. Mira su forma en la pestaña Estructura.</p>"
-        )
-    else:
-        chords_html = chord_grid(chords) + (
-            '\n            <p class="small text-body-secondary m-0">Cuerdas de 6ª (grave) a 1ª (aguda). '
-            "Círculo vacío: al aire. Cruz: no suena.</p>"
-        )
+    no_harmony = bool(song.get("sin_base_armonica")) and not song.get("acordes")
     form = song.get("forma", "")
     form_html = f'<p class="text-body-secondary m-0">{esc(form)}</p>' if form else ""
-    structure_html = structure(sections) if sections else ""
     note = (
         f'<p class="small text-body-secondary m-0">Cada casilla es un compás. {REPEAT} repite el '
-        "compás anterior. Versión básica de Acordia: solo acordes mayores y menores. Escucha la "
-        "grabación original para seguir la letra.</p>"
+        "compás anterior. Escucha la grabación original para seguir la letra.</p>"
     )
+    tabs, panes = [], []
+    for index, (key, label, description) in enumerate(MODES):
+        active = index == 0
+        tabs.append(
+            f'      <li class="nav-item" role="presentation"><button class="nav-link{" active" if active else ""}" '
+            f'id="t-{key}" data-bs-toggle="pill" data-bs-target="#p-{key}" type="button" role="tab" '
+            f'aria-controls="p-{key}" aria-selected="{"true" if active else "false"}">{label}</button></li>'
+        )
+        panes.append(
+            f'      <section class="tab-pane fade{" show active" if active else ""}" id="p-{key}" '
+            f'role="tabpanel" aria-labelledby="t-{key}" tabindex="0">\n'
+            '        <div class="d-grid gap-4">\n'
+            f'          <p class="text-body-secondary m-0">{description}</p>\n'
+            f"          {form_html if active else ''}\n"
+            f"{mode_pane(key, song, no_harmony)}\n"
+            f"          {note if active else ''}\n"
+            "        </div>\n"
+            "      </section>"
+        )
     main = f"""<main class="container py-4 py-lg-5">
     <header class="d-grid gap-3 pb-4 mb-4 border-bottom">
       <div class="d-flex flex-wrap gap-2 align-items-center">
@@ -162,26 +167,83 @@ def render(song: dict, status: str, preview: bool) -> str:
     </header>
 
     <ul class="nav nav-pills mb-4 flex-wrap" id="tabs" role="tablist">
-      <li class="nav-item" role="presentation"><button class="nav-link active" id="t-acordes" data-bs-toggle="pill" data-bs-target="#p-acordes" type="button" role="tab" aria-controls="p-acordes" aria-selected="true">Acordes</button></li>
-      <li class="nav-item" role="presentation"><button class="nav-link" id="t-estructura" data-bs-toggle="pill" data-bs-target="#p-estructura" type="button" role="tab" aria-controls="p-estructura" aria-selected="false">Estructura</button></li>
+{chr(10).join(tabs)}
     </ul>
 
     <div class="tab-content">
-      <section class="tab-pane fade show active" id="p-acordes" role="tabpanel" aria-labelledby="t-acordes" tabindex="0">
-            {chords_html}
-      </section>
-      <section class="tab-pane fade" id="p-estructura" role="tabpanel" aria-labelledby="t-estructura" tabindex="0">
-        <div class="d-grid gap-4">
-          {form_html}
-{structure_html}
-          {note}
-        </div>
-      </section>
+{chr(10).join(panes)}
     </div>
   </main>
 
 """
     return head + main + foot
+
+
+def card(song: dict, slug: str, status: str) -> str:
+    """Tarjeta de la Biblioteca: acordes básicos resumidos, nivel y tempo."""
+    published = status == "publicable"
+    chords = song.get("acordes", [])
+    chips = "".join(
+        f'<span class="ac-chip ac-chip-chord">{esc(c)}</span>' for c in chords[:SHOWN_CHORDS]
+    )
+    if len(chords) > SHOWN_CHORDS:
+        chips += f'<span class="ac-chip">+{len(chords) - SHOWN_CHORDS}</span>'
+    if song.get("tipo") == "instrumental" and not chords:
+        chips = '<span class="ac-chip">Instrumental</span>'
+    left = "" if published else '<span class="ac-chip">Próximamente</span>'
+    right = (
+        f'<span class="small text-body-secondary">{esc(song["barrio"])}</span>'
+        if song.get("barrio")
+        else ""
+    )
+    facts = []
+    if song.get("nivel"):
+        facts.append(f"Nivel {esc(song['nivel'])}")
+    meter = esc(song.get("compas", ""))
+    if meter and song.get("bpm"):
+        facts.append(f"{meter} · {song['bpm']} bpm")
+    elif meter:
+        facts.append(meter)
+    facts_html = "".join(f"<span>{fact}</span>" for fact in facts)
+    tag, attrs = ("a", f' href="cancion-{slug}.html"') if published else ("div", "")
+    return f"""          <div class="col">
+            <{tag} class="card h-100"{attrs}>
+              <div class="card-body d-grid gap-3">
+                <div class="d-flex justify-content-between align-items-start gap-2">{left}{right}</div>
+                <div><h3 class="h4 mb-1">{esc(song["titulo"])}</h3><p class="m-0 text-body-secondary">{esc(song["artista"])}</p></div>
+                <div class="d-flex flex-wrap gap-2">{chips}</div>
+                <div class="d-flex flex-wrap gap-3 small text-body-secondary ac-mono">{facts_html}</div>
+              </div>
+            </{tag}>
+          </div>"""
+
+
+def library_html(directory: Path) -> str:
+    cards = []
+    for slug, *_ in REPERTOIRE:
+        path = directory / f"{slug}.toml"
+        if not path.exists():
+            continue
+        report = validate_file(path)
+        status = (
+            "publicable" if not report.errors and report.status == "publicable" else report.status
+        )
+        cards.append(card(load_song(path), slug, status))
+    return (
+        '        <div class="row row-cols-1 row-cols-md-3 g-3">\n'
+        + "\n".join(cards)
+        + "\n        </div>"
+    )
+
+
+def update_library(directory: Path, index: Path) -> int:
+    """Reemplaza las tarjetas de index.html entre las marcas de la Biblioteca."""
+    page = index.read_text(encoding="utf-8")
+    start = page.index(LIBRARY_START) + len(LIBRARY_START)
+    end = page.index(LIBRARY_END)
+    block = library_html(directory)
+    index.write_text(page[:start] + "\n" + block + "\n        " + page[end:], encoding="utf-8")
+    return block.count('<div class="col">')
 
 
 def build(directory: Path, out: Path, preview: bool = False) -> list[Path]:
