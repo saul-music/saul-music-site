@@ -5,6 +5,7 @@ from pathlib import Path
 import pytest
 from fastapi.testclient import TestClient
 
+from musicsite.acordes import REPERTOIRE
 from musicsite.app import HEADERS, WEB_DIR, create_app, load_files
 
 
@@ -77,12 +78,9 @@ def test_load_files_skips_hidden_unknown_and_subdirectories(tmp_path: Path):
 
 def test_every_file_in_web_dir_is_public_content():
     # Lo que está en web/ se publica entero: un archivo nuevo ahí debe ser contenido del sitio.
+    fixed = {"index.html", "cancion.html", "guias.html", "artistas.html", "style.css", "acordia.js"}
+    slugs = {slug for slug, *_ in REPERTOIRE}
     names = {p.name for p in WEB_DIR.iterdir()}
-    assert names == {
-        "index.html",
-        "cancion.html",
-        "guias.html",
-        "artistas.html",
-        "style.css",
-        "acordia.js",
-    }
+    song_pages = {n for n in names - fixed if n.startswith("cancion-") and n.endswith(".html")}
+    assert names == fixed | song_pages
+    assert all(n.removeprefix("cancion-").removesuffix(".html") in slugs for n in song_pages)
