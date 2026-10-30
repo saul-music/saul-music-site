@@ -87,7 +87,7 @@
   /* Filtro de guías.
      <form data-ac-filter="#resultados" data-ac-count="#conteo" data-ac-empty="#sin-resultados">
        <select data-ac-key="barrio">…  <input type="checkbox" data-ac-key="hoy" value="1">
-     Cada tarjeta: <div class="col" data-barrio="Cueca,Cumbia" data-hoy="1">
+     Cada tarjeta: <div class="col" data-barrio="Rock,Pop" data-hoy="1">
      Un valor coincide si está en la lista separada por comas de la tarjeta. */
   document.querySelectorAll("form[data-ac-filter]").forEach(function (form) {
     var items = document.querySelectorAll(form.getAttribute("data-ac-filter") + " > *");
