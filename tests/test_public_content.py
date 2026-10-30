@@ -10,7 +10,12 @@ PAGES = sorted(WEB_DIR.glob("*.html"))
 FORBIDDEN = ["musicres", "run.app", "dashboard", "saulapp-music", "youtube", "bigquery", "secret"]
 HOST = re.compile(r"""(?:<link[^>]*\shref|\ssrc)=["'](https://[^/"']+)""")
 LINK_HOST = re.compile(r"""<a[^>]*\shref=["'](https://[^/"']+)""")
-ALLOWED_LINKS = {"https://www.musicapopular.cl"}
+ALLOWED_LINKS = {
+    "https://www.musicapopular.cl",
+    "https://es.wikipedia.org",
+    "https://www.biobiochile.cl",
+    "https://www.allmusic.com",
+}
 
 
 def text(path) -> str:
