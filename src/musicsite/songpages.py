@@ -37,6 +37,24 @@ def esc(value) -> str:
     return html.escape(str(value), quote=True)
 
 
+def bar_html(token: str) -> str:
+    """Una casilla por compás; con guiones, cada acorde ocupa el ancho de las partes que dura."""
+    parts = token.split("-") if token != REPEAT else [token]
+    if len(parts) == 1:
+        return f'<div class="ac-bar">{esc(token)}</div>'
+    chords: list[list] = []
+    for part in parts:
+        if part == REPEAT and chords:
+            chords[-1][1] += 1
+        else:
+            chords.append([part, 1])
+    spans = "".join(
+        f'<span class="ac-part" style="flex: {weight}">{esc(chord)}</span>'
+        for chord, weight in chords
+    )
+    return f'<div class="ac-bar is-split">{spans}</div>'
+
+
 def structure(sections: list[dict]) -> str:
     blocks = []
     for section in sections:
@@ -46,7 +64,7 @@ def structure(sections: list[dict]) -> str:
             if times > 1
             else ""
         )
-        bars = "".join(f'<div class="ac-bar">{esc(t)}</div>' for t in section.get("compases", []))
+        bars = "".join(bar_html(t) for t in section.get("compases", []))
         blocks.append(
             '          <div class="d-grid gap-2">\n'
             f'            <h2 class="h5 m-0">{esc(section.get("nombre", ""))}{label}</h2>\n'

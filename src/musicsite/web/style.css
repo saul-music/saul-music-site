@@ -430,6 +430,8 @@ a.card:hover { border-color: var(--ac-fill); transform: translateY(-2px); }
   font-family: var(--ac-font-display); font-size: 1.15rem; text-align: center;
 }
 .ac-bar.is-repeat { color: var(--ac-fg-muted); }
+.ac-bar.is-split { display: flex; padding-inline: 0; }
+.ac-part { flex-basis: 0; min-width: 0; padding-inline: .15rem; }
 
 /* Rasgueo: 8 tiempos */
 .ac-strum { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: .35rem; }

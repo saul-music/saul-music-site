@@ -230,3 +230,20 @@ def test_simple_template_optional_levels_are_commented_and_safe_to_enable(tmp_pa
     assert "\n[intermedio]\n" in on and "\n[avanzado]\n" in on
     report = validate_file(write(tmp_path, "tema", on))
     assert report.errors == []
+
+
+def test_bar_with_several_chords_is_valid(tmp_path):
+    body = GOOD.replace('compases = ["G", "%", "D", "Em", "C"]', 'compases = ["G-D", "Em-%-C-G"]')
+    assert validate_file(write(tmp_path, "tema", body)).errors == []
+
+
+@pytest.mark.parametrize("token", ["G-", "-G", "G--D", "%-G"])
+def test_malformed_multi_chord_bar_is_rejected(tmp_path, token):
+    body = GOOD.replace('compases = ["G", "%", "D", "Em", "C"]', f'compases = ["{token}"]')
+    assert validate_file(write(tmp_path, "tema", body)).errors
+
+
+def test_every_chord_in_a_multi_chord_bar_must_be_declared(tmp_path):
+    body = GOOD.replace('compases = ["G", "%", "D", "Em", "C"]', 'compases = ["G-A"]')
+    errors = validate_file(write(tmp_path, "tema", body)).errors
+    assert any("«A» no está en la lista de acordes" in error for error in errors)

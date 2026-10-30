@@ -206,3 +206,21 @@ def test_songpages_module_has_no_network_code():
     text = open(songpages.__file__, encoding="utf-8").read().lower()
     for word in ("http://", "urllib", "requests", "httpx", "socket"):
         assert word not in text
+
+
+def test_bar_with_several_chords_is_one_cell_with_proportional_parts():
+    from musicsite.songpages import bar_html
+
+    assert bar_html("F#-F#7") == (
+        '<div class="ac-bar is-split"><span class="ac-part" style="flex: 1">F#</span>'
+        '<span class="ac-part" style="flex: 1">F#7</span></div>'
+    )
+    held = bar_html("F#-%-F#7-B7")
+    assert held.count("<span") == 3
+    assert 'style="flex: 2">F#<' in held and 'style="flex: 1">B7<' in held
+
+
+def test_whole_bar_repeat_is_still_a_plain_cell():
+    from musicsite.songpages import bar_html
+
+    assert bar_html("%") == '<div class="ac-bar">%</div>'
