@@ -27,6 +27,7 @@ PORT=8080 uv --no-config run python -m musicsite.app    # http://localhost:8080
 | `index.html` | Inicio de Acordia |
 | `cancion.html` | Página de una canción (mockup) |
 | `guias.html` | Directorio de guías (mockup) |
+| `artistas.html` | Artistas del repertorio inicial, con enlace a su perfil en MusicaPopular.cl (solo enlaces, sin copiar sus textos) |
 | `style.css` | Tema de marca sobre Bootstrap 5.3.3 |
 | `acordia.js` | Tema, diagramas de acorde, práctica, filtro y modal |
 
