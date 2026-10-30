@@ -65,12 +65,17 @@ bpm = 0          # entre 40 y 240
 nivel = ""       # inicial, medio o avanzado
 acordes = []     # los acordes que usa el tema, por ejemplo ["G", "D", "Em", "C"]
 
-# Una sección por bloque. Cada elemento de "compases" es un acorde por compás;
-# "%" repite el anterior.
-[[secciones]]
-nombre = "Intro"
-repeticiones = 1
-compases = []
+forma = ""       # estructura general, por ejemplo "Intro - Estrofa - Coro - Estrofa - Coro - Final"
+confianza = ""   # alta, media o baja
+dudas = ""       # qué hay que verificar de oído
+sin_base_armonica = false   # true en un instrumental sin progresión estable
+
+# Secciones en notación compacta, una por línea: «Nombre xN: acordes». Un acorde por compás;
+# «%» repite el compás anterior. Por ejemplo:
+#   Intro x1: G D
+#   Estrofa x2: G % D Em C
+partitura = '''
+'''
 
 [procedencia]
 metodo = ""      # por ejemplo "de oído, con la grabación original"
@@ -103,6 +108,30 @@ def init(directory: Path) -> list[Path]:
         )
         created.append(path)
     return created
+
+
+SECTION_LINE = re.compile(r"^(?P<name>.+?)(?:\s+x(?P<times>\d+))?\s*:\s*(?P<bars>.*)$")
+
+
+def parse_score(text: str) -> tuple[list[dict], list[str]]:
+    """Convierte la notación compacta («Estrofa x2: G % D») en secciones."""
+    sections, errors = [], []
+    for number, line in enumerate(text.splitlines(), start=1):
+        line = line.strip()
+        if not line or line.startswith("#"):
+            continue
+        match = SECTION_LINE.match(line)
+        if not match:
+            errors.append(f"partitura, línea {number}: usa la forma «Nombre xN: acordes»")
+            continue
+        sections.append(
+            {
+                "nombre": match["name"].strip(),
+                "repeticiones": int(match["times"] or 1),
+                "compases": match["bars"].split(),
+            }
+        )
+    return sections, errors
 
 
 def check_chord(token: str, where: str, errors: list[str]) -> None:
@@ -139,7 +168,11 @@ def validate_file(path: Path) -> Report:
     chords = data.get("acordes", [])
     for chord in chords:
         check_chord(chord, "acordes", errors)
-    sections = data.get("secciones", [])
+    sections = list(data.get("secciones", []))
+    compact, score_errors = parse_score(data.get("partitura", ""))
+    sections += compact
+    errors.extend(score_errors)
+    no_harmony = bool(data.get("sin_base_armonica", False))
     bars = 0
     for section in sections:
         name = section.get("nombre", "?")
@@ -167,7 +200,7 @@ def validate_file(path: Path) -> Report:
                 errors.append(f"revisado exige completar «{key}»")
         if not bpm:
             errors.append("revisado exige completar «bpm»")
-        if not chords or not bars:
+        if not no_harmony and (not chords or not bars):
             errors.append("revisado exige acordes y compases")
         for key in ("metodo", "autor", "fecha"):
             if not origin.get(key):

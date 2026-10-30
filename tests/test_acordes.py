@@ -138,3 +138,33 @@ def test_module_reads_no_network_or_external_sites():
     text = open(source, encoding="utf-8").read().lower()
     for word in ("http://", "https://", "urllib", "requests", "httpx", "socket"):
         assert word not in text
+
+
+def test_parse_score_reads_compact_notation():
+    sections, errors = acordes.parse_score("Intro x2: G Em\n# nota\n\nEstrofa: G % D\n")
+    assert errors == []
+    assert sections == [
+        {"nombre": "Intro", "repeticiones": 2, "compases": ["G", "Em"]},
+        {"nombre": "Estrofa", "repeticiones": 1, "compases": ["G", "%", "D"]},
+    ]
+
+
+def test_parse_score_reports_bad_lines():
+    _, errors = acordes.parse_score("sin dos puntos")
+    assert errors and "línea 1" in errors[0]
+
+
+def test_compact_score_is_validated_like_sections(tmp_path):
+    body = GOOD.split("[[secciones]]")[0] + "partitura = '''\nEstrofa x2: G % D Em G7\n'''\n\n"
+    body += "[procedencia]" + GOOD.split("[procedencia]")[1]
+    errors = validate_file(write(tmp_path, "tema", body)).errors
+    assert any("«G7» no es un acorde básico" in error for error in errors)
+
+
+def test_instrumental_without_stable_harmony_can_be_reviewed(tmp_path):
+    body = (
+        GOOD.split("acordes = ")[0].replace('tipo = "cancion"', 'tipo = "instrumental"')
+        + "acordes = []\nsin_base_armonica = true\n\n[procedencia]"
+        + GOOD.split("[procedencia]")[1]
+    )
+    assert validate_file(write(tmp_path, "tema", body)).errors == []
