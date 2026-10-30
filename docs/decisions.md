@@ -8,7 +8,7 @@ Este repo es público: aquí no van datos de usuarios ni de investigación.
 
 ## S1 · El sitio se despliega en Cloud Run desde este repo (2026-10-30)
 
-El sitio sigue en su propio repo (`saulapp-legal/saul-music-site`) y deja GitHub Pages por un
+El sitio sigue en su propio repo (`saul-music/saul-music-site`) y deja GitHub Pages por un
 servicio FastAPI en Cloud Run, público, `min-instances=0`, región `southamerica-west1`, en el mismo
 patrón de CI/CD del otro nicho de SAÚL música. Decisión del usuario. **Por qué:** la interacción
 futura (formularios) necesita un servidor, y así el sitio y su backend viven juntos. **Consecuencias:**
