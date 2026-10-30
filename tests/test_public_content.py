@@ -15,6 +15,7 @@ ALLOWED_LINKS = {
     "https://es.wikipedia.org",
     "https://www.biobiochile.cl",
     "https://www.allmusic.com",
+    "https://acordes.lacuerda.net",
 }
 
 
