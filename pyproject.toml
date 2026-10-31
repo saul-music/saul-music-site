@@ -14,6 +14,7 @@ dependencies = [
 dev = [
     "httpx2>=2.16.0",
     "pytest>=8",
+    "pytest-playwright>=0.10.0",
     "ruff>=0.15",
 ]
 
@@ -32,6 +33,9 @@ default = true
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+# Los e2e (Playwright) son lentos y piden navegadores: corren aparte con `-m e2e`.
+addopts = "-m 'not e2e'"
+markers = ["e2e: pruebas de navegador con Playwright (pytest -m e2e --browser chromium)"]
 
 [tool.ruff]
 line-length = 100
