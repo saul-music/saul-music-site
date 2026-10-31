@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Corre que te pillo · Acordia</title>
-  <meta name="description" content="Corre que te pillo: estructura por compases, con versiones básica, intermedia y avanzada.">
+  <title>{% block title %}Acordia{% endblock %}</title>
+  <meta name="description" content="{% block description %}{% endblock %}">
   <meta name="theme-color" content="#191430">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 56'%3E%3Crect width='48' height='56' fill='%23191430'/%3E%3Cpath d='M6 54V24a18 18 0 0 1 36 0v30' fill='none' stroke='%23D4A64A' stroke-width='5'/%3E%3Ccircle cx='24' cy='16' r='4' fill='%235FB39B'/%3E%3C/svg%3E">
   <script>(function(){var t="dark";try{t=localStorage.getItem("acordia-tema")||"dark"}catch(e){}document.documentElement.setAttribute("data-bs-theme",t)})();</script>
@@ -13,7 +13,7 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Marcellus&family=Work+Sans:wght@400;500;600&display=swap">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
   <link rel="stylesheet" href="style.css">
-</head>
+{% block head %}{% endblock %}</head>
 <body>
 
   <div class="ac-proto">Prototipo en investigación · los temas y guías que ves son de ejemplo</div>
@@ -53,68 +53,7 @@
     </div>
   </nav>
 
-  <main class="container py-4 py-lg-5">
-    <header class="d-grid gap-3 pb-4 mb-4 border-bottom">
-      <div class="d-flex flex-wrap gap-2 align-items-center">
-        
-        <a class="ac-eyebrow" href="index.html#biblioteca">La Biblioteca</a>
-      </div>
-      <h1 class="display-5 m-0">Corre que te pillo</h1>
-      <p class="m-0 fs-5 text-body-secondary">Los Jaivas</p>
-      <dl class="d-flex flex-wrap gap-4 m-0 ac-mono">
-        <div><dt class="small text-body-secondary fw-normal">Tono</dt><dd class="m-0 fw-semibold">Sol mayor</dd></div>
-        <div><dt class="small text-body-secondary fw-normal">Compás</dt><dd class="m-0 fw-semibold">4/4</dd></div>
-        <div><dt class="small text-body-secondary fw-normal">Tempo</dt><dd class="m-0 fw-semibold">113 bpm</dd></div>
-        <div><dt class="small text-body-secondary fw-normal">Nivel</dt><dd class="m-0 fw-semibold">Medio</dd></div>
-      </dl>
-    </header>
-
-    <aside class="card mb-4 ac-plan-featured" aria-label="Guías de este tema">
-      <div class="card-body d-flex flex-wrap gap-3 align-items-center justify-content-between">
-        <div class="d-flex gap-3 align-items-center">
-          <div class="d-flex gap-2"><span class="ac-avatar" aria-hidden="true">GP</span><span class="ac-avatar is-oro" aria-hidden="true">AB</span><span class="ac-avatar" aria-hidden="true">TA</span></div>
-          <div class="d-grid">
-            <strong>3 guías pueden enseñarte «Corre que te pillo»</strong>
-            <span class="small text-body-secondary">Gonzalo Pincheira, Alejandro Bustos y 1 más · <span class="ac-chip ac-chip-example">Perfiles de ejemplo</span></span>
-          </div>
-        </div>
-        <a class="btn btn-primary" href="guias.html?tema=corre-que-te-pillo">Ver guías</a>
-      </div>
-    </aside>
-
-    <ul class="nav nav-pills mb-4 flex-wrap" id="tabs" role="tablist">
-      <li class="nav-item" role="presentation"><button class="nav-link active" id="t-basico" data-bs-toggle="pill" data-bs-target="#p-basico" type="button" role="tab" aria-controls="p-basico" aria-selected="true">Básico</button></li>
-      <li class="nav-item" role="presentation"><button class="nav-link" id="t-intermedio" data-bs-toggle="pill" data-bs-target="#p-intermedio" type="button" role="tab" aria-controls="p-intermedio" aria-selected="false">Intermedio</button></li>
-      <li class="nav-item" role="presentation"><button class="nav-link" id="t-avanzado" data-bs-toggle="pill" data-bs-target="#p-avanzado" type="button" role="tab" aria-controls="p-avanzado" aria-selected="false">Avanzado</button></li>
-    </ul>
-
-    <div class="tab-content">
-      <section class="tab-pane fade show active" id="p-basico" role="tabpanel" aria-labelledby="t-basico" tabindex="0">
-        <div class="d-grid gap-4">
-          <p class="text-body-secondary m-0">Acordes mayores y menores, sin extensiones.</p>
-          <p class="text-body-secondary m-0">Intro – Tema principal – Variación instrumental – Reexposición del tema – Desarrollo instrumental – Final</p>
-<p class="text-body-secondary m-0">Este tema no tiene una base armónica estable que podamos mostrar.</p>
-          <p class="small text-body-secondary m-0">Cada casilla es un compás. % repite el compás anterior. Escucha la grabación original para seguir la letra.</p>
-        </div>
-      </section>
-      <section class="tab-pane fade" id="p-intermedio" role="tabpanel" aria-labelledby="t-intermedio" tabindex="0">
-        <div class="d-grid gap-4">
-          <p class="text-body-secondary m-0">Con extensiones: séptimas, sus, add y similares.</p>
-          
-<p class="text-body-secondary m-0"><span class="ac-chip">Próximamente</span></p>
-          
-        </div>
-      </section>
-      <section class="tab-pane fade" id="p-avanzado" role="tabpanel" aria-labelledby="t-avanzado" tabindex="0">
-        <div class="d-grid gap-4">
-          <p class="text-body-secondary m-0">Extensiones, bajos e inversiones, y arreglos con tab.</p>
-          
-<p class="text-body-secondary m-0"><span class="ac-chip">Próximamente</span></p>
-          
-        </div>
-      </section>
-    </div>
-  </main>
+  {% block main %}{% endblock %}
 
   <footer class="ac-footer">
     <div class="container d-grid gap-3">

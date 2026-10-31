@@ -1,0 +1,71 @@
+# Transcripción propia de «Cámara lenta» (Javiera Mena).
+# Solo acordes básicos: mayores y menores, sin extensiones (G, Em, C#m; no G7, Dsus4, Am9).
+# Se escribe de oído o con una fuente que se declare en [procedencia]. No se copia ningún texto
+# de otro sitio. No se publica nada hasta marcar revisado y v2_resuelto.
+
+slug = "camara-lenta"
+titulo = "Cámara lenta"
+artista = "Javiera Mena"
+tipo = "cancion"
+barrio = "Indie"      # Rock, Pop o Indie (vacío si no aplica)
+
+tono = "Si mayor"        # por ejemplo "Sol mayor"
+cejilla = ""     # por ejemplo "Sin cejilla" o "Cejilla 3"
+compas = "4/4"      # por ejemplo "4/4"
+bpm = 86          # entre 40 y 240
+nivel = "medio"       # inicial, medio o avanzado
+acordes = ["E", "F#", "G#m", "B", "D#m", "C#m"]     # los acordes que usa el tema, por ejemplo ["G", "D", "Em", "C"]
+
+forma = "Intro – Estrofa – Coro – Estrofa – Coro – Interludio – Coro – Final"       # estructura general, por ejemplo "Intro - Estrofa - Coro - Estrofa - Coro - Final"
+confianza = "media"   # alta, media o baja
+dudas = "La tonalidad es tentativa. Verificar las diferencias entre estrofa y coro y la duración de cada acorde."       # qué hay que verificar de oído
+sin_base_armonica = false   # true en un instrumental sin progresión estable
+
+# Secciones en notación compacta, una por línea: «Nombre xN: acordes». Un acorde por compás;
+# «%» repite el compás anterior. Por ejemplo:
+#   Intro x1: G D
+#   Estrofa x2: G % D Em C
+partitura = '''
+Intro x2: E F# B F#
+Estrofa x4: E F# B F#
+Coro x2: E F# B F#
+Corte x2: C#m F#
+Interludio x4: E % D#m G#m
+Corte x2: C#m F#
+Intro: E F# B F#
+Coro x2: E F# B F#
+Corte x2: C#m F#
+Interludio x4: E % D#m G#m
+Corte x2: C#m F#
+Final (solo): E D#m G#m F#
+'''
+
+[intermedio]
+acordes = ["Emaj7", "F#7", "G#m", "B", "D#m"]
+partitura = '''
+Intro x2: E F# Bmaj7 F#
+Estrofa x4: E F# Bmaj7 F#
+Coro x2: E F# Bmaj7 F#
+Corte x2: C#m F# C#m F#-F#7
+Interludio x4: Emaj7 % D#m G#m
+Corte x2: C#m F# C#m F#-F#7
+Intro: E F# Bmaj7 F#
+Coro x2: E F# Bmaj7 F#
+Corte x2: C#m F# C#m F#-F#7
+Interludio x4: Emaj7 % D#m G#m
+Corte x2: C#m F# C#m F#-F#7
+Final(solo) x4: Emaj7 % D#m G#m
+Corte x2: C#m F# C#m F#-F#7
+Acorde final: Emaj7
+'''
+
+
+
+[procedencia]
+metodo = "Acordes escritos y validados por el responsable del proyecto (declaración del 2026-10-30), a partir de un boceto V1 preparado con ChatGPT. V2 marcado como resuelto por decisión del responsable; no hay asesoría legal registrada."      # por ejemplo "de oído, con la grabación original"
+autor = "Responsable del proyecto (declaración suya)"       # quién transcribió
+fecha = "2026-10-30"       # AAAA-MM-DD
+
+[revision]
+revisado = true      # true cuando la transcripción está terminada y revisada
+v2_resuelto = true   # true solo cuando los derechos (V2) estén resueltos

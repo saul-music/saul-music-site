@@ -139,4 +139,88 @@
       if (go) window.location.href = go;
     });
   });
+  /* Metrónomo de la página de canción: Web Audio con agenda anticipada (el reloj del audio, no
+     setInterval, decide cuándo suena cada clic). Arranca en el bpm del tema. */
+  document.querySelectorAll("[data-ac-metronome]").forEach(function (box) {
+    var home = +box.getAttribute("data-bpm") || 90;
+    var beats = +box.getAttribute("data-beats") || 4;
+    var MIN = 30, MAX = 240, AHEAD = 0.12, TICK = 25;
+    var bpm = home, playing = false, ctx = null, timer = null, nextTime = 0, beat = 0;
+    var toggle = box.querySelector("[data-ac-met-toggle]");
+    var input = box.querySelector("[data-ac-met-bpm]");
+    var range = box.querySelector("[data-ac-met-range]");
+    var dotsBox = box.querySelector("[data-ac-met-dots]");
+    var dots = [];
+    for (var i = 0; i < beats; i++) {
+      var d = document.createElement("span");
+      d.className = "ac-met-dot" + (i === 0 ? " is-first" : "");
+      dotsBox.appendChild(d);
+      dots.push(d);
+    }
+
+    function clamp(v) {
+      v = Math.round(+v);
+      if (!isFinite(v)) return bpm;
+      return Math.min(MAX, Math.max(MIN, v));
+    }
+    function setBpm(v) {
+      bpm = clamp(v);
+      input.value = bpm;
+      range.value = bpm;
+    }
+    function click(time, accent) {
+      var osc = ctx.createOscillator(), gain = ctx.createGain();
+      osc.frequency.value = accent ? 1568 : 1047;
+      gain.gain.setValueAtTime(0.0001, time);
+      gain.gain.exponentialRampToValueAtTime(accent ? 0.9 : 0.55, time + 0.002);
+      gain.gain.exponentialRampToValueAtTime(0.0001, time + 0.06);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(time);
+      osc.stop(time + 0.07);
+    }
+    function flash(index, time) {
+      setTimeout(function () {
+        if (!playing) return;
+        dots.forEach(function (x, k) { x.classList.toggle("is-on", k === index); });
+      }, Math.max(0, (time - ctx.currentTime) * 1000));
+    }
+    function schedule() {
+      while (nextTime < ctx.currentTime + AHEAD) {
+        click(nextTime, beat === 0);
+        flash(beat, nextTime);
+        nextTime += 60 / bpm;
+        beat = (beat + 1) % beats;
+      }
+    }
+    function start() {
+      var Ctor = window.AudioContext || window.webkitAudioContext;
+      if (!Ctor) return;
+      if (!ctx) ctx = new Ctor();
+      if (ctx.resume) ctx.resume();
+      playing = true;
+      beat = 0;
+      nextTime = ctx.currentTime + 0.06;
+      schedule();
+      timer = setInterval(schedule, TICK);
+      toggle.textContent = "Detener";
+      toggle.setAttribute("aria-pressed", "true");
+    }
+    function stop() {
+      playing = false;
+      clearInterval(timer);
+      dots.forEach(function (x) { x.classList.remove("is-on"); });
+      toggle.textContent = "Reproducir";
+      toggle.setAttribute("aria-pressed", "false");
+    }
+
+    toggle.addEventListener("click", function () { playing ? stop() : start(); });
+    input.addEventListener("change", function () { setBpm(input.value); });
+    range.addEventListener("input", function () { setBpm(range.value); });
+    box.querySelectorAll("[data-ac-met-step]").forEach(function (b) {
+      b.addEventListener("click", function () { setBpm(bpm + +b.getAttribute("data-ac-met-step")); });
+    });
+    box.querySelector("[data-ac-met-reset]").addEventListener("click", function () { setBpm(home); });
+    document.addEventListener("visibilitychange", function () { if (document.hidden && playing) stop(); });
+  });
 })();

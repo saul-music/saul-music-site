@@ -1,7 +1,10 @@
-"""Servidor del sitio: FastAPI entrega los archivos de `web/`; todo lo demás es 404 sin cuerpo.
+"""Servidor del sitio: FastAPI entrega los archivos de `web/` y las páginas de canción; lo demás
+es 404 sin cuerpo.
 
-Solo se sirven los archivos que existen en `web/` al arrancar, buscados por nombre exacto en un
-diccionario: no hay sistema de archivos por ruta, así que no hay recorrido de directorios.
+Las páginas de canción se renderizan con Jinja2 (`templates/`) desde los TOML de `songs/` al
+arrancar. Solo se sirve lo que existe en `web/` o en `songs/` en ese momento, buscado por nombre
+exacto en un diccionario: no hay sistema de archivos por ruta, así que no hay recorrido de
+directorios.
 Sin /docs, /redoc ni /openapi.json.
 """
 
@@ -14,6 +17,7 @@ from fastapi import FastAPI, Request, Response
 from starlette.exceptions import HTTPException
 
 WEB_DIR = Path(__file__).parent / "web"
+SONGS_DIR = Path(__file__).parent / "songs"
 TYPES = {
     ".html": "text/html; charset=utf-8",
     ".css": "text/css; charset=utf-8",
@@ -50,8 +54,13 @@ def load_files(root: Path) -> dict[str, tuple[bytes, str]]:
     return files
 
 
-def create_app(root: Path = WEB_DIR) -> FastAPI:
+def create_app(root: Path = WEB_DIR, songs: Path | None = SONGS_DIR) -> FastAPI:
     files = load_files(root)
+    if songs is not None:
+        from musicsite.songpages import render_published
+
+        for slug, page in render_published(songs).items():
+            files[f"/cancion-{slug}.html"] = (page.encode(), TYPES[".html"])
     app = FastAPI(docs_url=None, redoc_url=None, openapi_url=None, redirect_slashes=False)
 
     @app.middleware("http")
