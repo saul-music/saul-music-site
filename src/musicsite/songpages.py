@@ -136,9 +136,9 @@ def teacher_panel(slug: str, title: str) -> str:
     noun = "guía puede" if count == 1 else "guías pueden"
     return f"""    <aside class="card mb-4 ac-plan-featured" aria-label="Guías de este tema">
       <div class="card-body d-flex flex-wrap gap-3 align-items-center justify-content-between">
-        <div class="d-flex gap-3 align-items-center">
-          <div class="d-flex gap-2">{avatars}</div>
-          <div class="d-grid">
+        <div class="d-flex flex-wrap gap-3 align-items-center">
+          <div class="d-flex gap-2 flex-shrink-0">{avatars}</div>
+          <div class="d-grid" style="min-width: 0; grid-template-columns: minmax(0, 1fr)">
             <strong>{count} {noun} enseñarte «{esc(title)}»</strong>
             <span class="small text-body-secondary">{names}{more}{example}</span>
           </div>

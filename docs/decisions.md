@@ -54,3 +54,13 @@ quedan en `acordes-local/` (fuera de git); se publican con `musicsite.acordes pu
 `index.html`, `guias.html` y `artistas.html` siguen estáticos: pasar a `base.html` queda para
 cuando se toquen.
 
+
+## S5 · Pruebas de navegador con Playwright en matriz (2026-10-31)
+
+Se agrega `pytest-playwright` al grupo `dev` (solo PyPI; sin Node). Los tests están en
+`tests/e2e/`, marcados `e2e`: el `pytest` normal los excluye y corren con `-m e2e` contra el sitio
+real levantado en un puerto libre. El pipeline suma el job `e2e` entre `ci` e `image` (D45): una
+matriz con `fail-fast: false` de chromium, firefox, webkit, Pixel 7 (chromium) e iPhone 14
+(webkit); la imagen solo se construye si todas pasan. Un navegador headless no oye el clic: el
+sonido y la precisión del pulso se revisan a mano. Sin caché de navegadores por ahora (una acción
+más que fijar); cada entrada instala solo el suyo.
