@@ -472,3 +472,15 @@ a.card:hover { border-color: var(--ac-fill); transform: translateY(-2px); }
   .ac-bars { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .ac-strum-cell { font-size: 1rem; }
 }
+
+/* Metrónomo (página de canción) */
+.ac-met-input { width: 5.5rem; }
+.ac-met-range { min-width: 8rem; }
+.ac-met-dot {
+  width: 0.9rem; height: 0.9rem; border-radius: 50%;
+  border: 2px solid var(--bs-border-color); background: transparent;
+  transition: background-color 0.06s, border-color 0.06s;
+}
+.ac-met-dot.is-first { border-color: var(--bs-primary); }
+.ac-met-dot.is-on { background: var(--bs-body-color); border-color: var(--bs-body-color); }
+.ac-met-dot.is-first.is-on { background: var(--bs-primary); border-color: var(--bs-primary); }

@@ -42,3 +42,15 @@ del mismo archivo.
 **Los perfiles son mockups.** Gonzalo Pincheira y Alejandro Bustos (lo saben y lo aceptaron)
 enseñan todo el repertorio, sin precio ni datos inventados; el resto lleva `mock = true` y se rotula
 "Ejemplo". Nada de esto es una oferta real de clases hasta que exista el marketplace (M2, M6).
+
+## S4 · Páginas de canción con Jinja2 y datos en git (2026-10-31)
+
+Se agrega `jinja2` (solo PyPI). Un solo template (`templates/cancion.html` sobre `base.html`)
+reemplaza los 16 `cancion-*.html` generados. Los TOML `publicable` viven en `src/musicsite/songs/`
+(en git; esos acordes ya eran públicos como HTML) y el servicio los renderiza al arrancar a un
+diccionario de rutas exactas, sin ruta dinámica ni recorrido de directorios. Un tema no publicable
+rompe el arranque, así que el error aparece en el pipeline y no en una visita. Los borradores se
+quedan en `acordes-local/` (fuera de git); se publican con `musicsite.acordes publish`.
+`index.html`, `guias.html` y `artistas.html` siguen estáticos: pasar a `base.html` queda para
+cuando se toquen.
+

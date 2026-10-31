@@ -26,11 +26,20 @@ PORT=8080 uv --no-config run python -m musicsite.app    # http://localhost:8080
 |---|---|
 | `index.html` | Inicio de Acordia |
 | `cancion.html` | Mockup de una canción de ejemplo (sin enlaces, con noindex) |
-| `cancion-<tema>.html` | Una página por tema, solo con la sección Estructura y tres pestañas (Básico, Intermedio, Avanzado), generada con `python -m musicsite.acordes pages`. Las tarjetas de la Biblioteca en `index.html` se actualizan con `python -m musicsite.acordes library` |
 | `guias.html` | Directorio de guías (mockup) |
 | `artistas.html` | Artistas del repertorio inicial, con enlace a su perfil en MusicaPopular.cl (solo enlaces, sin copiar sus textos) |
 | `style.css` | Tema de marca sobre Bootstrap 5.3.3 |
 | `acordia.js` | Tema, diagramas de acorde, práctica, filtro y modal |
+
+## Páginas de canción (`templates/` y `songs/`)
+
+Ya no hay un HTML por tema. `templates/cancion.html` (sobre `templates/base.html`, con Jinja2) se
+renderiza al arrancar el servicio para cada `songs/<tema>.toml`, y se sirve en
+`/cancion-<tema>.html`. Un tema que no es `publicable` rompe el arranque. Cada página con `bpm`
+trae un metrónomo (Web Audio) que parte en ese tempo. Flujo del equipo editorial: validar en
+`acordes-local/` y copiar los publicables con
+`python -m musicsite.acordes publish --dir ../acordes-local --out src/musicsite/songs`; las
+tarjetas de la Biblioteca siguen con `python -m musicsite.acordes library`.
 
 **Todo archivo en `src/musicsite/web/` se publica.** El servidor entrega solo los archivos de esa
 carpeta, por nombre exacto; un archivo nuevo ahí debe ser contenido del sitio (un test lo exige).

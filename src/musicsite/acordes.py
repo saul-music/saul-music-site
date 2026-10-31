@@ -14,6 +14,7 @@ Uso:
 
 import argparse
 import re
+import shutil
 import sys
 import tomllib
 from dataclasses import dataclass, field
@@ -222,6 +223,20 @@ class Report:
     errors: list[str] = field(default_factory=list)
 
 
+def publish(directory: Path, out: Path) -> list[Path]:
+    """Copia a `out` los temas publicables de `directory` (la carpeta que el servicio carga)."""
+    out.mkdir(parents=True, exist_ok=True)
+    copied = []
+    for path in sorted(directory.glob("*.toml")):
+        report = validate_file(path)
+        if report.errors or report.status != "publicable":
+            continue
+        target = out / path.name
+        shutil.copyfile(path, target)
+        copied.append(target)
+    return copied
+
+
 def init(directory: Path) -> list[Path]:
     """Crea las plantillas que falten. Nunca sobrescribe un archivo existente."""
     directory.mkdir(parents=True, exist_ok=True)
@@ -382,7 +397,9 @@ def validate(directory: Path) -> list[Report]:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="musicsite.acordes", description=__doc__.split("\n")[0])
-    parser.add_argument("command", choices=["init", "validate", "pages", "library", "simple"])
+    parser.add_argument(
+        "command", choices=["init", "validate", "pages", "library", "simple", "publish"]
+    )
     parser.add_argument("--dir", required=True, type=Path, help="carpeta local (fuera de git)")
     parser.add_argument("--out", type=Path, help="carpeta de salida de las páginas (pages)")
     parser.add_argument(
@@ -397,6 +414,13 @@ def main(argv: list[str] | None = None) -> int:
             parser.error("simple exige --out")
         created = export_simple(args.dir, args.out, args.slug)
         print(f"{len(created)} archivos limpios escritos en {args.out}")
+        return 0
+
+    if args.command == "publish":
+        if not args.out:
+            parser.error("publish exige --out")
+        copied = publish(args.dir, args.out)
+        print(f"{len(copied)} temas publicables copiados a {args.out}")
         return 0
 
     if args.command == "library":

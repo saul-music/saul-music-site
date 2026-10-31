@@ -1,0 +1,44 @@
+# Transcripción propia de «Yo no te pido la luna» (Javiera Mena (versión)).
+# Solo acordes básicos: mayores y menores, sin extensiones (G, Em, C#m; no G7, Dsus4, Am9).
+# Se escribe de oído o con una fuente que se declare en [procedencia]. No se copia ningún texto
+# de otro sitio. No se publica nada hasta marcar revisado y v2_resuelto.
+
+slug = "yo-no-te-pido-la-luna"
+titulo = "Yo no te pido la luna"
+artista = "Javiera Mena (versión)"
+tipo = "cancion"
+barrio = "Indie"      # Rock, Pop o Indie (vacío si no aplica)
+
+tono = "Si mayor"        # por ejemplo "Sol mayor"
+cejilla = ""     # por ejemplo "Sin cejilla" o "Cejilla 3"
+compas = "4/4"      # por ejemplo "4/4"
+bpm = 120          # entre 40 y 240
+nivel = "inicial"       # inicial, medio o avanzado
+acordes = ["B", "F#", "C#m", "G#m", "E"]     # los acordes que usa el tema, por ejemplo ["G", "D", "Em", "C"]
+
+forma = "Intro – Estrofa – Pre-coro – Coro – Estrofa – Pre-coro – Coro – Final"       # estructura general, por ejemplo "Intro - Estrofa - Coro - Estrofa - Coro - Final"
+confianza = "media"   # alta, media o baja
+dudas = "Es la versión de Javiera Mena, no la original de Daniela Romo. Verificar tonalidad y diferencias de arreglo entre ambas versiones."       # qué hay que verificar de oído
+sin_base_armonica = false   # true en un instrumental sin progresión estable
+
+# Secciones en notación compacta, una por línea: «Nombre xN: acordes». Un acorde por compás;
+# «%» repite el compás anterior. Por ejemplo:
+#   Intro x1: G D
+#   Estrofa x2: G % D Em C
+partitura = '''
+Intro: B F# C#m G#m
+Estrofa x2: B F# C#m G#m
+Pre-coro: E B C#m G#m
+Coro x2: B E F# G#m
+Interludio: B F# C#m G#m
+Final: B E F#
+'''
+
+[procedencia]
+metodo = "Acordes escritos y validados por el responsable del proyecto (declaración del 2026-10-30), a partir de un boceto V1 preparado con ChatGPT. V2 marcado como resuelto por decisión del responsable; no hay asesoría legal registrada."      # por ejemplo "de oído, con la grabación original"
+autor = "Responsable del proyecto (declaración suya)"       # quién transcribió
+fecha = "2026-10-30"       # AAAA-MM-DD
+
+[revision]
+revisado = true      # true cuando la transcripción está terminada y revisada
+v2_resuelto = true   # true solo cuando los derechos (V2) estén resueltos

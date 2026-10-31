@@ -5,8 +5,8 @@ from pathlib import Path
 import pytest
 from fastapi.testclient import TestClient
 
-from musicsite.acordes import REPERTOIRE
-from musicsite.app import HEADERS, WEB_DIR, create_app, load_files
+from musicsite.acordes import REPERTOIRE, validate_file
+from musicsite.app import HEADERS, SONGS_DIR, WEB_DIR, create_app, load_files
 
 
 @pytest.fixture(scope="module")
@@ -76,11 +76,40 @@ def test_load_files_skips_hidden_unknown_and_subdirectories(tmp_path: Path):
     assert set(load_files(tmp_path)) == {"/", "/index.html"}
 
 
-def test_every_file_in_web_dir_is_public_content():
+def test_web_dir_has_only_fixed_site_files():
     # Lo que está en web/ se publica entero: un archivo nuevo ahí debe ser contenido del sitio.
+    # Las páginas de canción ya no son archivos: salen del template y de songs/.
     fixed = {"index.html", "cancion.html", "guias.html", "artistas.html", "style.css", "acordia.js"}
-    slugs = {slug for slug, *_ in REPERTOIRE}
-    names = {p.name for p in WEB_DIR.iterdir()}
-    song_pages = {n for n in names - fixed if n.startswith("cancion-") and n.endswith(".html")}
-    assert names == fixed | song_pages
-    assert all(n.removeprefix("cancion-").removesuffix(".html") in slugs for n in song_pages)
+    assert {p.name for p in WEB_DIR.iterdir()} == fixed
+
+
+def test_song_pages_come_from_published_songs(client):
+    slugs = {p.stem for p in SONGS_DIR.glob("*.toml")}
+    assert len(slugs) == 16
+    assert slugs <= {slug for slug, *_ in REPERTOIRE}
+    for slug in slugs:
+        response = client.get(f"/cancion-{slug}.html")
+        assert response.status_code == 200
+        assert response.headers["content-type"].startswith("text/html")
+        assert "data-ac-metronome" in response.text
+
+
+UNPUBLISHED = ["cantar-y-amar", "la-vida-magica-ay-si", "el-errante", "norte-y-cal"]
+
+
+@pytest.mark.parametrize("slug", UNPUBLISHED)
+def test_unpublished_songs_are_404(client, slug):
+    assert client.get(f"/cancion-{slug}.html").status_code == 404
+
+
+def test_every_published_song_is_valid():
+    for path in SONGS_DIR.glob("*.toml"):
+        report = validate_file(path)
+        assert not report.errors
+        assert report.status == "publicable"
+
+
+def test_unpublishable_song_stops_startup(tmp_path: Path):
+    (tmp_path / "otra-era.toml").write_text('slug = "otra-era"\n', encoding="utf-8")
+    with pytest.raises(ValueError):
+        create_app(songs=tmp_path)

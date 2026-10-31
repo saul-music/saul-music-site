@@ -18,10 +18,18 @@ import shutil
 import tomllib
 from pathlib import Path
 
+from jinja2 import Environment, FileSystemLoader, select_autoescape
+from markupsafe import Markup
+
 from musicsite.acordes import REPEAT, REPERTOIRE, parse_score, validate_file
-from musicsite.app import WEB_DIR
 from musicsite.profes import avatar, teachers_for
 
+TEMPLATES_DIR = Path(__file__).parent / "templates"
+ENV = Environment(
+    loader=FileSystemLoader(TEMPLATES_DIR),
+    autoescape=select_autoescape(["html"]),
+    keep_trailing_newline=True,
+)
 LIBRARY_START = "<!-- biblioteca:inicio -->"
 LIBRARY_END = "<!-- biblioteca:fin -->"
 SHOWN_CHORDS = 4
@@ -84,18 +92,6 @@ def load_song(path: Path) -> dict:
     return data
 
 
-def shell() -> tuple[str, str]:
-    """Cabecera (hasta <main>) y pie de las páginas del sitio, tomados de artistas.html."""
-    page = (WEB_DIR / "artistas.html").read_text(encoding="utf-8")
-    head = page[: page.index("<main")]
-    foot = page[page.index("  <footer") :]
-    head = head.replace(
-        'class="nav-link active" aria-current="page" href="artistas.html"',
-        'class="nav-link" href="artistas.html"',
-    )
-    return head, foot
-
-
 def mode_pane(key: str, song: dict, no_harmony: bool) -> str:
     """Contenido de una pestaña: solo la estructura de ese modo, o «Próximamente»."""
     if key == "basico":
@@ -154,20 +150,15 @@ def teacher_panel(slug: str, title: str) -> str:
 """
 
 
-def render(song: dict, status: str, preview: bool) -> str:
-    head, foot = shell()
-    title = esc(song["titulo"])
-    head = head.replace("<title>Artistas · Acordia</title>", f"<title>{title} · Acordia</title>")
-    head = head.replace(
-        "Los artistas del repertorio inicial de la Biblioteca de Acordia, con enlace a su perfil en MusicaPopular.cl.",
-        f"{title}: estructura por compases, con versiones básica, intermedia y avanzada.",
-    )
-    if preview:
-        head = head.replace("</head>", '  <meta name="robots" content="noindex">\n</head>')
+def beats_per_bar(meter: str) -> int:
+    """Clics por compás: el numerador (en 6/8 y 12/8 el bpm marca la corchea)."""
+    try:
+        return max(1, min(16, int(str(meter).split("/")[0])))
+    except ValueError:
+        return 4
 
-    badge = ""
-    if preview:
-        badge = f'<span class="ac-chip ac-chip-example">Borrador sin revisar ({esc(status)})</span>'
+
+def render(song: dict, status: str, preview: bool) -> str:
     facts = [
         ("Tono", song.get("tono")),
         ("Cejilla", song.get("cejilla")),
@@ -175,62 +166,24 @@ def render(song: dict, status: str, preview: bool) -> str:
         ("Tempo", f"{song['bpm']} bpm" if song.get("bpm") else ""),
         ("Nivel", str(song.get("nivel", "")).capitalize()),
     ]
-    facts_html = "\n".join(
-        f'        <div><dt class="small text-body-secondary fw-normal">{label}</dt>'
-        f'<dd class="m-0 fw-semibold">{esc(value)}</dd></div>'
-        for label, value in facts
-        if value
-    )
     no_harmony = bool(song.get("sin_base_armonica")) and not song.get("acordes")
-    form = song.get("forma", "")
-    form_html = f'<p class="text-body-secondary m-0">{esc(form)}</p>' if form else ""
     note = (
         f'<p class="small text-body-secondary m-0">Cada casilla es un compás. {REPEAT} repite el '
         "compás anterior. Escucha la grabación original para seguir la letra.</p>"
     )
-    tabs, panes = [], []
-    for index, (key, label, description) in enumerate(MODES):
-        active = index == 0
-        tabs.append(
-            f'      <li class="nav-item" role="presentation"><button class="nav-link{" active" if active else ""}" '
-            f'id="t-{key}" data-bs-toggle="pill" data-bs-target="#p-{key}" type="button" role="tab" '
-            f'aria-controls="p-{key}" aria-selected="{"true" if active else "false"}">{label}</button></li>'
-        )
-        panes.append(
-            f'      <section class="tab-pane fade{" show active" if active else ""}" id="p-{key}" '
-            f'role="tabpanel" aria-labelledby="t-{key}" tabindex="0">\n'
-            '        <div class="d-grid gap-4">\n'
-            f'          <p class="text-body-secondary m-0">{description}</p>\n'
-            f"          {form_html if active else ''}\n"
-            f"{mode_pane(key, song, no_harmony)}\n"
-            f"          {note if active else ''}\n"
-            "        </div>\n"
-            "      </section>"
-        )
-    main = f"""<main class="container py-4 py-lg-5">
-    <header class="d-grid gap-3 pb-4 mb-4 border-bottom">
-      <div class="d-flex flex-wrap gap-2 align-items-center">
-        {badge}
-        <a class="ac-eyebrow" href="index.html#biblioteca">La Biblioteca</a>
-      </div>
-      <h1 class="display-5 m-0">{title}</h1>
-      <p class="m-0 fs-5 text-body-secondary">{esc(song["artista"])}</p>
-      <dl class="d-flex flex-wrap gap-4 m-0 ac-mono">
-{facts_html}
-      </dl>
-    </header>
-
-{teacher_panel(song["slug"], song["titulo"])}    <ul class="nav nav-pills mb-4 flex-wrap" id="tabs" role="tablist">
-{chr(10).join(tabs)}
-    </ul>
-
-    <div class="tab-content">
-{chr(10).join(panes)}
-    </div>
-  </main>
-
-"""
-    return head + main + foot
+    return ENV.get_template("cancion.html").render(
+        song=song,
+        status=status,
+        preview=preview,
+        facts=[(label, value) for label, value in facts if value],
+        bpm=song.get("bpm") or 0,
+        beats=beats_per_bar(song.get("compas", "4/4")),
+        form=song.get("forma", ""),
+        modes=MODES,
+        panes={key: Markup(mode_pane(key, song, no_harmony)) for key, *_ in MODES},
+        teacher_panel=Markup(teacher_panel(song["slug"], song["titulo"])),
+        note=Markup(note),
+    )
 
 
 def card(song: dict, slug: str, status: str) -> str:
@@ -315,6 +268,23 @@ def build(directory: Path, out: Path, preview: bool = False) -> list[Path]:
         written.append(target)
     if preview and written:
         # La vista previa se abre desde el disco: necesita el tema y el script junto a las páginas.
+        from musicsite.app import WEB_DIR
+
         for asset in ("style.css", "acordia.js"):
             shutil.copy(WEB_DIR / asset, out / asset)
     return written
+
+
+def render_published(directory: Path) -> dict[str, str]:
+    """slug -> HTML de cada tema de `directory`. Falla si alguno no es publicable.
+
+    Es lo que el servicio ejecuta al arrancar: un error de datos rompe el arranque (y el pipeline),
+    no una visita.
+    """
+    pages = {}
+    for path in sorted(directory.glob("*.toml")):
+        report = validate_file(path)
+        if report.errors or report.status != "publicable":
+            raise ValueError(f"{path.name} no es publicable: {report.status} {report.errors}")
+        pages[path.stem] = render(load_song(path), report.status, preview=False)
+    return pages
