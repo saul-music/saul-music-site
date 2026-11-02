@@ -487,7 +487,6 @@ def test_count_in_shows_numbers_while_it_counts(song_audio: Page):
     count = song.locator("[data-ac-met-count]")
     expect(count.locator("span")).to_have_count(0)
     expect(toggle).to_have_text("Reproducir")
-    rest = toggle.bounding_box()
     toggle.click()
     expect(count.locator("span.is-on")).to_have_count(1, timeout=3000)
     seen, sizes = set(), []
@@ -503,9 +502,10 @@ def test_count_in_shows_numbers_while_it_counts(song_audio: Page):
             sizes.append((state["w"], state["h"]))
         song.wait_for_timeout(50)
     assert {"1", "2", "3", "4"} <= seen
-    # El botón no cambia de tamaño mientras cuenta (así la barra fija no crece).
-    assert all(abs(w - rest["width"]) < 1 and abs(h - rest["height"]) < 1 for w, h in sizes)
     expect(count.locator("span")).to_have_count(0, timeout=3000)  # empieza el compás 1
+    # El botón no cambia de tamaño al pasar de la cuenta a «Detener» (la barra fija no crece).
+    after = toggle.bounding_box()
+    assert all(abs(w - after["width"]) < 1 and abs(h - after["height"]) < 1 for w, h in sizes)
     expect(song.locator(".ac-bar.is-current")).to_have_count(1, timeout=3000)
     toggle.click()
     song.locator("[data-ac-met-countin]").click()  # sin cuenta, no aparece

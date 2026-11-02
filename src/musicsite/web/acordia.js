@@ -412,15 +412,16 @@
         return;
       }
       if (!countNums.length) {
+        /* El botón conserva el tamaño que tenía: la barra fija no puede crecer ni cambiar de fila. */
+        var w = toggle.offsetWidth, h = toggle.offsetHeight;
         for (var k = 1; k <= COUNT_IN; k++) {
           var s = document.createElement("span");
           s.textContent = k;
           countBox.appendChild(s);
           countNums.push(s);
         }
-        /* El botón conserva el tamaño que tenía: la barra fija no puede crecer ni cambiar de fila. */
-        toggle.style.width = toggle.offsetWidth + "px";
-        toggle.style.height = toggle.offsetHeight + "px";
+        toggle.style.width = w + "px";
+        toggle.style.height = h + "px";
         toggle.classList.add("is-counting");
       }
       countNums.forEach(function (x, k) { x.classList.toggle("is-on", k === index); });
