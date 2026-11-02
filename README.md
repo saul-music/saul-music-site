@@ -20,6 +20,11 @@ uv --no-config run ruff check && uv --no-config run ruff format --check
 PORT=8080 uv --no-config run python -m musicsite.app    # http://localhost:8080
 ```
 
+**Con los temas de producción:** `scripts/dev-produccion.sh` baja la publicación vigente del bucket editorial
+(solo lectura, credenciales de `~/.config/gcloud-saul`) a `../acordes-produccion/`, fuera de este repo público, y
+arranca el sitio apuntando a esa copia (`http://127.0.0.1:8767`, o el `PORT` que pidas). `--solo-bajar` solo
+actualiza la copia. Sin la variable `EDITORIAL_DIR` el sitio usa los temas de `songs/`, que pueden estar desfasados.
+
 ## Páginas (`src/musicsite/web/`)
 
 | Archivo | Qué es |
