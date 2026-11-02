@@ -139,13 +139,23 @@
       if (go) window.location.href = go;
     });
   });
+  /* Bloque fijo de la canción: se pega justo bajo la barra de navegación, cuya altura varía. */
+  (function () {
+    var nav = document.querySelector(".navbar.sticky-top");
+    if (!nav) return;
+    function set() { document.documentElement.style.setProperty("--ac-nav-h", nav.offsetHeight + "px"); }
+    set();
+    window.addEventListener("resize", set);
+    if (window.ResizeObserver) new ResizeObserver(set).observe(nav);
+  })();
   /* Metrónomo de la página de canción: Web Audio con agenda anticipada (el reloj del audio, no
      setInterval, decide cuándo suena cada clic). Arranca en el bpm del tema. */
   document.querySelectorAll("[data-ac-metronome]").forEach(function (box) {
     var home = +box.getAttribute("data-bpm") || 90;
     var beats = +box.getAttribute("data-beats") || 4;
     var MIN = 30, MAX = 240, AHEAD = 0.12, TICK = 25;
-    var bpm = home, playing = false, ctx = null, timer = null, nextTime = 0, beat = 0;
+    var bpm = home, playing = false, ctx = null, timer = null, nextTime = 0, beat = 0, count = 0;
+    var cur = { pane: null, seq: [], idx: -1, counter: null, group: null };
     var toggle = box.querySelector("[data-ac-met-toggle]");
     var input = box.querySelector("[data-ac-met-bpm]");
     var range = box.querySelector("[data-ac-met-range]");
@@ -179,10 +189,75 @@
       osc.start(time);
       osc.stop(time + 0.07);
     }
-    function flash(index, time) {
+    /* Cursor de compás: aplana las secciones de la pestaña visible (cada una × sus repeticiones) y
+       marca el compás por el que va el pulso, con una flecha encima y su "n / N". */
+    function activePane() { return document.querySelector(".tab-pane.active") || document; }
+    function buildSeq(pane) {
+      var seq = [];
+      pane.querySelectorAll(".ac-bars").forEach(function (g) {
+        var reps = +g.getAttribute("data-reps") || 1;
+        var bars = g.querySelectorAll(".ac-bar");
+        for (var r = 1; r <= reps; r++) {
+          bars.forEach(function (el) { seq.push({ el: el, group: g, rep: r, reps: reps }); });
+        }
+      });
+      return seq;
+    }
+    function clearCounter() {
+      if (cur.counter) cur.counter.remove();
+      cur.counter = null;
+      cur.group = null;
+    }
+    function clearCursor() {
+      document.querySelectorAll(".ac-bar.is-current, .ac-bar.is-beat").forEach(function (b) {
+        b.classList.remove("is-current", "is-beat", "is-downbeat");
+      });
+      clearCounter();
+      cur.pane = null; cur.seq = []; cur.idx = -1;
+    }
+    function keepInView(el) {
+      var tools = document.querySelector(".ac-sticky-tools");
+      var top = (tools ? tools.getBoundingClientRect().bottom : 0) + 12;
+      var r = el.getBoundingClientRect();
+      if (r.top >= top && r.bottom <= window.innerHeight - 12) return;
+      var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      var target = top + (window.innerHeight - top) / 3;
+      window.scrollTo({ top: window.scrollY + r.top - target, behavior: reduce ? "auto" : "smooth" });
+    }
+    function cursor(n) {
+      var pane = activePane();
+      if (pane !== cur.pane) { clearCursor(); cur.pane = pane; cur.seq = buildSeq(pane); }
+      if (!cur.seq.length) return;
+      var i = Math.floor(n / beats) % cur.seq.length;
+      var step = cur.seq[i];
+      if (i !== cur.idx) {
+        if (cur.idx >= 0) cur.seq[cur.idx].el.classList.remove("is-current");
+        if (cur.group !== step.group) {
+          clearCounter();
+          var h = step.group.previousElementSibling;
+          if (step.reps > 1 && h) {
+            cur.counter = document.createElement("span");
+            cur.counter.className = "ac-rep-count ac-mono";
+            h.appendChild(cur.counter);
+            cur.group = step.group;
+          }
+        }
+        if (cur.counter) cur.counter.textContent = step.rep + " / " + step.reps;
+        step.el.classList.add("is-current");
+        cur.idx = i;
+        keepInView(step.el);
+      }
+      var el = step.el, first = n % beats === 0;
+      el.classList.add("is-beat");
+      el.classList.toggle("is-downbeat", first);
+      setTimeout(function () { el.classList.remove("is-beat", "is-downbeat"); },
+        Math.min(160, 60000 / bpm * 0.55));
+    }
+    function flash(index, time, n) {
       setTimeout(function () {
         if (!playing) return;
         dots.forEach(function (x, k) { x.classList.toggle("is-on", k === index); });
+        cursor(n);
       }, Math.max(0, (time - ctx.currentTime) * 1000));
     }
     function schedule() {
@@ -194,7 +269,8 @@
       if (nextTime < ctx.currentTime) nextTime = ctx.currentTime + 0.06;
       while (nextTime < ctx.currentTime + AHEAD) {
         click(nextTime, beat === 0);
-        flash(beat, nextTime);
+        flash(beat, nextTime, count);
+        count++;
         nextTime += 60 / bpm;
         beat = (beat + 1) % beats;
       }
@@ -208,6 +284,7 @@
     function begin() {
       if (!playing) return;
       beat = 0;
+      count = 0;
       nextTime = ctx.currentTime + 0.06;
       schedule();
     }
@@ -229,6 +306,7 @@
       playing = false;
       clearInterval(timer);
       dots.forEach(function (x) { x.classList.remove("is-on"); });
+      clearCursor();
       toggle.textContent = "Reproducir";
       toggle.setAttribute("aria-pressed", "false");
     }

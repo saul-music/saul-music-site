@@ -114,6 +114,44 @@ def test_metronome_plays_pulses_and_stops(song_audio: Page):
     expect(song.locator(".ac-met-dot.is-on")).to_have_count(0)
 
 
+def test_playhead_walks_the_bars_and_counts_repetitions(song_audio: Page):
+    song = song_audio
+    song.locator("[data-ac-met-range]").fill("240")  # ~0,25 s por pulso
+    song.locator("[data-ac-met-toggle]").click()
+    current = song.locator("#p-basico .ac-bar.is-current")
+    expect(current).to_have_count(1, timeout=5000)
+    first = current.evaluate("el => Array.from(el.closest('.ac-bars').children).indexOf(el)")
+    assert first == 0
+    # La sección Intro es × 2: aparece "1 / 2" y luego "2 / 2".
+    counter = song.locator("#p-basico .ac-rep-count").first
+    expect(counter).to_have_text("1 / 2", timeout=5000)
+    expect(counter).to_have_text("2 / 2", timeout=8000)
+    # Pasa a la sección siguiente: el cursor sigue siendo único y el contador de Intro desaparece.
+    expect(song.locator("#p-basico .ac-bar.is-current")).to_have_count(1)
+    expect(song.locator("#p-basico .ac-rep-count").first).not_to_have_text("2 / 2", timeout=8000)
+    song.locator("[data-ac-met-toggle]").click()
+    expect(song.locator(".ac-bar.is-current")).to_have_count(0)
+    expect(song.locator(".ac-rep-count")).to_have_count(0)
+
+
+def test_metronome_stays_visible_next_to_the_bars_and_guides_stay_on_top(song: Page):
+    tools = song.locator(".ac-sticky-tools")
+    guides = song.get_by_role("link", name="Ver guías")
+    # Las guías van arriba, antes del metrónomo y de los compases.
+    assert song.evaluate(
+        "document.querySelector('aside[aria-label]').compareDocumentPosition("
+        "document.querySelector('.ac-sticky-tools')) & Node.DOCUMENT_POSITION_FOLLOWING"
+    )
+    song.evaluate("window.scrollTo(0, document.body.scrollHeight)")
+    song.wait_for_timeout(200)
+    box = tools.bounding_box()
+    viewport_h = song.viewport_size["height"]
+    assert box is not None and 0 <= box["y"] < viewport_h / 2
+    assert box["height"] < viewport_h * 0.3
+    expect(song.locator("[data-ac-met-toggle]")).to_be_in_viewport()
+    expect(guides).not_to_be_in_viewport()  # las guías no son fijas
+
+
 def test_difficulty_tabs_switch(song: Page):
     expect(song.locator("#p-basico")).to_be_visible()
     song.locator("#t-intermedio").click()

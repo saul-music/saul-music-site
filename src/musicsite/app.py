@@ -33,7 +33,7 @@ HEADERS = {
         "default-src 'self'; "
         "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; "
         "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com; "
-        "font-src https://fonts.gstatic.com; img-src 'self' data:; "
+        "font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; "
         "base-uri 'none'; form-action 'none'; frame-ancestors 'none'"
     ),
 }

@@ -475,7 +475,7 @@ a.card:hover { border-color: var(--ac-fill); transform: translateY(-2px); }
 
 /* Metrónomo (página de canción) */
 .ac-met-input { width: 5.5rem; }
-.ac-met-range { min-width: 8rem; }
+.ac-metronome .ac-met-range { width: auto; flex: 1 1 8rem; min-width: 8rem; }
 .ac-met-dot {
   width: 0.9rem; height: 0.9rem; border-radius: 50%;
   border: 2px solid var(--bs-border-color); background: transparent;
@@ -484,3 +484,41 @@ a.card:hover { border-color: var(--ac-fill); transform: translateY(-2px); }
 .ac-met-dot.is-first { border-color: var(--bs-primary); }
 .ac-met-dot.is-on { background: var(--bs-body-color); border-color: var(--bs-body-color); }
 .ac-met-dot.is-first.is-on { background: var(--bs-primary); border-color: var(--bs-primary); }
+
+/* Metrónomo fijo, pegado a las pestañas y los compases mientras avanza el tema */
+.ac-sticky-tools {
+  position: sticky; top: var(--ac-nav-h, 56px); z-index: 1010;
+  background: var(--bs-body-bg); padding-block: .5rem; margin-bottom: 1rem;
+}
+
+/* Cursor de compás */
+.ac-bar { position: relative; transition: background-color .08s, color .08s; }
+.ac-bar.is-current { box-shadow: inset 0 0 0 2px var(--ac-accent); }
+.ac-bar.is-current::before {
+  content: "\25BC"; position: absolute; top: -.7rem; left: 50%; transform: translateX(-50%);
+  font-size: .8rem; line-height: 1; color: var(--ac-accent); z-index: 1;
+}
+.ac-bar.is-beat { background: rgba(var(--ac-accent-rgb), .28); }
+.ac-bar.is-downbeat { background: var(--ac-fill); color: var(--ac-on-fill); }
+.ac-rep-count { margin-left: .5rem; font-size: .85rem; color: var(--ac-accent); font-weight: 600; }
+.ac-bars { scroll-margin-top: 12rem; }
+
+@media (max-width: 575.98px) {
+  .ac-sticky-tools .card-body { padding: .5rem .75rem; gap: .5rem !important; }
+  .ac-sticky-tools .btn { --bs-btn-padding-y: .2rem; --bs-btn-padding-x: .6rem; --bs-btn-font-size: .9rem; }
+  .ac-sticky-tools .ac-met-input { width: 3.6rem; padding: .2rem .25rem; }
+  .ac-sticky-tools [data-ac-met-dots] { display: none !important; }
+}
+
+/* Deslizante del metrónomo: pista y control visibles en ambos temas */
+.ac-metronome .ac-met-range::-webkit-slider-runnable-track { height: .35rem; border-radius: 1rem; background: rgba(var(--ac-accent-rgb), .35); }
+.ac-metronome .ac-met-range::-moz-range-track { height: .35rem; border-radius: 1rem; background: rgba(var(--ac-accent-rgb), .35); }
+.ac-metronome .ac-met-range::-webkit-slider-thumb { background: var(--ac-fill); margin-top: -.35rem; }
+.ac-metronome .ac-met-range::-moz-range-thumb { background: var(--ac-fill); border: 0; }
+
+/* Acordes en tipografía de cancionero (Petaluma Script, SIL OFL 1.1; ver PetalumaScript-OFL.txt) */
+@font-face {
+  font-family: "Petaluma Script"; src: url("PetalumaScript.woff2") format("woff2");
+  font-display: swap;
+}
+.ac-bar { font-family: "Petaluma Script", var(--ac-font-display); font-size: 1.6rem; line-height: 1.2; }
