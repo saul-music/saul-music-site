@@ -220,3 +220,7 @@ título gancho; al tocarlo (o con Enter/Espacio) se despliega el texto.
   vacía al buscar, para que el texto viva en un solo lugar.
 - **Sin tecnología nueva.** `artistas.html` queda fuera de alcance.
 - **Se comprueba:** pruebas de unidad del orden y de las cabeceras, y dos e2e del buscador (5 navegadores).
+- **Secciones importantes con más presencia, sobrio (mismo PR):** la Biblioteca del home es una banda con
+  tinte dorado leve y bordes de 2 px arriba y abajo; en cada tema, cada sección de compases (Intro, Estrofa…)
+  es un panel con borde, fondo propio y barra dorada a la izquierda (`.ac-score`). Solo CSS y una clase;
+  funciona en oscuro y claro. Regla: lo que más importa se destaca así, sin colores nuevos.

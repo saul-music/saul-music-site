@@ -137,7 +137,7 @@ def structure(sections: list[dict]) -> str:
             previous = shown
         bars = "".join(bars)
         blocks.append(
-            '          <div class="d-grid gap-2">\n'
+            '          <div class="d-grid gap-2 ac-score">\n'
             f'            <h2 class="h5 m-0">{esc(section.get("nombre", ""))}{label}</h2>\n'
             f'            <div class="ac-bars" data-reps="{times}">{bars}</div>\n'
             "          </div>"
