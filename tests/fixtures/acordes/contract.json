@@ -1,0 +1,39 @@
+{
+  "_nota": "Contrato con musicsite.acordes (repo del sitio): casos sintéticos y los errores esperados. Si cambian las reglas, se actualiza en los dos repos.",
+  "valido": {
+    "song": {
+      "slug": "tema-de-prueba", "titulo": "Tema de prueba", "artista": "Artista de prueba",
+      "tipo": "cancion", "barrio": "Pop", "tono": "Sol mayor", "compas": "4/4", "bpm": 96,
+      "nivel": "inicial", "acordes": ["G", "Em", "C", "D"],
+      "partitura": "Intro x1: G Em\nEstrofa x2: G % Em C\nCoro: C-G D %\n",
+      "procedencia": {"metodo": "Sintético", "autor": "Prueba", "fecha": "2026-01-01"},
+      "revision": {"revisado": true, "v2_resuelto": true}
+    },
+    "status": "publicable", "errors": []
+  },
+  "casos": [
+    {"cambio": {"acordes": ["G7"]}, "contiene": "no es un acorde básico"},
+    {"cambio": {"bpm": 300}, "contiene": "bpm debe estar entre 40 y 240"},
+    {"cambio": {"compas": "cuatro"}, "contiene": "compas debe tener la forma 4/4"},
+    {"cambio": {"partitura": "Coro: % G"}, "contiene": "«%» no puede ser el primer compás"},
+    {"cambio": {"partitura": "Coro: G Am"}, "contiene": "«Am» no está en la lista de acordes"},
+    {"cambio": {"partitura": "Coro: G--D"}, "contiene": "tiene un guion sin acorde"},
+    {"cambio": {"partitura": "sin dos puntos"}, "contiene": "usa la forma «Nombre xN: acordes»"},
+    {"cambio": {"tipo": "otro"}, "contiene": "tipo debe ser"},
+    {"cambio": {"barrio": "Jazz"}, "contiene": "barrio debe ser Rock, Pop o Indie"},
+    {"cambio": {"intermedio": {"partitura": "A: G7 Cmaj7"}}, "errores": 0},
+    {"cambio": {"intermedio": {"partitura": "A: G/B"}}, "contiene": "no es un acorde válido para este modo"},
+    {"cambio": {"avanzado": {"partitura": "A: G/B"}}, "errores": 0},
+    {"cambio": {"procedencia": {"metodo": "", "autor": "", "fecha": ""}}, "contiene": "procedencia («metodo»)"},
+    {"cambio": {"revision": {"revisado": false, "v2_resuelto": true}}, "contiene": "v2_resuelto exige revisado"},
+    {"cambio": {"partitura": "> Un buen consejo | Practica despacio.\nIntro x1: G Em\n"}, "errores": 0},
+    {"cambio": {"partitura": "Intro x1: G Em\n> Un buen consejo | Practica despacio.\nCoro: C-G D %\n"}, "errores": 0},
+    {"cambio": {"partitura": "> Solo título\nIntro x1: G Em\n"}, "contiene": "un tip se escribe"},
+    {"cambio": {"partitura": "> | Sin título\nIntro x1: G Em\n"}, "contiene": "un tip se escribe"},
+    {"cambio": {"partitura": "> Sin texto |\nIntro x1: G Em\n"}, "contiene": "un tip se escribe"},
+    {"cambio": {"partitura": "> xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx | Texto\nIntro x1: G Em\n"}, "contiene": "título del tip pasa de 60"},
+    {"cambio": {"partitura": "> Título | xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\nIntro x1: G Em\n"}, "contiene": "texto del tip pasa de 280"},
+    {"cambio": {"intermedio": {"partitura": "> Truco | Cambia el acorde.\nA: G7"}}, "errores": 0},
+    {"cambio": {"avanzado": {"partitura": "> Truco\nA: G/B"}}, "contiene": "un tip se escribe"}
+  ]
+}
