@@ -134,14 +134,8 @@ def test_playhead_walks_the_bars_and_counts_repetitions(song_audio: Page):
     expect(song.locator(".ac-rep-count")).to_have_count(0)
 
 
-def test_metronome_stays_visible_next_to_the_bars_and_guides_stay_on_top(song: Page):
+def test_metronome_stays_visible_next_to_the_bars(song: Page):
     tools = song.locator(".ac-sticky-tools")
-    guides = song.get_by_role("link", name="Ver guías")
-    # Las guías van arriba, antes del metrónomo y de los compases.
-    assert song.evaluate(
-        "document.querySelector('aside[aria-label]').compareDocumentPosition("
-        "document.querySelector('.ac-sticky-tools')) & Node.DOCUMENT_POSITION_FOLLOWING"
-    )
     song.evaluate("window.scrollTo(0, document.body.scrollHeight)")
     song.wait_for_timeout(200)
     box = tools.bounding_box()
@@ -149,7 +143,128 @@ def test_metronome_stays_visible_next_to_the_bars_and_guides_stay_on_top(song: P
     assert box is not None and 0 <= box["y"] < viewport_h / 2
     assert box["height"] < viewport_h * 0.3
     expect(song.locator("[data-ac-met-toggle]")).to_be_in_viewport()
-    expect(guides).not_to_be_in_viewport()  # las guías no son fijas
+
+
+def test_guides_entry_changes_shape_but_is_never_shown_twice(song: Page):
+    strip = song.locator(".ac-met-strip [data-ac-met-guides]")
+    help_button = song.locator(".ac-sticky-tools [data-ac-met-help]")
+    # Arriba: solo la franja, antes de la barra fija; el botón corto está oculto.
+    expect(strip).to_be_in_viewport()
+    expect(help_button).to_be_hidden()
+    assert song.evaluate(
+        "document.querySelector('.ac-met-strip').compareDocumentPosition("
+        "document.querySelector('.ac-sticky-tools')) & Node.DOCUMENT_POSITION_FOLLOWING"
+    )
+    # Al bajar: la franja sale de pantalla y aparece el botón corto, a la vista y en la barra fija.
+    song.evaluate("window.scrollTo(0, document.body.scrollHeight)")
+    song.wait_for_timeout(300)
+    expect(strip).not_to_be_in_viewport()
+    expect(help_button).to_be_visible()
+    expect(help_button).to_be_in_viewport()
+    expect(help_button).to_have_attribute("href", re.compile(r"guias\.html\?tema=camara-lenta"))
+    assert (
+        song.locator(".ac-sticky-tools").bounding_box()["height"]
+        < song.viewport_size["height"] * 0.3
+    )
+    # De vuelta arriba: la franja otra vez y el botón se oculta.
+    song.evaluate("window.scrollTo(0, 0)")
+    song.wait_for_timeout(300)
+    expect(help_button).to_be_hidden()
+    expect(strip).to_be_in_viewport()
+
+
+def test_guides_collapse_lists_top_five_with_prices_and_links_to_the_guides_page(song: Page):
+    panel = song.locator("#guias-panel")
+    expect(panel).to_be_hidden()
+    song.locator(".ac-met-strip [data-ac-met-guides]").click()
+    expect(panel).to_have_class(re.compile(r"\bshow\b"))  # animación terminada
+    rows = panel.locator(".ac-guide-row")
+    assert 1 <= rows.count() <= 5
+    expect(panel.get_by_text("/ clase").first).to_be_visible()
+    expect(panel.get_by_text("Todo el repertorio").first).to_be_visible()
+    link = panel.get_by_role("link", name=re.compile("^Ver las"))
+    expect(link).to_have_attribute("href", re.compile(r"guias\.html\?tema=camara-lenta"))
+    expect(panel).to_be_in_viewport()
+    song.keyboard.press("Escape")
+    expect(panel).to_be_hidden()
+
+
+def test_guides_collapse_opens_from_the_scrolled_bar_without_moving_the_bars(song: Page):
+    song.evaluate("window.scrollTo(0, 900)")
+    help_button = song.locator("[data-ac-met-help]")
+    expect(help_button).to_be_visible()
+    first_bar = song.locator("#p-basico .ac-bar").first
+    page_y = "el => el.getBoundingClientRect().top + window.scrollY"
+    before = first_bar.evaluate(page_y)
+    help_button.click()
+    panel = song.locator("#guias-panel")
+    expect(panel).to_have_class(re.compile(r"\bshow\b"))
+    expect(panel).to_be_in_viewport()
+    assert first_bar.evaluate(page_y) == before  # flota: no empuja los compases
+    song.locator("h1").click(force=True)  # tocar fuera lo cierra
+    expect(panel).to_be_hidden()
+
+
+def test_clicking_a_guide_goes_straight_to_their_card(song: Page):
+    song.locator(".ac-met-strip [data-ac-met-guides]").click()
+    panel = song.locator("#guias-panel")
+    expect(panel).to_have_class(re.compile(r"\bshow\b"))
+    row = panel.locator("a.ac-guide-row").first
+    guide_id = row.get_attribute("href").split("#guia-")[1]
+    row.click()
+    expect(song).to_have_url(re.compile(rf"guias\.html\?tema=camara-lenta#guia-{guide_id}$"))
+    card = song.locator(f"#guia-{guide_id}")
+    expect(card).to_be_visible()
+    expect(card).to_be_in_viewport()
+    expect(card).to_have_class(re.compile("is-target"))
+
+
+def _clicks(page: Page) -> int:
+    return page.evaluate("window.__clicks")
+
+
+def test_mute_keeps_the_tempo_and_the_cursor_without_any_sound(song_audio: Page):
+    song = song_audio
+    song.locator("[data-ac-met-range]").fill("240")
+    mute = song.locator("[data-ac-met-mute]")
+    mute.click()
+    expect(mute).to_have_attribute("aria-pressed", "true")
+    song.locator("[data-ac-met-toggle]").click()
+    expect(song.locator("#p-basico .ac-bar.is-current")).to_have_count(1, timeout=5000)
+    expect(song.locator("#p-basico .ac-rep-count").first).to_have_text("2 / 2", timeout=8000)
+    assert _clicks(song) == 0
+
+
+def test_toggling_sound_while_playing_does_not_stop_it(song_audio: Page):
+    song = song_audio
+    song.locator("[data-ac-met-range]").fill("240")
+    toggle = song.locator("[data-ac-met-toggle]")
+    toggle.click()
+    for _ in range(40):
+        if _clicks(song) >= 2:
+            break
+        song.wait_for_timeout(100)
+    assert _clicks(song) >= 2
+    mute = song.locator("[data-ac-met-mute]")
+    mute.click()  # a silencio en marcha
+    song.wait_for_timeout(300)
+    frozen = _clicks(song)
+    song.wait_for_timeout(700)
+    assert _clicks(song) == frozen
+    expect(toggle).to_have_attribute("aria-pressed", "true")
+    expect(song.locator("#p-basico .ac-bar.is-current")).to_have_count(1)
+    mute.click()  # de vuelta con sonido
+    for _ in range(40):
+        if _clicks(song) > frozen:
+            break
+        song.wait_for_timeout(100)
+    assert _clicks(song) > frozen
+
+
+def test_mute_choice_is_remembered(song_audio: Page, base_url: str):
+    song_audio.locator("[data-ac-met-mute]").click()
+    song_audio.goto(base_url + SONG)
+    expect(song_audio.locator("[data-ac-met-mute]")).to_have_attribute("aria-pressed", "true")
 
 
 def test_difficulty_tabs_switch(song: Page):

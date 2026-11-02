@@ -23,7 +23,7 @@ from jinja2 import Environment, FileSystemLoader, select_autoescape
 from markupsafe import Markup
 
 from musicsite.acordes import REPEAT, REPERTOIRE, parse_score, validate_file
-from musicsite.profes import avatar, teachers_for
+from musicsite.profes import avatar, coverage, price, teachers_for, top_teachers
 
 TEMPLATES_DIR = Path(__file__).parent / "templates"
 ENV = Environment(
@@ -56,11 +56,15 @@ def accidentals(chord: str) -> str:
     return chord
 
 
-def bar_html(token: str) -> str:
-    """Una casilla por compás; con guiones, cada acorde ocupa el ancho de las partes que dura."""
+def bar_html(token: str, repeat: bool = False) -> str:
+    """Una casilla por compás; con guiones, cada acorde ocupa el ancho de las partes que dura.
+
+    `repeat` marca la casilla que repite el compás anterior: muestra sus acordes en gris atenuado.
+    """
+    mark = ' is-repeat" title="Repite el compás anterior' if repeat else ""
     parts = token.split("-") if token != REPEAT else [token]
     if len(parts) == 1:
-        return f'<div class="ac-bar">{esc(accidentals(token))}</div>'
+        return f'<div class="ac-bar{mark}">{esc(accidentals(token))}</div>'
     chords: list[list] = []
     for part in parts:
         if part == REPEAT and chords:
@@ -71,7 +75,7 @@ def bar_html(token: str) -> str:
         f'<span class="ac-part" style="flex: {weight}">{esc(accidentals(chord))}</span>'
         for chord, weight in chords
     )
-    return f'<div class="ac-bar is-split">{spans}</div>'
+    return f'<div class="ac-bar is-split{mark}">{spans}</div>'
 
 
 def structure(sections: list[dict]) -> str:
@@ -83,7 +87,14 @@ def structure(sections: list[dict]) -> str:
             if times > 1
             else ""
         )
-        bars = "".join(bar_html(t) for t in section.get("compases", []))
+        bars, previous = [], None
+        for token in section.get("compases", []):
+            # «%» repite el compás anterior: la casilla muestra ese mismo acorde, atenuado.
+            repeated = token == REPEAT and previous is not None
+            shown = previous if repeated else token
+            bars.append(bar_html(shown, repeat=repeated))
+            previous = shown
+        bars = "".join(bars)
         blocks.append(
             '          <div class="d-grid gap-2">\n'
             f'            <h2 class="h5 m-0">{esc(section.get("nombre", ""))}{label}</h2>\n'
@@ -126,39 +137,48 @@ def mode_pane(key: str, song: dict, no_harmony: bool) -> str:
     return body
 
 
-def teacher_panel(slug: str, title: str) -> str:
-    """Panel fijo bajo la cabecera: quién puede enseñar este tema, según lo que cada profe declaró."""
-    teachers = teachers_for(slug)
-    if not teachers:
-        return (
-            '    <aside class="card mb-4" aria-label="Guías de este tema"><div class="card-body">'
-            '<p class="m-0 text-body-secondary">Aún no hay guías que enseñen este tema.</p>'
-            "</div></aside>\n"
-        )
-    count = len(teachers)
-    names = ", ".join(esc(t["nombre"]) for t in teachers[:2])
-    more = f" y {count - 2} más" if count > 2 else ""
-    example = (
-        ' · <span class="ac-chip ac-chip-example">Perfiles de ejemplo</span>'
-        if any(t.get("mock") for t in teachers)
-        else ""
+def guide_row(profile: dict, index: int, slug: str) -> str:
+    """Una guía en el desplegable: nota, cuánto cubre de este tema y su precio por clase."""
+    score = profile.get("puntuacion")
+    rating = (
+        f'<span class="ac-rating">★ {score:.1f}</span> ({profile["resenas"]})'
+        if score is not None
+        else '<span class="ac-chip">Nuevo</span>'
     )
-    avatars = "".join(avatar(t, i) for i, t in enumerate(teachers[:3]))
-    noun = "guía puede" if count == 1 else "guías pueden"
-    return f"""    <aside class="card mb-4 ac-plan-featured" aria-label="Guías de este tema">
-      <div class="card-body d-flex flex-wrap gap-3 align-items-center justify-content-between">
-        <div class="d-flex flex-wrap gap-3 align-items-center">
-          <div class="d-flex gap-2 flex-shrink-0 ac-teachers-avatars">{avatars}</div>
-          <div class="d-grid" style="min-width: 0; grid-template-columns: minmax(0, 1fr)">
-            <strong>{count} {noun} enseñarte «{esc(title)}»</strong>
-            <span class="small text-body-secondary ac-teachers-names">{names}{more}{example}</span>
-          </div>
-        </div>
-        <a class="btn btn-primary" href="guias.html?tema={esc(slug)}">Ver guías</a>
-      </div>
-    </aside>
+    example = ' <span class="ac-chip ac-chip-example">Ejemplo</span>' if profile.get("mock") else ""
+    cost = (
+        f'<span class="ac-mono fw-semibold">{esc(price(profile))}</span>'
+        ' <span class="small text-body-secondary">/ clase</span>'
+        if profile.get("precio")
+        else '<span class="small text-body-secondary">Precio por definir</span>'
+    )
+    href = f"guias.html?tema={esc(slug)}#guia-{esc(profile['id'])}"
+    return (
+        '<li><a class="ac-guide-row" href="' + href + '" '
+        f'aria-label="Ver el perfil de {esc(profile["nombre"])}">'
+        f"{avatar(profile, index)}"
+        f'<div class="ac-guide-info"><strong>{esc(profile["nombre"])}</strong>{example}'
+        f'<span class="small text-body-secondary d-block">{rating} · {esc(coverage(profile, slug))}'
+        "</span></div>"
+        f'<div class="ac-guide-cost">{cost}</div></a></li>'
+    )
 
-"""
+
+def guides_panel(slug: str, title: str) -> str:
+    """Desplegable con las 5 guías mejor puntuadas que pueden enseñar el tema y el enlace a todas."""
+    total = len(teachers_for(slug))
+    rows = "".join(guide_row(p, i, slug) for i, p in enumerate(top_teachers(slug)))
+    noun = "la guía" if total == 1 else f"las {total} guías"
+    return f"""<div class="collapse ac-guides-panel" id="guias-panel">
+      <div class="card"><div class="card-body d-grid gap-3">
+        <div class="d-flex justify-content-between align-items-center gap-3">
+          <strong>Quienes pueden enseñarte «{esc(title)}»</strong>
+          <button type="button" class="btn-close" data-bs-toggle="collapse" data-bs-target="#guias-panel" aria-label="Cerrar"></button>
+        </div>
+        <ul class="list-unstyled m-0 d-grid gap-2">{rows}</ul>
+        <a class="btn btn-primary" href="guias.html?tema={esc(slug)}">Ver {noun}</a>
+      </div></div>
+    </div>"""
 
 
 def beats_per_bar(meter: str) -> int:
@@ -179,9 +199,10 @@ def render(song: dict, status: str, preview: bool) -> str:
     ]
     no_harmony = bool(song.get("sin_base_armonica")) and not song.get("acordes")
     note = (
-        f'<p class="small text-body-secondary m-0">Cada casilla es un compás. {REPEAT} repite el '
-        "compás anterior. Escucha la grabación original para seguir la letra.</p>"
+        '<p class="small text-body-secondary m-0">Cada casilla es un compás. Las casillas en gris '
+        "repiten el compás anterior. Escucha la grabación original para seguir la letra.</p>"
     )
+    teachers = teachers_for(song["slug"])
     return ENV.get_template("cancion.html").render(
         song=song,
         status=status,
@@ -192,7 +213,9 @@ def render(song: dict, status: str, preview: bool) -> str:
         form=song.get("forma", ""),
         modes=MODES,
         panes={key: Markup(mode_pane(key, song, no_harmony)) for key, *_ in MODES},
-        teacher_panel=Markup(teacher_panel(song["slug"], song["titulo"])),
+        guides_count=len(teachers),
+        guides_panel=Markup(guides_panel(song["slug"], song["titulo"])) if teachers else "",
+        guide_avatars=Markup("".join(avatar(t, i) for i, t in enumerate(teachers[:3]))),
         note=Markup(note),
     )
 

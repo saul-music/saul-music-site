@@ -11,9 +11,10 @@ from musicsite.profes import (
     songs_of,
     teachers_for,
     teaches,
+    top_teachers,
     update_guides,
 )
-from musicsite.songpages import render, teacher_panel
+from musicsite.songpages import render
 
 BY_ARTIST = {"ensena": [{"artista": "Los Tres"}]}
 BY_SONG = {"ensena": [{"artista": "Los Bunkers", "tema": "ven-aqui"}]}
@@ -69,16 +70,24 @@ def test_every_repertoire_song_has_at_least_two_teachers():
     assert all(len(teachers_for(slug)) >= 2 for slug, *_ in REPERTOIRE)
 
 
-def test_panel_names_the_song_and_links_to_the_filtered_guides():
-    html = teacher_panel("ven-aqui", "Ven aquí")
-    assert "Ven aquí" in html and "guias.html?tema=ven-aqui" in html
-    assert "Gonzalo Pincheira" in html and "Perfiles de ejemplo" in html
-
-
-def test_panel_sits_above_the_tabs_in_every_mode():
-    song = {"slug": "ven-aqui", "titulo": "Ven aquí", "artista": "Los Bunkers", "tipo": "cancion"}
+def test_guides_appear_once_as_a_strip_before_the_player():
+    song = {
+        "slug": "ven-aqui",
+        "titulo": "Ven aquí",
+        "artista": "Los Bunkers",
+        "tipo": "cancion",
+        "bpm": 90,
+    }
     page = render(song, "publicable", preview=False)
-    assert page.index("Guías de este tema") < page.index('id="tabs"')
+    # Una entrada con dos formas (franja y botón corto, oculto) que abren el mismo desplegable.
+    assert page.count('data-bs-target="#guias-panel"') == 3  # franja, botón corto y cerrar
+    assert page.count('href="guias.html?tema=ven-aqui"') == 3  # franja y botón (respaldo) + panel
+    assert "data-ac-met-help" in page and " hidden>¿Se complica" in page
+    assert page.count("<aside") == 1 and "Ver guías" not in page
+    # La franja va primero: antes de la barra del metrónomo, las pestañas y los compases.
+    assert (
+        page.index("data-ac-met-guides") < page.index("data-ac-metronome") < page.index('id="tabs"')
+    )
 
 
 def test_update_guides_writes_one_card_per_profile(tmp_path):
@@ -88,3 +97,73 @@ def test_update_guides_writes_one_card_per_profile(tmp_path):
     text = page.read_text(encoding="utf-8")
     assert text.count('data-temas="') == len(load_profiles())
     assert "Todo el repertorio" in text
+
+
+def test_top_teachers_rank_by_score_and_leave_unrated_last():
+    from musicsite.profes import top_teachers
+
+    rated = [
+        {"nombre": "A", "puntuacion": 4.5, "resenas": 10, "hoy": False},
+        {"nombre": "B", "puntuacion": 4.9, "resenas": 3, "hoy": False},
+        {"nombre": "C", "puntuacion": 4.9, "resenas": 30, "hoy": False},
+        {"nombre": "N1", "hoy": False},
+        {"nombre": "N2", "hoy": True},
+    ]
+    profiles = [{**p, "id": p["nombre"], "ensena": [{"artista": "*"}]} for p in rated]
+    names = [p["nombre"] for p in top_teachers("ven-aqui", 5, profiles)]
+    assert names == ["C", "B", "A", "N2", "N1"]
+    assert len(top_teachers("ven-aqui", 2, profiles)) == 2
+
+
+def test_real_people_are_never_given_a_score():
+    for profile in load_profiles():
+        if not profile.get("mock"):
+            assert "puntuacion" not in profile and "resenas" not in profile
+
+
+def test_score_needs_reviews_and_a_valid_range(tmp_path):
+    base = '[[profe]]\nid = "x"\nnombre = "X"\nlugar = "Santiago"\nmodo = ["linea"]\nmock = true\n'
+    rules = 'ensena = [{ artista = "*" }]\n'
+    bad = tmp_path / "profes.toml"
+    bad.write_text(base + "puntuacion = 6\nresenas = 2\n" + rules, encoding="utf-8")
+    with pytest.raises(ValueError, match="entre 1 y 5"):
+        load_profiles(bad)
+    bad.write_text(base + "puntuacion = 4\n" + rules, encoding="utf-8")
+    with pytest.raises(ValueError, match="van juntas"):
+        load_profiles(bad)
+
+
+def test_coverage_says_how_much_of_the_song_a_guide_teaches():
+    from musicsite.profes import coverage
+
+    everything = {"ensena": [{"artista": "*"}]}
+    artist = {"ensena": [{"artista": "Los Bunkers"}]}
+    one = {"ensena": [{"artista": "Los Bunkers", "tema": "ven-aqui"}]}
+    assert coverage(everything, "ven-aqui") == "Todo el repertorio"
+    assert coverage(artist, "ven-aqui") == "Los Bunkers (todos)"
+    assert coverage(one, "ven-aqui") == "Este tema"
+
+
+def test_guides_panel_lists_at_most_five_with_price_and_links_to_the_filtered_page():
+    from musicsite.songpages import guides_panel
+
+    html = guides_panel("ven-aqui", "Ven aquí")
+    assert html.count('class="ac-guide-row"') <= 5
+    assert 'href="guias.html?tema=ven-aqui"' in html and "/ clase" in html
+    assert "★" in html  # las de ejemplo traen nota
+
+
+def test_each_guide_row_links_to_that_guides_card_on_the_guides_page():
+    from musicsite.songpages import guides_panel
+
+    html = guides_panel("camara-lenta", "Cámara lenta")
+    for profile in top_teachers("camara-lenta"):
+        assert f'href="guias.html?tema=camara-lenta#guia-{profile["id"]}"' in html
+
+
+def test_guides_page_has_an_anchor_for_every_profile():
+    from musicsite.app import WEB_DIR
+
+    page = (WEB_DIR / "guias.html").read_text(encoding="utf-8")
+    for profile in load_profiles():
+        assert f'id="guia-{profile["id"]}"' in page

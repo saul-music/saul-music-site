@@ -118,6 +118,14 @@
     fields.forEach(function (f) { f.addEventListener("change", run); });
     form.addEventListener("submit", function (e) { e.preventDefault(); });
     run();
+    /* Enlace directo a una guía (#guia-id): el filtro cambia el alto de la página, así que se
+       desplaza a su tarjeta después de filtrar y se la marca. */
+    var target = window.location.hash ? document.getElementById(window.location.hash.slice(1)) : null;
+    if (target && !target.hidden) {
+      target.classList.add("is-target");
+      var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      target.scrollIntoView({ block: "center", behavior: reduce ? "auto" : "smooth" });
+    }
   });
 
   /* Modal de conexión: copia nombre y precio del botón que lo abrió */
@@ -148,15 +156,43 @@
     window.addEventListener("resize", set);
     if (window.ResizeObserver) new ResizeObserver(set).observe(nav);
   })();
+  /* Una sola entrada a las guías que cambia de forma: la franja de arriba mientras se ve; al salir de
+     pantalla, un botón corto en la barra fija, para tentarse cuando una parte se complica. */
+  (function () {
+    var strip = document.querySelector(".ac-met-strip");
+    var help = document.querySelector("[data-ac-met-help]");
+    if (!strip || !help || !window.IntersectionObserver) return;
+    new IntersectionObserver(function (entries) {
+      help.hidden = entries[entries.length - 1].isIntersecting;
+    }).observe(strip);
+  })();
+  /* Desplegable de guías: se cierra con Escape o al tocar fuera, y se trae a la vista al abrir. */
+  (function () {
+    var panel = document.getElementById("guias-panel");
+    if (!panel || !window.bootstrap) return;
+    var collapse = window.bootstrap.Collapse.getOrCreateInstance(panel, { toggle: false });
+    panel.addEventListener("shown.bs.collapse", function () {
+      var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      panel.scrollIntoView({ block: "nearest", behavior: reduce ? "auto" : "smooth" });
+    });
+    document.addEventListener("keydown", function (e) { if (e.key === "Escape") collapse.hide(); });
+    document.addEventListener("click", function (e) {
+      if (!panel.classList.contains("show")) return;
+      if (e.target.closest("#guias-panel, [data-bs-target='#guias-panel']")) return;
+      collapse.hide();
+    });
+  })();
   /* Metrónomo de la página de canción: Web Audio con agenda anticipada (el reloj del audio, no
      setInterval, decide cuándo suena cada clic). Arranca en el bpm del tema. */
   document.querySelectorAll("[data-ac-metronome]").forEach(function (box) {
     var home = +box.getAttribute("data-bpm") || 90;
     var beats = +box.getAttribute("data-beats") || 4;
     var MIN = 30, MAX = 240, AHEAD = 0.12, TICK = 25;
-    var bpm = home, playing = false, ctx = null, timer = null, nextTime = 0, beat = 0, count = 0;
+    var bpm = home, playing = false, muted = false, ctx = null, timer = null, nextTime = 0, beat = 0, count = 0;
     var cur = { pane: null, seq: [], idx: -1, counter: null, group: null };
+    var MUTE_KEY = "acordia-sin-sonido";
     var toggle = box.querySelector("[data-ac-met-toggle]");
+    var mute = box.querySelector("[data-ac-met-mute]");
     var input = box.querySelector("[data-ac-met-bpm]");
     var range = box.querySelector("[data-ac-met-range]");
     var dotsBox = box.querySelector("[data-ac-met-dots]");
@@ -253,54 +289,67 @@
       setTimeout(function () { el.classList.remove("is-beat", "is-downbeat"); },
         Math.min(160, 60000 / bpm * 0.55));
     }
+    /* Reloj: con sonido, el del audio (preciso); en "sin sonido", el del navegador, que no depende
+       de ninguna salida de audio. Los tiempos de agenda están en el reloj del modo vigente. */
+    function clock() { return muted || !ctx ? performance.now() / 1000 : ctx.currentTime; }
     function flash(index, time, n) {
       setTimeout(function () {
         if (!playing) return;
         dots.forEach(function (x, k) { x.classList.toggle("is-on", k === index); });
         cursor(n);
-      }, Math.max(0, (time - ctx.currentTime) * 1000));
+      }, Math.max(0, (time - clock()) * 1000));
     }
     function schedule() {
-      /* Safari: con el contexto suspendido (o "interrupted" en iOS) el reloj no corre; no se agenda. */
-      if (ctx.state !== "running") {
-        if (ctx.resume) ctx.resume();
-        return;
+      if (!muted) {
+        /* Safari: con el contexto suspendido (o "interrupted" en iOS) el reloj no corre; no se agenda. */
+        if (!ctx || ctx.state !== "running") {
+          if (ctx && ctx.resume) ctx.resume();
+          return;
+        }
       }
-      if (nextTime < ctx.currentTime) nextTime = ctx.currentTime + 0.06;
-      while (nextTime < ctx.currentTime + AHEAD) {
-        click(nextTime, beat === 0);
+      var now = clock();
+      if (nextTime < now) nextTime = now + 0.06;
+      while (nextTime < now + AHEAD) {
+        if (!muted) click(nextTime, beat === 0);
         flash(beat, nextTime, count);
         count++;
         nextTime += 60 / bpm;
         beat = (beat + 1) % beats;
       }
     }
-    /* iOS silencia Web Audio con el interruptor de silencio; "playback" lo evita (Safari 16.4+). */
+    /* iOS silencia Web Audio con el interruptor de silencio; "playback" lo evita (Safari 16.4+).
+       Sin sonido no se toca: así no interrumpe la música que el usuario escucha en otra app. */
     function unlockIOS() {
       try {
         if (navigator.audioSession) navigator.audioSession.type = "playback";
       } catch (e) { /* sin soporte */ }
     }
+    function ensureAudio() {
+      var Ctor = window.AudioContext || window.webkitAudioContext;
+      if (!Ctor) return null;
+      unlockIOS();
+      if (!ctx) ctx = new Ctor();
+      /* resume() es asíncrono en Safari: se agenda cuando el reloj ya corre. */
+      var p = ctx.resume ? ctx.resume() : null;
+      return p && p.then ? p : { then: function (f) { f(); } };
+    }
     function begin() {
       if (!playing) return;
       beat = 0;
       count = 0;
-      nextTime = ctx.currentTime + 0.06;
+      nextTime = clock() + 0.06;
       schedule();
     }
     function start() {
-      var Ctor = window.AudioContext || window.webkitAudioContext;
-      if (!Ctor) return;
-      unlockIOS();
-      if (!ctx) ctx = new Ctor();
+      if (!muted && !(window.AudioContext || window.webkitAudioContext)) return;
       playing = true;
       clearInterval(timer);
       timer = setInterval(schedule, TICK);
       toggle.textContent = "Detener";
       toggle.setAttribute("aria-pressed", "true");
-      /* resume() es asíncrono en Safari: el primer clic se agenda cuando el reloj ya corre. */
-      var p = ctx.resume ? ctx.resume() : null;
-      if (p && p.then) p.then(begin, begin); else begin();
+      if (muted) { begin(); return; }
+      var audio = ensureAudio();
+      audio.then(begin, begin);
     }
     function stop() {
       playing = false;
@@ -310,7 +359,25 @@
       toggle.textContent = "Reproducir";
       toggle.setAttribute("aria-pressed", "false");
     }
+    /* Cambia de modo sin cortar ni descompasar: se conserva lo que falta para el próximo pulso. */
+    function setMuted(value, save) {
+      var remaining = playing ? Math.max(nextTime - clock(), 0.02) : 0;
+      muted = !!value;
+      if (mute) mute.setAttribute("aria-pressed", muted ? "true" : "false");
+      if (save) { try { localStorage.setItem(MUTE_KEY, muted ? "1" : "0"); } catch (e) {} }
+      if (!playing) return;
+      if (muted) { nextTime = clock() + remaining; return; }
+      var audio = ensureAudio();
+      if (!audio) { muted = true; return; }
+      audio.then(function () { nextTime = clock() + remaining; });
+    }
 
+    if (mute) {
+      var saved = null;
+      try { saved = localStorage.getItem(MUTE_KEY); } catch (e) {}
+      if (saved === "1") setMuted(true, false);
+      mute.addEventListener("click", function () { setMuted(!muted, true); });
+    }
     toggle.addEventListener("click", function () { playing ? stop() : start(); });
     input.addEventListener("change", function () { setBpm(input.value); });
     range.addEventListener("input", function () { setBpm(range.value); });
