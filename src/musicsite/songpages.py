@@ -344,13 +344,42 @@ def library_html(directory: Path) -> str:
     )
 
 
-def update_library(directory: Path, index: Path) -> int:
-    """Reemplaza las tarjetas de index.html entre las marcas de la Biblioteca."""
-    page = index.read_text(encoding="utf-8")
+def published_library_html(directory: Path) -> str:
+    """Biblioteca de lo publicado (S9): una tarjeta por tema de `directory`, todos publicables.
+
+    Va primero el repertorio inicial en su orden; los que aún no están publicados salen como
+    «Próximamente» solo con título y artista (sus datos son borrador y no se muestran). Los temas
+    nuevos, que no están en el repertorio, van al final por título."""
+    cards = []
+    for slug, title, artist, kind in REPERTOIRE:
+        path = directory / f"{slug}.toml"
+        if path.exists():
+            cards.append(card(load_song(path), slug, "publicable"))
+        else:
+            stub = {"titulo": title, "artista": artist, "tipo": kind}
+            cards.append(card(stub, slug, "borrador"))
+    known = {slug for slug, *_ in REPERTOIRE}
+    extra = [load_song(p) for p in sorted(directory.glob("*.toml")) if p.stem not in known]
+    for song in sorted(extra, key=lambda s: s["titulo"].lower()):
+        cards.append(card(song, song["slug"], "publicable"))
+    return (
+        '        <div class="row row-cols-1 row-cols-md-3 g-3">\n'
+        + "\n".join(cards)
+        + "\n        </div>"
+    )
+
+
+def apply_library(page: str, block: str) -> str:
+    """`page` (index.html) con `block` entre las marcas de la Biblioteca."""
     start = page.index(LIBRARY_START) + len(LIBRARY_START)
     end = page.index(LIBRARY_END)
+    return page[:start] + "\n" + block + "\n        " + page[end:]
+
+
+def update_library(directory: Path, index: Path) -> int:
+    """Reemplaza las tarjetas de index.html entre las marcas de la Biblioteca."""
     block = library_html(directory)
-    index.write_text(page[:start] + "\n" + block + "\n        " + page[end:], encoding="utf-8")
+    index.write_text(apply_library(index.read_text(encoding="utf-8"), block), encoding="utf-8")
     return block.count('<div class="col">')
 
 

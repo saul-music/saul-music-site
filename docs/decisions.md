@@ -121,3 +121,33 @@ sin datos de terceros. Un acorde sin forma disponible (`G/B`, extensiones raras)
 sumar al admin una sección opcional «Formas específicas» en Avanzado. Lo revisa un guitarrista: las
 formas estándar de los 23 acordes del repertorio, y una propia de ejemplo.
 
+## S9 · El sitio muestra lo publicado desde el admin, con `songs/` como respaldo (2026-11-02)
+
+Aplica la decisión M17 del control. Con `EDITORIAL_DIR` (el bucket `saulapp-music-editorial` montado de
+**solo lectura** en Cloud Run), las páginas de canción **y la Biblioteca del inicio** salen de la
+publicación vigente que dejó el admin (`current.txt` → `releases/<versión>/`), no de `songs/` en git.
+Reemplaza en parte S4 (datos en git).
+
+- **Mismo servicio, sin tecnología nueva:** `musicsite.catalog.Catalog` lee archivos del volumen
+  montado; no hay librería de Google Cloud ni credenciales en el código.
+- **Relectura cada 60 s** (`EDITORIAL_REFRESH_SECONDS`): publicar aparece en el sitio en ese plazo más
+  los 5 minutos de caché del navegador (`max-age=300`). No hace falta desplegar ni reiniciar.
+- **Una publicación que no sirve nunca reemplaza a la buena:** un tema no publicable, un nombre de
+  archivo fuera de `[a-z0-9-]`, una publicación vacía o un error de lectura se descartan y se sigue
+  mostrando lo anterior (la descartada por datos no se reintenta hasta que cambie el puntero). El
+  puntero nunca sale de `releases/`.
+- **Respaldo:** al arrancar sin publicación válida (bucket vacío, puntero roto, montaje caído) se usa
+  `songs/` de git, y la Biblioteca estática de `index.html`. Un dato malo en `songs/` sigue rompiendo
+  el arranque (S4). **`songs/` se retira de git cuando esta vía lleve un tiempo estable.**
+- **Lo publicado reemplaza, no se mezcla:** un tema que está en git pero no en la publicación
+  vigente no se muestra.
+- **Biblioteca:** el repertorio inicial va primero en su orden; los publicados con su tarjeta completa;
+  los del repertorio aún no publicados como «Próximamente» **solo con título y artista** (antes
+  mostraban los acordes de sus borradores); los temas nuevos fuera del repertorio, al final por
+  título. `acordes library` sigue sirviendo para regenerar el HTML estático de respaldo.
+- **Permisos (D56):** `musicsite-runtime` recibe solo `roles/storage.objectViewer` en el bucket editorial
+  (`bootstrap/gcp.sh`). No ve los borradores ni los datos de research.
+- **Frontera M9:** nada del bucket entra a git. El bucket lleva solo temas ya publicables.
+- **No cubre:** las fichas de `artistas.html` y los perfiles de `guias.html` siguen estáticos (un
+  artista nuevo no aparece solo); el `sitemap.xml` por tema es parte de S6.
+

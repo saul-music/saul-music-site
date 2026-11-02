@@ -23,6 +23,7 @@ env:
   SERVICE: musicsite
   DEPLOYER: musicsite-deployer@saulapp-music.iam.gserviceaccount.com
   RUNTIME: musicsite-runtime@saulapp-music.iam.gserviceaccount.com
+  EDITORIAL_BUCKET: saulapp-music-editorial
 
 concurrency:
   group: pipeline-${{ github.ref }}
@@ -147,12 +148,15 @@ jobs:
           workload_identity_provider: ${{ vars.GCP_WIF_PROVIDER }}
           service_account: ${{ env.DEPLOYER }}
       - uses: google-github-actions/setup-gcloud@aa5489c8933f4cc7a4f7d45035b3b1440c9c10db # v3.0.1
-      - name: desplegar el sitio (público; sin volúmenes, sin secretos, sin acceso a datos)
+      - name: desplegar el sitio (público; lee solo el bucket editorial, montado de solo lectura)
         run: |
           gcloud run deploy "$SERVICE" \
             --project "$PROJECT_ID" --region "$REGION" \
             --image "${IMAGE}:${GITHUB_SHA}" \
             --service-account "$RUNTIME" \
+            --add-volume "name=editorial,type=cloud-storage,bucket=${EDITORIAL_BUCKET},readonly=true" \
+            --add-volume-mount volume=editorial,mount-path=/editorial \
+            --set-env-vars EDITORIAL_DIR=/editorial \
             --min-instances 0 --max-instances 2 --cpu 1 --memory 512Mi \
             --allow-unauthenticated --quiet
       - name: smoke (/ y /cancion.html y una página de canción dan 200; /docs y /dashboard/latest dan 404)

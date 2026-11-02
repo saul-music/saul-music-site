@@ -31,11 +31,14 @@ PORT=8080 uv --no-config run python -m musicsite.app    # http://localhost:8080
 | `style.css` | Tema de marca sobre Bootstrap 5.3.3 |
 | `acordia.js` | Tema, diagramas de acorde, práctica, filtro y modal |
 
-## Páginas de canción (`templates/` y `songs/`)
+## Páginas de canción (`templates/`, el bucket editorial y `songs/`)
 
 Ya no hay un HTML por tema. `templates/cancion.html` (sobre `templates/base.html`, con Jinja2) se
-renderiza al arrancar el servicio para cada `songs/<tema>.toml`, y se sirve en
-`/cancion-<tema>.html`. Un tema que no es `publicable` rompe el arranque. Cada página con `bpm`
+renderiza para cada tema publicado y se sirve en `/cancion-<tema>.html`. **En producción los temas
+salen de la publicación vigente del bucket editorial** (`EDITORIAL_DIR`, S9): publicar desde el admin
+los deja en el sitio en unos minutos, sin desplegar. `songs/<tema>.toml` es el respaldo si no hay
+publicación válida y lo que usan los tests y el desarrollo local. Para ver en local lo publicado de
+verdad, ver la guía «Desarrollo» de las guías del equipo (`gcloud storage rsync` + `EDITORIAL_DIR`). Un tema que no es `publicable` rompe el arranque. Cada página con `bpm`
 trae un metrónomo (Web Audio) que parte en ese tempo. Flujo del equipo editorial: validar en
 `acordes-local/` y copiar los publicables con
 `python -m musicsite.acordes publish --dir ../acordes-local --out src/musicsite/songs`; las
