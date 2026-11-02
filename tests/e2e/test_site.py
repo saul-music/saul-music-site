@@ -3,7 +3,9 @@
     uv run pytest -m e2e --browser chromium
     uv run pytest -m e2e --browser webkit --device "iPhone 14"
 
-El sonido no se puede comprobar aquí: solo que el reloj de audio arranca y el pulso se mueve.
+Los altavoces no se pueden oír aquí: la lógica va contra un AudioContext simulado y
+test_audio_real.py comprueba, con un sink nulo de PulseAudio en el CI, que el contexto real corre
+y emite señal. Que suene en Safari/iPhone (interruptor de silencio) se comprueba de oído.
 """
 
 import re
