@@ -397,3 +397,36 @@ def test_tip_renders_escaped_in_position_and_the_playhead_ignores_it(tmp_path):
 
 def test_a_song_without_tips_is_unchanged(song):
     assert "ac-tip" not in render(song, "publicable", preview=False).split("</style>")[-1]
+
+
+def test_library_is_sorted_by_artist_ignoring_articles_and_accents():
+    from musicsite.songpages import artist_key, render_library, sort_key
+
+    assert artist_key("Los Bunkers") == "bunkers" and artist_key("La Ley") == "ley"
+    assert artist_key("Álvaro Díaz") == "alvaro diaz" and sort_key("ÉPICA") == "epica"
+    songs = [
+        {"titulo": "Zeta", "artista": "Los Tres"},
+        {"titulo": "Beta", "artista": "Álvaro"},
+        {"titulo": "Ánimo", "artista": "Los Bunkers"},
+        {"titulo": "Alfa", "artista": "los bunkers"},
+    ]
+    page = render_library([(song, "x", "borrador") for song in songs])
+    # Álvaro, luego Bunkers (Alfa antes que Ánimo, sin tildes), luego Tres
+    order = [
+        page.index(f'<h4 class="h4 mb-1">{title}') for title in ("Beta", "Alfa", "Ánimo", "Zeta")
+    ]
+    assert order == sorted(order)
+
+
+def test_library_opens_each_artist_group_with_a_header_and_count():
+    from musicsite.songpages import render_library
+
+    songs = [
+        {"titulo": "Uno", "artista": "Los Tres"},
+        {"titulo": "Dos", "artista": "los tres"},
+        {"titulo": "Solo", "artista": "Gepe"},
+    ]
+    page = render_library([(song, "x", "borrador") for song in songs])
+    assert page.count('class="col-12 ac-artist-head"') == 2
+    assert "<small>1 tema</small>" in page and "<small>2 temas</small>" in page
+    assert page.index("Gepe") < page.index("Dos") < page.index("Uno")

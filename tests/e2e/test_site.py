@@ -556,3 +556,50 @@ def test_tips_do_not_disturb_the_playhead(page: Page, tips_url: str):
     )
     assert first == 0
     page.locator("[data-ac-met-toggle]").click()
+
+
+def test_landing_search_filters_the_library_and_goes_to_the_artist(page: Page, base_url: str):
+    page.goto(f"{base_url}/index.html")
+    cards = page.locator("#biblioteca .row > .col:not(.ac-artist-head)")
+    heads = page.locator("#biblioteca .ac-artist-head:visible")
+    total = cards.count()
+    page.fill("#buscar", "los tres")
+    expect(heads).to_have_count(1)
+    expect(heads).to_contain_text("Los Tres")
+    assert 0 < page.locator("#biblioteca .row > .col:not(.ac-artist-head):visible").count() < total
+    assert all(
+        "Los Tres" in t
+        for t in page.locator(
+            "#biblioteca .row > .col:not(.ac-artist-head):visible p"
+        ).all_inner_texts()
+    )
+    page.keyboard.press("Enter")  # envía el formulario: baja a la Biblioteca
+    expect(heads).to_be_in_viewport()
+    page.fill("#buscar", "DEJATE")  # sin tildes ni mayúsculas, por título
+    expect(page.locator("#biblioteca .row > .col:not(.ac-artist-head):visible")).to_have_count(1)
+    page.fill("#buscar", "zzzz")
+    expect(page.locator("#sin-resultados")).to_be_visible()
+    page.fill("#buscar", "")
+    expect(cards).to_have_count(total)
+    expect(page.locator("#sin-resultados")).to_be_hidden()
+
+
+def test_library_search_is_shared_with_the_landing_and_stays_in_reach(page: Page, base_url: str):
+    page.goto(f"{base_url}/index.html")
+    cards = page.locator("#biblioteca .row > .col:not(.ac-artist-head):visible")
+    total = cards.count()
+    page.fill("#buscar", "bunkers")  # mientras se escribe arriba, la galería ya lo muestra
+    expect(page.locator("#buscar-biblioteca")).to_have_value("bunkers")
+    expect(page.locator("#lib-count")).to_have_text(re.compile(r"^\d+ de \d+ temas$"))
+    page.keyboard.press("Enter")  # al buscar, arriba se vacía y la galería conserva el texto
+    expect(page.locator("#buscar")).to_have_value("")
+    expect(page.locator("#buscar-biblioteca")).to_have_value("bunkers")
+    page.locator("#biblioteca .ac-artist-head:visible").scroll_into_view_if_needed()
+    page.evaluate("window.scrollBy(0, 300)")
+    expect(page.locator(".ac-lib-search")).to_be_in_viewport()  # sigue a mano al bajar
+    page.fill("#buscar-biblioteca", "tres")  # y se puede cambiar sin volver al inicio
+    expect(page.locator("#buscar")).to_have_value("")
+    page.click("#lib-clear")
+    expect(cards).to_have_count(total)
+    expect(page.locator("#buscar")).to_have_value("")
+    expect(page.locator("#lib-clear")).to_be_hidden()

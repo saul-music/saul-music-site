@@ -113,9 +113,8 @@ def test_changed_content_and_a_new_song_show_up(editorial):
     assert client.get("/cancion-tema-nuevo.html").status_code == 200
     index = client.get("/").text
     assert 'href="cancion-tema-nuevo.html"' in index and "Artista Nuevo" in index
-    assert index.index("cancion-otra-era.html") < index.index(
-        "cancion-tema-nuevo.html"
-    )  # nuevos al final
+    # los nuevos se mezclan por artista (S14): «Artista Nuevo» va antes que «Los Jaivas»
+    assert index.index("Artista Nuevo") < index.index("Los Jaivas")
 
 
 def test_new_publication_is_picked_up_after_the_refresh_interval(editorial, monkeypatch):

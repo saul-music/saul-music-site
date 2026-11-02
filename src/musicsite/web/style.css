@@ -142,6 +142,38 @@ p { max-width: 65ch; }
   font-size: .78rem; font-weight: 600; letter-spacing: .18em;
   text-transform: uppercase; color: var(--ac-second);
 }
+/* Biblioteca: cada artista abre su grupo con una cabecera de ancho completo */
+#biblioteca { scroll-margin-top: calc(var(--ac-nav-h, 4rem) + .5rem); }
+/* Buscador propio de la galería: queda fijo bajo la barra mientras se recorre la Biblioteca */
+.ac-lib-search {
+  position: sticky; top: var(--ac-nav-h, 4rem); z-index: 5;
+  display: flex; align-items: center; gap: .75rem; margin-bottom: 1.25rem; padding: .75rem 0;
+  background: var(--ac-bg); border-bottom: 1px solid var(--ac-line);
+}
+.ac-lib-search .form-control { flex: 1 1 12rem; min-width: 0; }
+.ac-lib-count { white-space: nowrap; }
+/* El botón propio reemplaza a la X diminuta del navegador, que no se entiende como «limpiar» */
+.ac-lib-search input[type="search"]::-webkit-search-cancel-button { -webkit-appearance: none; appearance: none; display: none; }
+.ac-lib-clear { border-color: var(--ac-oro); color: var(--ac-oro); font-weight: 600; }
+.ac-lib-clear span { font-size: 1.1em; margin-right: .25rem; }
+@media (max-width: 575.98px) {
+  .ac-lib-search { flex-wrap: wrap; gap: .4rem .6rem; padding: .5rem 0; }
+  .ac-lib-search .form-control { flex: 1 1 8rem; }
+  .ac-lib-count { order: 3; flex: 1 0 100%; font-size: .75rem; }
+}
+.ac-no-results { margin-top: 1.5rem; color: var(--ac-fg-muted); }
+.row > .ac-artist-head { flex: 0 0 100%; width: 100%; margin-top: 1.75rem; }
+.row > .ac-artist-head:first-child { margin-top: 0; }
+.ac-artist {
+  display: flex; align-items: baseline; gap: .75rem; margin: 0;
+  padding-bottom: .5rem; border-bottom: 1px solid var(--ac-line);
+  font-family: var(--ac-font-display); font-size: 1.35rem; font-weight: 400;
+}
+.ac-artist span { border-left: 3px solid var(--ac-oro); padding-left: .65rem; }
+.ac-artist small {
+  font-family: var(--ac-font-text); font-size: .78rem; letter-spacing: .08em;
+  text-transform: uppercase; color: var(--ac-fg-muted);
+}
 .ac-mono { font-variant-numeric: tabular-nums; }
 a { text-underline-offset: .2em; text-decoration-thickness: 1px; }
 
@@ -335,6 +367,21 @@ a.card:hover { border-color: var(--ac-fill); transform: translateY(-2px); }
 .ac-section-head { display: grid; gap: .75rem; margin-bottom: 2.5rem; }
 .ac-section-head h2 { margin: 0; font-size: clamp(1.9rem, 3.5vw, 2.6rem); }
 .ac-section-head p { margin: 0; color: var(--ac-fg-muted); }
+
+/* Lo importante se destaca, pero sobrio: tinte dorado leve, bordes marcados y una barra de acento */
+#biblioteca {
+  background: color-mix(in srgb, var(--ac-oro) 6%, var(--ac-bg));
+  border-block: 2px solid rgba(var(--ac-accent-rgb), .5);
+}
+#biblioteca + .ac-section { border-top: 0; }
+.ac-score {
+  padding: 1rem 1.15rem 1.15rem; border: 1px solid rgba(var(--ac-accent-rgb), .35);
+  border-left: 4px solid var(--ac-oro); border-radius: var(--ac-radius);
+  background: color-mix(in srgb, var(--ac-oro) 4%, var(--ac-surface));
+}
+
+.ac-score .ac-bars { border-left-color: rgba(var(--ac-accent-rgb), .45); }
+.ac-score .ac-bar { border-color: rgba(var(--ac-accent-rgb), .45); }
 
 /* Hero */
 .ac-hero { padding-block: clamp(3rem, 7vw, 6rem); }
