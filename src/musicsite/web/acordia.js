@@ -408,6 +408,7 @@
       if (index < 0) {
         if (countNums.length) { countBox.textContent = ""; countNums = []; }
         toggle.classList.remove("is-counting");
+        toggle.style.width = toggle.style.height = "";
         return;
       }
       if (!countNums.length) {
@@ -417,6 +418,9 @@
           countBox.appendChild(s);
           countNums.push(s);
         }
+        /* El botón conserva el tamaño que tenía: la barra fija no puede crecer ni cambiar de fila. */
+        toggle.style.width = toggle.offsetWidth + "px";
+        toggle.style.height = toggle.offsetHeight + "px";
         toggle.classList.add("is-counting");
       }
       countNums.forEach(function (x, k) { x.classList.toggle("is-on", k === index); });

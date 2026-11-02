@@ -542,6 +542,7 @@ a.card:hover { border-color: var(--ac-fill); transform: translateY(-2px); }
 .ac-met-mute[aria-pressed="true"] .ac-off { display: inline; }
 /* Cuenta inicial: 1 2 3 4 dentro del botón principal, que no crece ni agrega una fila */
 .ac-met-toggle { min-width: 8.5rem; }
+.ac-met-toggle.is-counting { white-space: nowrap; overflow: hidden; padding-inline: 0; }
 .ac-met-toggle.is-counting [data-ac-met-label] { display: none; }
 .ac-met-count { display: inline-flex; gap: .45rem; align-items: baseline; font-weight: 600; }
 .ac-met-count span { opacity: .55; }
