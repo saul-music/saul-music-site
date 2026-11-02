@@ -2,7 +2,7 @@
 # Bootstrap del despliegue del sitio en GCP (CI/CD de este repo). Idempotente.
 #
 # Crea lo que Terraform todavía no crea: repo de imágenes, dos service accounts (deployer para el
-# CI y runtime para Cloud Run, sin acceso a datos) y un proveedor de Workload Identity Federation
+# CI y runtime para Cloud Run, que solo lee lo ya publicado) y un proveedor de Workload Identity Federation
 # restringido a ESTE repo y a main, dentro del pool existente del proyecto. No toca políticas de
 # organización: la excepción que permite servicios públicos ya existe en este proyecto.
 #
@@ -20,6 +20,7 @@ GITHUB_REPO="${GITHUB_REPO:-saul-music/saul-music-site}"
 AR_REPO="${AR_REPO:-musicsite}"
 DEPLOYER="${DEPLOYER:-musicsite-deployer}"
 RUNTIME="${RUNTIME:-musicsite-runtime}"
+EDITORIAL_BUCKET="${EDITORIAL_BUCKET:-${PROJECT_ID}-editorial}"  # lo publicado desde el admin (S9)
 POOL="${POOL:-github}"
 PROVIDER="${PROVIDER:-github-musicsite}"
 export CLOUDSDK_CONFIG="${CLOUDSDK_CONFIG:-$HOME/.config/gcloud-saul}"
@@ -27,7 +28,8 @@ DRY_RUN="${DRY_RUN:-0}"
 export CLOUDSDK_CORE_DISABLE_PROMPTS=1
 
 APIS=(run.googleapis.com artifactregistry.googleapis.com iam.googleapis.com
-  iamcredentials.googleapis.com sts.googleapis.com cloudresourcemanager.googleapis.com)
+  iamcredentials.googleapis.com sts.googleapis.com cloudresourcemanager.googleapis.com
+  storage.googleapis.com)
 
 DEPLOYER_SA="$DEPLOYER@$PROJECT_ID.iam.gserviceaccount.com"
 RUNTIME_SA="$RUNTIME@$PROJECT_ID.iam.gserviceaccount.com"
@@ -67,7 +69,8 @@ for sa in "$DEPLOYER" "$RUNTIME"; do
   fi
 done
 
-# 4. Permisos. El runtime no tiene ningún rol: el sitio no lee ni escribe datos. El deployer sube
+# 4. Permisos. El runtime no tiene roles de proyecto: solo puede leer el bucket editorial (abajo),
+# que lleva únicamente temas ya publicados; nunca los borradores ni los datos. El deployer sube
 # imágenes a su repo, despliega y actúa como el runtime. run.admin (no developer) porque el
 # despliegue público fija la política IAM del servicio.
 log "permisos"
@@ -77,6 +80,16 @@ run gcloud projects add-iam-policy-binding "$PROJECT_ID" \
   --member "serviceAccount:$DEPLOYER_SA" --role roles/run.admin --condition=None
 run gcloud iam service-accounts add-iam-policy-binding "$RUNTIME_SA" --project "$PROJECT_ID" \
   --member "serviceAccount:$DEPLOYER_SA" --role roles/iam.serviceAccountUser
+
+# 4b. Lectura de lo publicado (S9). El bucket lo crea el bootstrap de research (M17); el runtime
+# recibe solo `objectViewer` ahí. Si aún no existe, se avisa y se puede repetir el script después.
+if gcloud storage buckets describe "gs://$EDITORIAL_BUCKET" --project "$PROJECT_ID" >/dev/null 2>&1; then
+  log "lectura del bucket $EDITORIAL_BUCKET para $RUNTIME"
+  run gcloud storage buckets add-iam-policy-binding "gs://$EDITORIAL_BUCKET" --project "$PROJECT_ID" \
+    --member "serviceAccount:$RUNTIME_SA" --role roles/storage.objectViewer
+else
+  log "AVISO: el bucket $EDITORIAL_BUCKET no existe; corre antes el bootstrap de research y repite este script"
+fi
 
 # 5. WIF: solo este repo y solo la rama main pueden actuar como el deployer. El pool es compartido
 # con otros repos del proyecto; cada repo tiene su propio proveedor y su propia condición.
