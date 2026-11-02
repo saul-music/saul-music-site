@@ -485,21 +485,26 @@ def test_count_in_shows_numbers_while_it_counts(song_audio: Page):
     song.locator("[data-ac-met-range]").fill("120")  # 0,5 s por pulso: la cuenta dura ~2 s
     toggle = song.locator("[data-ac-met-toggle]")
     count = song.locator("[data-ac-met-count]")
-    tools = song.locator(".ac-sticky-tools")
     expect(count.locator("span")).to_have_count(0)
     expect(toggle).to_have_text("Reproducir")
-    rest = tools.bounding_box()["height"]
+    rest = toggle.bounding_box()
     toggle.click()
     expect(count.locator("span.is-on")).to_have_count(1, timeout=3000)
-    seen, heights = set(), []
+    seen, sizes = set(), []
     for _ in range(30):
-        on = count.locator("span.is-on")
-        if on.count():
-            seen.add(on.first.inner_text())
-            heights.append(tools.bounding_box()["height"])
+        # En una sola llamada: el número resaltado y el tamaño del botón en ese instante.
+        state = song.evaluate(
+            """() => { const on = document.querySelector('[data-ac-met-count] span.is-on');
+              const r = document.querySelector('[data-ac-met-toggle]').getBoundingClientRect();
+              return on ? { n: on.textContent, w: r.width, h: r.height } : null; }"""
+        )
+        if state:
+            seen.add(state["n"])
+            sizes.append((state["w"], state["h"]))
         song.wait_for_timeout(50)
     assert {"1", "2", "3", "4"} <= seen
-    assert heights and max(heights) <= rest + 1  # la barra no crece mientras cuenta
+    # El botón no cambia de tamaño mientras cuenta (así la barra fija no crece).
+    assert all(abs(w - rest["width"]) < 1 and abs(h - rest["height"]) < 1 for w, h in sizes)
     expect(count.locator("span")).to_have_count(0, timeout=3000)  # empieza el compás 1
     expect(song.locator(".ac-bar.is-current")).to_have_count(1, timeout=3000)
     toggle.click()
