@@ -190,3 +190,18 @@ cuyo acorde está sonando, no la casilla entera. Una casilla con un solo acorde 
   número actual resaltado, en vez de «Reproducir/Detener». Va dentro del botón para que la barra fija no
   crezca (un elemento aparte la pasaba a dos filas). También en «Sin sonido». Los números solo existen en el
   DOM durante la cuenta.
+
+## S13 · Tips o consejos entre secciones de la partitura (2026-11-02)
+
+Una línea `> Título | Texto` dentro de la `partitura` (de cualquier versión) es un tip que se muestra donde se
+escribe: al inicio o entre secciones. Cerrado muestra el ícono de destello que brilla, la etiqueta «Tip» y el
+título gancho; al tocarlo (o con Enter/Espacio) se despliega el texto.
+
+- **Límites:** título hasta 60 caracteres, texto hasta 280, ambos obligatorios; el texto siempre se escapa.
+- **No son compases:** el cursor del metrónomo, el conteo de compases y los acordes usados los ignoran.
+- **Brillo:** se apaga con `prefers-reduced-motion` y, una vez abierto, el tip deja de brillar (se recuerda
+  en `localStorage` por contenido; si falla, simplemente vuelve a brillar).
+- **Sin tecnología nueva** ni formato nuevo: reutiliza la `partitura`. Los temas sin tips no cambian.
+- **Pendiente (research):** el validador del admin es una copia y rechazaría estas líneas; hay que
+  sincronizarlo (con el contrato) antes de publicar tips desde el admin. Fuera de alcance de este paso.
+

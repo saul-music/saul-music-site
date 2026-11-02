@@ -503,6 +503,31 @@ a.card:hover { border-color: var(--ac-fill); transform: translateY(-2px); }
 .ac-rep-count { margin-left: .5rem; font-size: .85rem; color: var(--ac-accent); font-weight: 600; }
 .ac-bars { scroll-margin-top: 12rem; }
 
+/* Tips entre secciones: tarjeta con un ícono que brilla hasta que se abre */
+.ac-tip { border: 2px dashed var(--ac-accent); border-radius: var(--ac-radius, .75rem); background: rgba(var(--ac-accent-rgb), .07); }
+.ac-tip-btn {
+  display: flex; align-items: center; gap: .75rem; width: 100%; padding: .6rem .8rem; border: 0;
+  background: transparent; color: inherit; text-align: left; cursor: pointer; border-radius: inherit;
+}
+.ac-tip-btn:focus-visible { outline: 2px solid var(--ac-accent); outline-offset: 2px; }
+.ac-tip-icon {
+  position: relative; flex: none; display: grid; place-items: center; width: 2.6rem; height: 2.6rem;
+  border-radius: 50%; background: var(--ac-fill); color: var(--ac-on-fill);
+}
+.ac-tip-icon::after {
+  content: ""; position: absolute; inset: 0; border-radius: 50%; border: 2px solid var(--ac-accent);
+  animation: ac-tip-glow 2.2s ease-out infinite;
+}
+.ac-tip.is-seen .ac-tip-icon::after { animation: none; opacity: 0; }
+@keyframes ac-tip-glow { 0% { transform: scale(1); opacity: .9; } 100% { transform: scale(1.6); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .ac-tip-icon::after { animation: none; opacity: 0; } }
+.ac-tip-label { display: grid; gap: .1rem; min-width: 0; flex: 1; }
+.ac-tip-kicker { font-size: .72rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--ac-accent); }
+.ac-tip-title { font-weight: 600; line-height: 1.25; }
+.ac-tip-chev { flex: none; transition: transform .15s; color: var(--ac-accent); }
+.ac-tip-btn[aria-expanded="true"] .ac-tip-chev { transform: rotate(180deg); }
+.ac-tip-body { margin: 0; padding: 0 .8rem .8rem 4.15rem; }
+
 /* Partir desde cualquier compás: bandera en la esquina de cada casilla */
 .ac-start-flag {
   position: absolute; top: 2px; left: 2px; z-index: 2; display: grid; place-items: center;

@@ -512,3 +512,47 @@ def test_count_in_shows_numbers_while_it_counts(song_audio: Page):
     toggle.click()
     song.wait_for_timeout(300)
     expect(count.locator("span")).to_have_count(0)
+
+
+def test_tips_open_by_keyboard_stay_in_place_and_stop_glowing_once_seen(page: Page, tips_url: str):
+    page.goto(tips_url + SONG)
+    tips = page.locator("#p-basico .ac-tip")
+    expect(tips).to_have_count(2)
+    # Un tip al inicio (antes de la primera sección) y otro entre secciones.
+    order = page.evaluate(
+        """() => [...document.querySelectorAll('#p-basico .ac-tip, #p-basico h2')]
+          .map(e => e.classList.contains('ac-tip') ? 'tip' : e.textContent.trim().split(' ')[0])"""
+    )
+    assert order[:2] == ["tip", "Intro"] and order.index("tip", 1) < order.index("Coro")
+    first = tips.first
+    button = first.locator(".ac-tip-btn")
+    body = first.locator(".ac-tip-body")
+    expect(button).to_have_attribute("aria-expanded", "false")
+    expect(body).to_be_hidden()
+    expect(first).not_to_have_class(re.compile(r"\bis-seen\b"))
+    button.focus()
+    page.keyboard.press("Enter")
+    expect(button).to_have_attribute("aria-expanded", "true")
+    expect(body).to_be_visible()
+    expect(body).to_contain_text("el bajo baja a B")
+    expect(first).to_have_class(re.compile(r"\bis-seen\b"))
+    page.keyboard.press("Space")
+    expect(body).to_be_hidden()
+    # Lo ya visto se recuerda al recargar; el otro sigue brillando.
+    page.reload()
+    expect(page.locator("#p-basico .ac-tip").first).to_have_class(re.compile(r"\bis-seen\b"))
+    expect(page.locator("#p-basico .ac-tip").nth(1)).not_to_have_class(re.compile(r"\bis-seen\b"))
+
+
+def test_tips_do_not_disturb_the_playhead(page: Page, tips_url: str):
+    page.add_init_script(SAFARI_AUDIO_STUB)
+    page.goto(tips_url + SONG)
+    page.locator("[data-ac-met-countin]").click()
+    page.locator("[data-ac-met-range]").fill("240")
+    page.locator("[data-ac-met-toggle]").click()
+    expect(page.locator("#p-basico .ac-bar.is-current")).to_have_count(1, timeout=5000)
+    first = page.locator("#p-basico .ac-bar.is-current").evaluate(
+        "el => Array.from(el.closest('.ac-bars').children).indexOf(el)"
+    )
+    assert first == 0
+    page.locator("[data-ac-met-toggle]").click()

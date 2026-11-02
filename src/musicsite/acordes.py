@@ -258,15 +258,38 @@ def init(directory: Path) -> list[Path]:
     return created
 
 
+TIP_TITLE_MAX = 60
+TIP_TEXT_MAX = 280
 SECTION_LINE = re.compile(r"^(?P<name>.+?)(?:\s+x(?P<times>\d+))?\s*:\s*(?P<bars>.*)$")
 
 
+def parse_tip(line: str, where: str) -> tuple[dict | None, str | None]:
+    """Un tip es una línea «> Título | Texto»; va entre secciones o al inicio, y no es un compás."""
+    title, bar, text = (part.strip() for part in line[1:].partition("|"))
+    if not bar or not title or not text:
+        return None, f"{where}: un tip se escribe «> Título | Texto» (con título y texto)"
+    if len(title) > TIP_TITLE_MAX:
+        return None, f"{where}: el título del tip pasa de {TIP_TITLE_MAX} caracteres"
+    if len(text) > TIP_TEXT_MAX:
+        return None, f"{where}: el texto del tip pasa de {TIP_TEXT_MAX} caracteres"
+    return {"consejo": {"titulo": title, "texto": text}}, None
+
+
 def parse_score(text: str) -> tuple[list[dict], list[str]]:
-    """Convierte la notación compacta («Estrofa x2: G % D») en secciones."""
+    """Convierte la notación compacta («Estrofa x2: G % D») en secciones.
+
+    Las líneas «> Título | Texto» son tips y quedan en su lugar entre las secciones."""
     sections, errors = [], []
     for number, line in enumerate(text.splitlines(), start=1):
         line = line.strip()
         if not line or line.startswith("#"):
+            continue
+        if line.startswith(">"):
+            tip, error = parse_tip(line, f"partitura, línea {number}")
+            if error:
+                errors.append(error)
+            else:
+                sections.append(tip)
             continue
         match = SECTION_LINE.match(line)
         if not match:
@@ -386,7 +409,7 @@ def validate_file(path: Path) -> Report:
         errors.extend(f"{mode}: {error}" for error in mode_errors)
         used: set[str] = set()
         for section in mode_sections:
-            for token in section["compases"]:
+            for token in section.get("compases", []):
                 for chord in check_bar(token, mode, errors):
                     used.add(chord)
                     if not pattern.match(chord):

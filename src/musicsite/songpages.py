@@ -13,6 +13,7 @@ Uso:
     python -m musicsite.acordes library --dir ../acordes-local --index src/musicsite/web/index.html
 """
 
+import hashlib
 import html
 import json
 import re
@@ -91,9 +92,35 @@ def bar_html(token: str, repeat: bool = False) -> str:
     return f'<div class="ac-bar is-split{mark}">{spans}</div>'
 
 
+TIP_ICON = (
+    '<svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor" aria-hidden="true">'
+    '<path d="M12 2l2.1 6.1L20 10l-5.9 1.9L12 18l-2.1-6.1L4 10l5.9-1.9z"/>'
+    '<path d="M19 15l.9 2.1L22 18l-2.1.9L19 21l-.9-2.1L16 18l2.1-.9z"/></svg>'
+)
+
+
+def tip_html(tip: dict) -> str:
+    """Un tip entre secciones: tarjeta con ícono que brilla; cerrada muestra solo el título gancho."""
+    title, text = tip["titulo"], tip["texto"]
+    key = hashlib.sha1(f"{title}|{text}".encode()).hexdigest()[:10]  # noqa: S324
+    return (
+        f'          <div class="ac-tip" data-ac-tip="{key}">\n'
+        '            <button type="button" class="ac-tip-btn" aria-expanded="false">'
+        f'<span class="ac-tip-icon">{TIP_ICON}</span>'
+        f'<span class="ac-tip-label"><span class="ac-tip-kicker">Tip</span>'
+        f'<span class="ac-tip-title">{esc(title)}</span></span>'
+        '<span class="ac-tip-chev" aria-hidden="true">\u25be</span></button>\n'
+        f'            <p class="ac-tip-body" hidden>{esc(text)}</p>\n'
+        "          </div>"
+    )
+
+
 def structure(sections: list[dict]) -> str:
     blocks = []
     for section in sections:
+        if "consejo" in section:
+            blocks.append(tip_html(section["consejo"]))
+            continue
         times = section.get("repeticiones", 1)
         label = (
             f' <span class="text-body-secondary fw-normal ac-mono">× {times}</span>'

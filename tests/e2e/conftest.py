@@ -7,7 +7,7 @@ import time
 import pytest
 import uvicorn
 
-from musicsite.app import create_app
+from musicsite.app import SONGS_DIR, create_app
 
 
 def pytest_collection_modifyitems(items):
@@ -16,12 +16,11 @@ def pytest_collection_modifyitems(items):
             item.add_marker(pytest.mark.e2e)
 
 
-@pytest.fixture(scope="session")
-def base_url() -> str:
+def serve(app):
     with socket.socket() as sock:
         sock.bind(("127.0.0.1", 0))
         port = sock.getsockname()[1]
-    config = uvicorn.Config(create_app(), host="127.0.0.1", port=port, log_level="warning")
+    config = uvicorn.Config(app, host="127.0.0.1", port=port, log_level="warning")
     server = uvicorn.Server(config)
     thread = threading.Thread(target=server.run, daemon=True)
     thread.start()
@@ -34,3 +33,28 @@ def base_url() -> str:
     yield f"http://127.0.0.1:{port}"
     server.should_exit = True
     thread.join(timeout=5)
+
+
+@pytest.fixture(scope="session")
+def base_url() -> str:
+    yield from serve(create_app())
+
+
+@pytest.fixture(scope="session")
+def tips_url(tmp_path_factory) -> str:
+    """Sitio con «Cámara lenta» más dos tips (al inicio y entre secciones): los temas reales no
+    llevan tips todavía, así que se prueban sobre una copia en una carpeta temporal."""
+    folder = tmp_path_factory.mktemp("songs-with-tips")
+    text = (SONGS_DIR / "camara-lenta.toml").read_text(encoding="utf-8")
+    text = text.replace(
+        "Intro x2: E F# B F#\n",
+        "> ¿Qué hace el bajo aquí? | La guitarra sostiene E y el bajo baja a B.\n"
+        "Intro x2: E F# B F#\n",
+        1,
+    ).replace(
+        "Coro x2: E F# B F#\n",
+        "> Antes del coro | Respira y entra con fuerza.\nCoro x2: E F# B F#\n",
+        1,
+    )
+    (folder / "camara-lenta.toml").write_text(text, encoding="utf-8")
+    yield from serve(create_app(songs=folder))
