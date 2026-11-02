@@ -475,7 +475,7 @@ a.card:hover { border-color: var(--ac-fill); transform: translateY(-2px); }
 
 /* Metrónomo (página de canción) */
 .ac-met-input { width: 5.5rem; }
-.ac-metronome .ac-met-range { width: auto; flex: 1 1 8rem; min-width: 8rem; }
+.ac-metronome .ac-met-range { width: auto; flex: 1 1 5rem; min-width: 5rem; }
 .ac-met-dot {
   width: 0.9rem; height: 0.9rem; border-radius: 50%;
   border: 2px solid var(--bs-border-color); background: transparent;
