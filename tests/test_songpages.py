@@ -273,6 +273,7 @@ def test_metronome_bar_has_mute_and_a_guides_entry_only_when_there_are_guides(so
 
     page = render(song, "publicable", preview=False)
     assert "data-ac-met-mute" in page
+    assert 'data-ac-met-countin aria-pressed="true"' in page
     assert "2 guías pueden enseñarte esta canción" in page or "data-ac-met-guides" in page
     monkeypatch.setattr(songpages, "teachers_for", lambda slug: [])
     empty = render(song, "publicable", preview=False)

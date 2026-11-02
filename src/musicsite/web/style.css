@@ -528,12 +528,19 @@ a.card:hover { border-color: var(--ac-fill); transform: translateY(-2px); }
 .ac-met-mute[aria-pressed="true"] { background: var(--ac-fill); border-color: var(--ac-fill); color: var(--ac-on-fill); }
 .ac-met-mute[aria-pressed="true"] .ac-on { display: none; }
 .ac-met-mute[aria-pressed="true"] .ac-off { display: inline; }
+.ac-met-countin { display: inline-flex; align-items: center; gap: .4rem; }
+.ac-met-countin[aria-pressed="true"] { background: var(--ac-fill); border-color: var(--ac-fill); color: var(--ac-on-fill); }
 @media (max-width: 575.98px) {
+  .ac-sticky-tools .ac-met-countin-text {
+    position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap;
+  }
+  .ac-sticky-tools .ac-met-countin { padding-inline: .55rem; align-self: stretch; }
   .ac-sticky-tools .ac-met-mute-text {
     position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap;
   }
   .ac-sticky-tools .ac-met-mute { padding-inline: .55rem; align-self: stretch; }
   .ac-sticky-tools .ac-met-reset-bpm { display: none; }
+  .ac-sticky-tools .ac-metronome .ac-met-range { flex-basis: 4.5rem; min-width: 4.5rem; }
   .ac-sticky-tools .ac-metronome .card-body > .small, .ac-sticky-tools .ac-metronome .d-flex > .small { display: none; }
 }
 
