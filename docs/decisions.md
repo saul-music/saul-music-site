@@ -163,3 +163,30 @@ en «Sin sonido» es solo visual.
 - Siempre son 4 clics, sea cual sea el compás. Solo se hace al iniciar: cambiar el bpm o el sonido
   mientras suena no la repite.
 - Sin tecnología nueva ni cambios de servidor: solo `acordia.js`, la plantilla y el CSS.
+
+## S11 · El parpadeo del pulso sigue el acorde dentro de un compás partido (2026-11-02)
+
+En una casilla con varios acordes (`F#-F#7`, `F#-%-F#7-B7`), cada pulso ilumina solo la parte (`.ac-part`)
+cuyo acorde está sonando, no la casilla entera. Una casilla con un solo acorde no cambia.
+
+- Cada parte lleva `data-weight` con su duración; el pulso `p` del compás cae en la parte que contiene
+  la posición `floor(p × total / pulsos)`. En 4/4, `F#-%-F#7-B7` ilumina F# dos pulsos, F#7 uno y B7 uno.
+- Si los trozos no dividen exacto los pulsos (3 trozos en 4/4), la primera parte recibe más pulsos.
+- El acento del primer pulso cae sobre la parte que lo contiene. Marco, flecha, contador y cuenta
+  inicial (S10) no cambian. Sin tecnología nueva.
+
+## S12 · Partir desde cualquier compás y compás actual centrado (2026-11-02)
+
+- **Bandera de inicio:** cada compás tiene un botón «Partir desde aquí» (esquina superior izquierda; visible
+  al pasar el cursor o con foco, y siempre atenuado en pantallas táctiles). Hay una sola marca por página;
+  tocar la misma bandera la quita. «Reproducir» (con su cuenta inicial) parte de ese compás, en la primera
+  pasada de su sección; «Detener» no borra la marca. Si la marca no está en la pestaña visible, se parte del
+  primer compás. No se guarda en `localStorage`. Las banderas las agrega `acordia.js`; el HTML generado no cambia.
+- **Centrado:** mientras suena, el compás actual se mantiene centrado entre la barra fija y el borde de la
+  ventana (antes solo se movía la página si el compás salía de pantalla). Scroll suave, o instantáneo con
+  movimiento reducido. Un scroll manual (rueda, dedo o teclado) pausa el seguimiento 4 segundos.
+- Sin tecnología nueva.
+- **Indicador de la cuenta inicial (S10):** mientras cuenta, el botón principal muestra «1 2 3 4» con el
+  número actual resaltado, en vez de «Reproducir/Detener». Va dentro del botón para que la barra fija no
+  crezca (un elemento aparte la pasaba a dos filas). También en «Sin sonido». Los números solo existen en el
+  DOM durante la cuenta.
