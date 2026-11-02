@@ -332,3 +332,68 @@ def test_title_and_artist_strip_is_in_the_sticky_area_and_starts_hidden(song):
     page = render(song, "publicable", preview=False)
     assert "data-ac-sticky-title hidden><strong>" in page
     assert page.index("ac-sticky-tools") < page.index("data-ac-sticky-title")
+
+
+# --- Tips entre secciones -------------------------------------------------------------------
+
+
+TIPS_SAMPLE = SAMPLE.replace(
+    "Estrofa x2: G % D Em C\n",
+    "> ¿Qué hace el bajo? | La guitarra sostiene G y el bajo baja a D <b>suave</b>.\n"
+    "Estrofa x2: G % D Em C\n"
+    "> Cierra con calma | Deja sonar el último C.\n"
+    "Coro: C Am\n",
+)
+
+
+def test_tips_keep_their_place_between_sections():
+    from musicsite.acordes import parse_score
+
+    sections, errors = parse_score("> A | uno\nEstrofa: G D\n> B | dos\nCoro: C Am\n")
+    assert errors == []
+    assert [("consejo" in s) for s in sections] == [True, False, True, False]
+    assert sections[0]["consejo"] == {"titulo": "A", "texto": "uno"}
+
+
+@pytest.mark.parametrize(
+    "line",
+    [
+        "> Solo título",
+        "> | sin título",
+        "> Sin texto |",
+        "> " + "x" * 61 + " | t",
+        "> t | " + "x" * 281,
+    ],
+)
+def test_bad_tips_are_rejected_with_a_clear_message(tmp_path, line):
+    body = SAMPLE.replace("Estrofa x2:", f"{line}\nEstrofa x2:")
+    errors = validate_file(write(tmp_path, "otra-era", body)).errors
+    assert any("tip" in e for e in errors)
+
+
+def test_tips_validate_in_every_mode_and_do_not_count_as_bars(tmp_path):
+    body = TIPS_SAMPLE + (
+        "\n[intermedio]\npartitura = '''\n> Tip IM | texto\nEstrofa: G7 Em7\n'''\n"
+        "[avanzado]\npartitura = '''\nEstrofa: Gmaj7 D\n> Tip AV | texto\n'''\n"
+    )
+    assert validate_file(write(tmp_path, "otra-era", body)).errors == []
+
+
+def test_tip_renders_escaped_in_position_and_the_playhead_ignores_it(tmp_path):
+    page = render(load_song(write(tmp_path, "otra-era", TIPS_SAMPLE)), "publicable", preview=False)
+    assert page.count('data-ac-tip="') == 2
+    assert "&lt;b&gt;suave&lt;/b&gt;" in page and "<b>suave</b>" not in page
+    first, estrofa, second, coro = (
+        page.index('data-ac-tip="'),
+        page.index('<h2 class="h5 m-0">Estrofa'),
+        page.rindex('data-ac-tip="'),
+        page.index('<h2 class="h5 m-0">Coro'),
+    )
+    assert first < estrofa < second < coro
+    assert '<button type="button" class="ac-tip-btn" aria-expanded="false">' in page
+    # Los tips no son compases: ni cuentan como `.ac-bars` ni se mezclan con ellos.
+    assert page.count('class="ac-bars"') == 2
+
+
+def test_a_song_without_tips_is_unchanged(song):
+    assert "ac-tip" not in render(song, "publicable", preview=False).split("</style>")[-1]

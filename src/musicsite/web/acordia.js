@@ -383,6 +383,26 @@
       collapse.hide();
     });
   })();
+  /* Tips entre secciones: se abren con un toque; los ya vistos dejan de brillar (se recuerda aquí). */
+  (function () {
+    var KEY = "acordia-tips-vistos", seen = [];
+    try { seen = JSON.parse(localStorage.getItem(KEY) || "[]"); } catch (e) {}
+    document.querySelectorAll("[data-ac-tip]").forEach(function (tip) {
+      var id = tip.getAttribute("data-ac-tip");
+      var btn = tip.querySelector(".ac-tip-btn"), body = tip.querySelector(".ac-tip-body");
+      if (seen.indexOf(id) >= 0) tip.classList.add("is-seen");
+      btn.addEventListener("click", function () {
+        var open = btn.getAttribute("aria-expanded") !== "true";
+        btn.setAttribute("aria-expanded", open ? "true" : "false");
+        body.hidden = !open;
+        if (open && seen.indexOf(id) < 0) {
+          seen.push(id);
+          tip.classList.add("is-seen");
+          try { localStorage.setItem(KEY, JSON.stringify(seen)); } catch (e) {}
+        }
+      });
+    });
+  })();
   /* Metrónomo de la página de canción: Web Audio con agenda anticipada (el reloj del audio, no
      setInterval, decide cuándo suena cada clic). Arranca en el bpm del tema. */
   document.querySelectorAll("[data-ac-metronome]").forEach(function (box) {
