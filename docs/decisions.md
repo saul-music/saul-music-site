@@ -151,3 +151,15 @@ Reemplaza en parte S4 (datos en git).
 - **No cubre:** las fichas de `artistas.html` y los perfiles de `guias.html` siguen estáticos (un
   artista nuevo no aparece solo); el `sitemap.xml` por tema es parte de S6.
 
+
+## S10 · Cuenta inicial del metrónomo, activada por defecto (2026-11-02)
+
+Al reproducir un tema suenan **4 clics de cuenta** (el primero acentuado) antes del compás 1. Durante la
+cuenta los puntos de pulso parpadean y el cursor de compases no avanza. Suena si el sonido está activado;
+en «Sin sonido» es solo visual.
+
+- **Activada por defecto**; el botón «Cuenta inicial» la desactiva. La elección se guarda en
+  `localStorage` (`acordia-cuenta-inicial`), como «Sin sonido»; si falla, la página sigue funcionando.
+- Siempre son 4 clics, sea cual sea el compás. Solo se hace al iniciar: cambiar el bpm o el sonido
+  mientras suena no la repite.
+- Sin tecnología nueva ni cambios de servidor: solo `acordia.js`, la plantilla y el CSS.

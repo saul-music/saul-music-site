@@ -364,3 +364,24 @@ def test_metronome_waits_for_running_context_like_safari(page: Page, base_url: s
         page.wait_for_timeout(100)
     assert page.evaluate("window.__clicks") >= 2
     assert page.evaluate("window.__early") == 0
+
+
+def test_count_in_precedes_the_playhead_and_can_be_turned_off(song_audio: Page):
+    song = song_audio
+    song.locator("[data-ac-met-range]").fill("240")  # 0,25 s por pulso: la cuenta dura ~1 s
+    count_btn = song.locator("[data-ac-met-countin]")
+    expect(count_btn).to_have_attribute("aria-pressed", "true")
+    song.locator("[data-ac-met-toggle]").click()
+    expect(song.locator(".ac-met-dot.is-on")).to_have_count(1, timeout=2000)
+    assert song.locator(".ac-bar.is-current").count() == 0  # aún cuenta, el cursor no empieza
+    expect(song.locator(".ac-bar.is-current")).to_have_count(1, timeout=5000)
+    assert song.evaluate("window.__clicks") >= 5  # 4 de cuenta + al menos el primer pulso
+    song.locator("[data-ac-met-toggle]").click()
+    # Desactivada: el cursor aparece sin esperar la cuenta, y la elección sobrevive a recargar.
+    count_btn.click()
+    expect(count_btn).to_have_attribute("aria-pressed", "false")
+    song.reload()
+    expect(song.locator("[data-ac-met-countin]")).to_have_attribute("aria-pressed", "false")
+    song.locator("[data-ac-met-range]").fill("240")
+    song.locator("[data-ac-met-toggle]").click()
+    expect(song.locator(".ac-bar.is-current")).to_have_count(1, timeout=700)

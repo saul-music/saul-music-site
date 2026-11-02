@@ -390,10 +390,12 @@
     var beats = +box.getAttribute("data-beats") || 4;
     var MIN = 30, MAX = 240, AHEAD = 0.12, TICK = 25;
     var bpm = home, playing = false, muted = false, ctx = null, timer = null, nextTime = 0, beat = 0, count = 0;
+    var COUNT_IN = 4, countIn = true, pre = 0;
     var cur = { pane: null, seq: [], idx: -1, counter: null, group: null };
-    var MUTE_KEY = "acordia-sin-sonido";
+    var MUTE_KEY = "acordia-sin-sonido", COUNT_KEY = "acordia-cuenta-inicial";
     var toggle = box.querySelector("[data-ac-met-toggle]");
     var mute = box.querySelector("[data-ac-met-mute]");
+    var countBtn = box.querySelector("[data-ac-met-countin]");
     var input = box.querySelector("[data-ac-met-bpm]");
     var range = box.querySelector("[data-ac-met-range]");
     var dotsBox = box.querySelector("[data-ac-met-dots]");
@@ -493,11 +495,11 @@
     /* Reloj: con sonido, el del audio (preciso); en "sin sonido", el del navegador, que no depende
        de ninguna salida de audio. Los tiempos de agenda están en el reloj del modo vigente. */
     function clock() { return muted || !ctx ? performance.now() / 1000 : ctx.currentTime; }
-    function flash(index, time, n) {
+    function flash(index, time, n, isCount) {
       setTimeout(function () {
         if (!playing) return;
         dots.forEach(function (x, k) { x.classList.toggle("is-on", k === index); });
-        cursor(n);
+        if (!isCount) cursor(n);
       }, Math.max(0, (time - clock()) * 1000));
     }
     function schedule() {
@@ -511,10 +513,13 @@
       var now = clock();
       if (nextTime < now) nextTime = now + 0.06;
       while (nextTime < now + AHEAD) {
-        if (!muted) click(nextTime, beat === 0);
-        flash(beat, nextTime, count);
-        count++;
+        /* Cuenta inicial: suena (si hay sonido) y parpadea, pero el cursor de compases no avanza. */
+        var isCount = pre > 0;
+        if (!muted) click(nextTime, isCount ? pre === COUNT_IN : beat === 0);
+        flash(isCount ? COUNT_IN - pre : beat, nextTime, count, isCount);
         nextTime += 60 / bpm;
+        if (isCount) { pre--; continue; }
+        count++;
         beat = (beat + 1) % beats;
       }
     }
@@ -538,6 +543,7 @@
       if (!playing) return;
       beat = 0;
       count = 0;
+      pre = countIn ? COUNT_IN : 0;
       nextTime = clock() + 0.06;
       schedule();
     }
@@ -578,6 +584,18 @@
       try { saved = localStorage.getItem(MUTE_KEY); } catch (e) {}
       if (saved === "1") setMuted(true, false);
       mute.addEventListener("click", function () { setMuted(!muted, true); });
+    }
+    /* La cuenta inicial (4 clics) viene activada; se puede desactivar y la elección se recuerda. */
+    function setCountIn(value, save) {
+      countIn = !!value;
+      if (countBtn) countBtn.setAttribute("aria-pressed", countIn ? "true" : "false");
+      if (save) { try { localStorage.setItem(COUNT_KEY, countIn ? "1" : "0"); } catch (e) {} }
+    }
+    if (countBtn) {
+      var savedCount = null;
+      try { savedCount = localStorage.getItem(COUNT_KEY); } catch (e) {}
+      if (savedCount === "0") setCountIn(false, false);
+      countBtn.addEventListener("click", function () { setCountIn(!countIn, true); });
     }
     toggle.addEventListener("click", function () { playing ? stop() : start(); });
     input.addEventListener("change", function () { setBpm(input.value); });
