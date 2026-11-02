@@ -64,6 +64,17 @@ jobs:
           enable-cache: true
       - run: uv sync --locked
       - run: uv run playwright install --with-deps ${{ matrix.browser }}
+      - name: audio virtual (experimento)
+        # Sink nulo de PulseAudio para que el AudioContext real llegue a running en el runner.
+        run: |
+          sudo apt-get install -y pulseaudio
+          export XDG_RUNTIME_DIR="$RUNNER_TEMP/xdg"; mkdir -p "$XDG_RUNTIME_DIR"; chmod 700 "$XDG_RUNTIME_DIR"
+          pulseaudio --kill 2>/dev/null || true
+          pulseaudio -D --exit-idle-time=-1 --start
+          pactl load-module module-null-sink sink_name=ci
+          pactl set-default-sink ci
+          pactl list short sinks
+          echo "XDG_RUNTIME_DIR=$XDG_RUNTIME_DIR" >> "$GITHUB_ENV"
       - name: pruebas de navegador
         env:
           DEVICE: ${{ matrix.device }}
