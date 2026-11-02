@@ -11,6 +11,8 @@ from musicsite.songpages import (
     LIBRARY_START,
     build,
     card,
+    chords_payload,
+    json_script,
     load_song,
     render,
     update_library,
@@ -60,13 +62,25 @@ def with_modes(extra):
     return SAMPLE + extra
 
 
+def btn(chord: str, shown: str | None = None) -> str:
+    """El botón con que se muestra un acorde (abre su diagrama)."""
+    return (
+        f'<button type="button" class="ac-chord-btn" data-chord="{chord}" '
+        f'aria-haspopup="dialog">{shown or chord}</button>'
+    )
+
+
+def text_of(html: str) -> str:
+    return re.sub(r"<[^>]*>", "", html)
+
+
 def test_page_has_only_the_structure_section_with_three_mode_tabs(song):
     page = render(song, "publicable", preview=False)
     for key in ("basico", "intermedio", "avanzado"):
         assert f'id="p-{key}"' in page
     assert "Básico" in page and "Intermedio" in page and "Avanzado" in page
     assert "data-frets" not in page and "Rasgueo" not in page and "Práctica" not in page
-    assert '<div class="ac-bar">Em</div>' in page
+    assert f'<div class="ac-bar">{btn("Em")}</div>' in page
     assert "Borrador" not in page and "noindex" not in page
 
 
@@ -212,12 +226,16 @@ def test_bar_with_several_chords_is_one_cell_with_proportional_parts():
     from musicsite.songpages import bar_html
 
     assert bar_html("F#-F#7") == (
-        '<div class="ac-bar is-split"><span class="ac-part" style="flex: 1">F\u266f</span>'
-        '<span class="ac-part" style="flex: 1">F\u266f7</span></div>'
+        '<div class="ac-bar is-split"><span class="ac-part" style="flex: 1">'
+        + btn("F#", "F\u266f")
+        + '</span><span class="ac-part" style="flex: 1">'
+        + btn("F#7", "F\u266f7")
+        + "</span></div>"
     )
     held = bar_html("F#-%-F#7-B7")
     assert held.count("<span") == 3
-    assert 'style="flex: 2">F\u266f<' in held and 'style="flex: 1">B7<' in held
+    assert 'style="flex: 2">' + btn("F#", "F\u266f") in held
+    assert 'style="flex: 1">' + btn("B7") in held
 
 
 def test_whole_bar_repeat_is_still_a_plain_cell():
@@ -266,10 +284,10 @@ def test_percent_bar_shows_the_previous_chord_dimmed():
     from musicsite.songpages import structure
 
     html = structure([{"nombre": "Interludio", "compases": ["E", "%", "D#m", "%", "%"]}])
-    bars = re.findall(r'<div class="ac-bar([^"]*)"[^>]*>([^<]*)</div>', html)
-    assert [chord for _, chord in bars] == ["E", "E", "D\u266fm", "D\u266fm", "D\u266fm"]
+    bars = re.findall(r'<div class="ac-bar([^"]*)"[^>]*>(.*?)</div>', html)
+    assert [text_of(chord) for _, chord in bars] == ["E", "E", "D\u266fm", "D\u266fm", "D\u266fm"]
     assert ["is-repeat" in cls for cls, _ in bars] == [False, True, False, True, True]
-    assert "%" not in re.sub(r"<[^>]*>", "", html)
+    assert "%" not in text_of(html)
 
 
 def test_percent_bar_repeats_a_split_bar_too():
@@ -284,4 +302,31 @@ def test_percent_inside_a_bar_still_holds_the_chord():
     from musicsite.songpages import bar_html
 
     held = bar_html("F#-%-F#7-B7")
-    assert 'style="flex: 2">F\u266f<' in held and "is-repeat" not in held
+    assert 'style="flex: 2">' + btn("F#", "F\u266f") in held and "is-repeat" not in held
+
+
+def test_own_shape_goes_only_to_its_version_and_the_page_embeds_the_data(tmp_path):
+    body = with_modes(
+        "\n[avanzado]\npartitura = '''\nA: G Em\n'''\n[avanzado.formas]\n\"G\" = \"3 5 5 4 3 3\"\n"
+    )
+    loaded = load_song(write(tmp_path, "otra-era", body))
+    assert loaded["formas"] == {"avanzado": {"G": [3, 5, 5, 4, 3, 3]}}
+    payload = chords_payload(loaded)
+    assert payload["own"]["avanzado"]["G"]["frets"] == [3, 5, 5, 4, 3, 3]
+    assert "intermedio" not in payload["own"] and payload["chords"]["G"]["guitar"]
+    page = render(loaded, "publicable", preview=False)
+    assert 'id="acordes-data"' in page and "ac-chord-btn" in page
+    assert "<" not in page.split('id="acordes-data">')[1].split("</script>")[0]
+
+
+def test_chords_data_is_embedded_safely_and_only_for_chords_of_the_song(song):
+    assert "<" not in json_script({"x": "</script><b>"})
+    payload = chords_payload(song)
+    assert set(payload["chords"]) == {"G", "D", "Em", "C"}  # los de sus compases
+    assert payload["chords"]["G"]["label"] == "G" and payload["own"] == {}
+
+
+def test_title_and_artist_strip_is_in_the_sticky_area_and_starts_hidden(song):
+    page = render(song, "publicable", preview=False)
+    assert "data-ac-sticky-title hidden><strong>" in page
+    assert page.index("ac-sticky-tools") < page.index("data-ac-sticky-title")

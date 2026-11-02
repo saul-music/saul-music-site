@@ -97,3 +97,27 @@ estructurados; contenido delgado (casi solo la grilla de acordes, sin letras por
   fuera de Santiago.
 
 **Estado:** no iniciado. Plan y aprobación explícita antes de cualquier código.
+
+## S8 · Diagramas de acorde: forma estándar de chords-db y formas propias opcionales (2026-11-02)
+
+Cada acorde de la página de canción abre un panel (al pasar el cursor, al enfocar o al tocar; panel
+inferior en celular) con la forma de guitarra y su tab de texto, y el teclado. **Escribir un tema no
+pide formas:** cada acorde usa la forma estándar. Las formas vienen de *chords-db* (MIT), recortadas a
+`data/chords-guitar.json` (893 formas; se descartaron 21 que sonaban notas ajenas) con el aviso en
+`THIRD_PARTY_NOTICES.md`; no hay dependencia en tiempo de ejecución ni red (política L1, control).
+
+**Formas propias, opcionales y solo en Intermedio y Avanzado:** `[avanzado.formas]` o
+`[intermedio.formas]`, p. ej. `"Cmaj7" = "x 3 2 0 0 0"` (trastes de la 6ª a la 1ª cuerda; `x` = no
+suena). El validador exige 6 valores (0 a 24), un acorde que aparezca en esa versión y que solo suenen
+notas del acorde (con bajo `G/B`, la nota más grave debe ser el bajo). El Básico no admite formas. La
+forma propia se muestra primero en su versión, con la etiqueta «Forma de esta versión»; las estándar
+siguen con «Otra forma».
+
+**El teclado se calcula** con teoría propia (`chordtheory.py`, notas escritas por grado: Cm = C Eb G),
+sin datos de terceros. Un acorde sin forma disponible (`G/B`, extensiones raras) muestra el teclado y
+«Sin diagrama de guitarra»; no se inventan formas. No incluye ukelele ni dedos propios.
+
+**Pendiente en research (M16):** replicar la regla en la copia del validador (test de contrato) y
+sumar al admin una sección opcional «Formas específicas» en Avanzado. Lo revisa un guitarrista: las
+formas estándar de los 23 acordes del repertorio, y una propia de ejemplo.
+

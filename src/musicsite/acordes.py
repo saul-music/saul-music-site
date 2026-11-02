@@ -20,6 +20,8 @@ import tomllib
 from dataclasses import dataclass, field
 from pathlib import Path
 
+from musicsite import chordtheory as theory
+
 # (slug, título, artista, tipo): el repertorio inicial más los tres ejemplos del sitio.
 REPERTOIRE = [
     ("esquemas-juveniles", "Esquemas juveniles", "Javiera Mena", "cancion"),
@@ -111,6 +113,10 @@ v2_resuelto = false   # true solo cuando los derechos (V2) estén resueltos
 # '''
 # tab = '''
 # '''
+# Formas de guitarra: NO se piden. Cada acorde usa la forma estándar. Solo si quieres una forma
+# específica en esta versión, de la 6ª a la 1ª cuerda (x = no suena, 0 = al aire):
+# [avanzado.formas]
+# "Cmaj7" = "x 3 2 0 0 0"
 """
 
 
@@ -300,6 +306,29 @@ def check_chord(token: str, where: str, errors: list[str]) -> None:
     )
 
 
+def check_shapes(mode: str, shapes: object, used: set[str], errors: list[str]) -> None:
+    """Formas propias de guitarra (opcionales): solo pueden sonar notas del acorde."""
+    if not shapes:
+        return
+    if not isinstance(shapes, dict):
+        errors.append(f'{mode}: formas debe ser una tabla («F#» = "2 4 4 3 2 2")')
+        return
+    for name, text in shapes.items():
+        where = f"{mode}.formas «{name}»"
+        chord = theory.parse(name)
+        if chord is None:
+            errors.append(f"{where}: no sé dibujar este acorde")
+        elif name not in used:
+            errors.append(f"{where}: el acorde no aparece en la versión {mode}")
+        else:
+            try:
+                frets = theory.parse_shape(text)
+            except ValueError as error:
+                errors.append(f"{where}: {error}")
+                continue
+            errors.extend(f"{where}: {error}" for error in theory.check_shape(chord, frets))
+
+
 def validate_file(path: Path) -> Report:
     report = Report(path)
     try:
@@ -349,15 +378,20 @@ def validate_file(path: Path) -> Report:
 
     if data.get("barrio", "") not in BARRIOS:
         errors.append("barrio debe ser Rock, Pop o Indie")
+    if "formas" in data:
+        errors.append("formas solo existe en [intermedio] y [avanzado]; el básico usa la estándar")
     for mode, pattern in MODES.items():
         score = data.get(mode, {}).get("partitura", "")
         mode_sections, mode_errors = parse_score(score)
         errors.extend(f"{mode}: {error}" for error in mode_errors)
+        used: set[str] = set()
         for section in mode_sections:
             for token in section["compases"]:
                 for chord in check_bar(token, mode, errors):
+                    used.add(chord)
                     if not pattern.match(chord):
                         errors.append(f"{mode}: «{chord}» no es un acorde válido para este modo")
+        check_shapes(mode, data.get(mode, {}).get("formas", {}), used, errors)
     tab = data.get("avanzado", {}).get("tab", "")
     if not isinstance(tab, str):
         errors.append("avanzado: tab debe ser texto")

@@ -23,8 +23,9 @@
       <a class="btn btn-primary ac-met-guides" href="guias.html?tema={{ song.slug }}" data-ac-met-guides{% if bpm %} role="button" data-bs-toggle="collapse" data-bs-target="#guias-panel" aria-controls="guias-panel" aria-expanded="false"{% endif %}>Aprende con una guía</a>
     </aside>
     {% endif %}
-    {% if bpm %}<div class="ac-sticky-tools">
-    <section class="card ac-metronome" data-ac-metronome data-bpm="{{ bpm }}" data-beats="{{ beats }}" aria-label="Metrónomo">
+    <div class="ac-sticky-tools">
+    <div class="ac-sticky-title" data-ac-sticky-title hidden><strong>{{ song.titulo }}</strong><span> · {{ song.artista }}</span></div>
+    {% if bpm %}<section class="card ac-metronome" data-ac-metronome data-bpm="{{ bpm }}" data-beats="{{ beats }}" aria-label="Metrónomo">
       <div class="card-body d-flex flex-wrap gap-3 align-items-center">
         <button class="btn btn-primary" type="button" data-ac-met-toggle aria-pressed="false">Reproducir</button>
         <button class="btn btn-outline-primary ac-met-mute" type="button" data-ac-met-mute aria-pressed="false" title="Seguir el tempo sin sonido">
@@ -46,8 +47,8 @@
       </div>
     </section>
     {{ guides_panel }}
-    </div>
     {% endif %}
+    </div>
     <ul class="nav nav-pills mb-4 flex-wrap" id="tabs" role="tablist">
 {% for key, label, description in modes %}      <li class="nav-item" role="presentation"><button class="nav-link{{ ' active' if loop.first }}" id="t-{{ key }}" data-bs-toggle="pill" data-bs-target="#p-{{ key }}" type="button" role="tab" aria-controls="p-{{ key }}" aria-selected="{{ 'true' if loop.first else 'false' }}">{{ label }}</button></li>
 {% endfor %}    </ul>
@@ -63,4 +64,5 @@
       </section>
 {% endfor %}    </div>
   </main>
+  <script type="application/json" id="acordes-data">{{ chords_json }}</script>
 {% endblock %}
