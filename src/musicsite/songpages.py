@@ -14,6 +14,7 @@ Uso:
 """
 
 import html
+import json
 import re
 import shutil
 import tomllib
@@ -22,6 +23,7 @@ from pathlib import Path
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 from markupsafe import Markup
 
+from musicsite import chordtheory as theory
 from musicsite.acordes import REPEAT, REPERTOIRE, parse_score, validate_file
 from musicsite.profes import avatar, coverage, price, teachers_for, top_teachers
 
@@ -56,6 +58,17 @@ def accidentals(chord: str) -> str:
     return chord
 
 
+def chord_html(chord: str) -> str:
+    """El acorde como botón que abre su diagrama; texto plano si no sabemos dibujarlo."""
+    shown = esc(accidentals(chord))
+    if theory.parse(chord) is None:
+        return shown
+    return (
+        f'<button type="button" class="ac-chord-btn" data-chord="{esc(chord)}" '
+        f'aria-haspopup="dialog">{shown}</button>'
+    )
+
+
 def bar_html(token: str, repeat: bool = False) -> str:
     """Una casilla por compás; con guiones, cada acorde ocupa el ancho de las partes que dura.
 
@@ -64,7 +77,7 @@ def bar_html(token: str, repeat: bool = False) -> str:
     mark = ' is-repeat" title="Repite el compás anterior' if repeat else ""
     parts = token.split("-") if token != REPEAT else [token]
     if len(parts) == 1:
-        return f'<div class="ac-bar{mark}">{esc(accidentals(token))}</div>'
+        return f'<div class="ac-bar{mark}">{chord_html(token)}</div>'
     chords: list[list] = []
     for part in parts:
         if part == REPEAT and chords:
@@ -72,7 +85,7 @@ def bar_html(token: str, repeat: bool = False) -> str:
         else:
             chords.append([part, 1])
     spans = "".join(
-        f'<span class="ac-part" style="flex: {weight}">{esc(accidentals(chord))}</span>'
+        f'<span class="ac-part" style="flex: {weight}">{chord_html(chord)}</span>'
         for chord, weight in chords
     )
     return f'<div class="ac-bar is-split{mark}">{spans}</div>'
@@ -104,6 +117,20 @@ def structure(sections: list[dict]) -> str:
     return "\n".join(blocks)
 
 
+def own_shapes(data: dict) -> dict[str, dict[str, list[int]]]:
+    """Formas propias de guitarra por versión ({modo: {acorde: trastes}}). Opcionales: la
+    validación está en acordes.py; aquí se ignora lo que no se pueda leer."""
+    shapes: dict[str, dict[str, list[int]]] = {}
+    for mode in ("intermedio", "avanzado"):
+        table = data.get(mode, {}).get("formas", {})
+        for name, text in table.items() if isinstance(table, dict) else []:
+            try:
+                shapes.setdefault(mode, {})[name] = theory.parse_shape(text)
+            except ValueError:
+                continue
+    return shapes
+
+
 def load_song(path: Path) -> dict:
     data = tomllib.loads(path.read_text(encoding="utf-8"))
     compact, _ = parse_score(data.get("partitura", ""))
@@ -111,6 +138,7 @@ def load_song(path: Path) -> dict:
     for mode in ("intermedio", "avanzado"):
         data[mode + "_secciones"], _ = parse_score(data.get(mode, {}).get("partitura", ""))
     data["tab"] = data.get("avanzado", {}).get("tab", "").strip("\n")
+    data["formas"] = own_shapes(data)
     return data
 
 
@@ -135,6 +163,44 @@ def mode_pane(key: str, song: dict, no_harmony: bool) -> str:
                 '<p class="text-body-secondary m-0"><span class="ac-chip">Próximamente</span></p>'
             )
     return body
+
+
+def chords_payload(song: dict) -> dict:
+    """Datos de los diagramas que usa este tema: acordes, teclas y formas de guitarra."""
+    used: set[str] = set()
+    for key in ("secciones", "intermedio_secciones", "avanzado_secciones"):
+        for section in song.get(key, []):
+            for token in section.get("compases", []):
+                used.update(part for part in token.split("-") if part and part != REPEAT)
+    chords = {}
+    for name in sorted(used):
+        chord = theory.parse(name)
+        if chord is None:
+            continue
+        keys, bass = theory.piano_keys(chord)
+        standard = theory.standard_positions(chord)
+        chords[name] = {
+            "label": accidentals(name),
+            "notes": [accidentals(n) for n in theory.note_names(chord)],
+            "keys": keys,
+            "bass": bass,
+            "guitar": [{**p, "tab": list(theory.tab_lines(p["frets"]))} for p in standard]
+            if standard
+            else None,
+        }
+    own = {
+        mode: {
+            name: {"frets": frets, "tab": list(theory.tab_lines(frets))}
+            for name, frets in table.items()
+        }
+        for mode, table in song.get("formas", {}).items()
+    }
+    return {"chords": chords, "own": own}
+
+
+def json_script(data: dict) -> str:
+    """JSON seguro para incrustar en una etiqueta <script>."""
+    return json.dumps(data, ensure_ascii=False, separators=(",", ":")).replace("<", "\\u003c")
 
 
 def guide_row(profile: dict, index: int, slug: str) -> str:
@@ -213,6 +279,7 @@ def render(song: dict, status: str, preview: bool) -> str:
         form=song.get("forma", ""),
         modes=MODES,
         panes={key: Markup(mode_pane(key, song, no_harmony)) for key, *_ in MODES},
+        chords_json=Markup(json_script(chords_payload(song))),
         guides_count=len(teachers),
         guides_panel=Markup(guides_panel(song["slug"], song["titulo"])) if teachers else "",
         guide_avatars=Markup("".join(avatar(t, i) for i, t in enumerate(teachers[:3]))),

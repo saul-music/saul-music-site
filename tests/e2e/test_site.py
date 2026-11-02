@@ -219,6 +219,53 @@ def test_clicking_a_guide_goes_straight_to_their_card(song: Page):
     expect(card).to_have_class(re.compile("is-target"))
 
 
+def test_title_and_artist_stay_visible_while_scrolling(song: Page):
+    strip = song.locator("[data-ac-sticky-title]")
+    expect(strip).to_be_hidden()  # arriba ya se ve el encabezado
+    song.evaluate("window.scrollTo(0, document.body.scrollHeight)")
+    expect(strip).to_be_visible()
+    expect(strip).to_contain_text("Cámara lenta")
+    expect(strip).to_contain_text("Javiera Mena")
+    expect(strip).to_be_in_viewport()
+    song.evaluate("window.scrollTo(0, 0)")
+    expect(strip).to_be_hidden()
+
+
+def test_chord_opens_guitar_diagram_with_tab_then_keyboard_and_closes(song: Page):
+    chord = song.locator("#p-basico .ac-chord-btn").first
+    panel = song.locator(".ac-chord-panel")
+    expect(panel).to_have_count(0)
+    chord.click()
+    expect(panel).to_be_visible()
+    expect(panel.locator("svg[aria-label^='Acorde']")).to_be_visible()
+    expect(panel.locator(".ac-cp-tab")).to_contain_text("E A D G B e")
+    next_form = panel.locator(".ac-cp-next")
+    expect(next_form).to_have_text(re.compile(r"^Otra forma \(1.\d+\)$"))
+    first = panel.locator(".ac-cp-tab").inner_text()
+    next_form.click()
+    assert panel.locator(".ac-cp-tab").inner_text() != first
+    panel.get_by_role("button", name="Teclado").click()
+    expect(panel.locator("svg[aria-label^='Teclas']")).to_be_visible()
+    expect(panel.locator("svg .key.on")).not_to_have_count(0)
+    assert song.evaluate(
+        "document.documentElement.scrollWidth <= document.documentElement.clientWidth"
+    )
+    box = panel.bounding_box()
+    assert 0 <= box["x"] and box["x"] + box["width"] <= song.viewport_size["width"] + 1
+    song.keyboard.press("Escape")
+    expect(panel).to_be_hidden()
+    chord.click()  # recuerda el instrumento elegido
+    expect(panel.locator("svg[aria-label^='Teclas']")).to_be_visible()
+
+
+def test_tapping_outside_closes_the_chord_panel(song: Page):
+    song.locator("#p-basico .ac-chord-btn").nth(1).click()
+    panel = song.locator(".ac-chord-panel")
+    expect(panel).to_be_visible()
+    song.locator("h1").click(force=True)
+    expect(panel).to_be_hidden()
+
+
 def _clicks(page: Page) -> int:
     return page.evaluate("window.__clicks")
 

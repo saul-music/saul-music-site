@@ -19,23 +19,21 @@
   });
   setTheme(root.getAttribute("data-bs-theme") || "dark");
 
-  /* Diagramas de acorde.
-     <div class="ac-chord" data-name="G" data-frets="3 2 0 0 0 3"></div>
-     frets de 6ª a 1ª cuerda: número = traste, 0 = al aire, x = no suena. */
+  /* Diagramas de acorde. guitarSVG recibe los trastes absolutos de la 6ª a la 1ª cuerda
+     (0 = al aire, -1 = no suena) y, si hay, los dedos y las cejillas. */
   var NS = "http://www.w3.org/2000/svg";
   function el(tag, attrs) {
     var n = document.createElementNS(NS, tag);
     for (var k in attrs) n.setAttribute(k, attrs[k]);
     return n;
   }
-  document.querySelectorAll(".ac-chord[data-frets]").forEach(function (box) {
-    var frets = box.getAttribute("data-frets").split(/\s+/);
-    var nums = frets.filter(function (f) { return /^\d+$/.test(f) && +f > 0; }).map(Number);
-    var max = nums.length ? Math.max.apply(null, nums) : 1;
-    var base = max > 4 ? Math.min.apply(null, nums) : 1;
-    var x0 = 14, y0 = 22, sx = 14, sy = 18, rows = 4;
-    var svg = el("svg", { viewBox: "0 0 98 120", role: "img",
-      "aria-label": "Acorde " + box.getAttribute("data-name") });
+  function guitarSVG(frets, fingers, barres, label) {
+    var played = frets.filter(function (f) { return f > 0; });
+    var max = played.length ? Math.max.apply(null, played) : 1;
+    var base = max > 4 ? Math.min.apply(null, played) : 1;
+    var x0 = 14, y0 = 22, sx = 14, sy = 18, rows = Math.max(4, max - base + 1);
+    var svg = el("svg", { viewBox: "0 0 98 " + (y0 + rows * sy + 6), role: "img",
+      "aria-label": "Acorde " + label });
     for (var s = 0; s < 6; s++)
       svg.appendChild(el("line", { x1: x0 + s * sx, y1: y0, x2: x0 + s * sx, y2: y0 + rows * sy, class: "grid", "stroke-width": 1.5 }));
     for (var r = 0; r <= rows; r++)
@@ -45,23 +43,226 @@
       var t = el("text", { x: 2, y: y0 + sy * .7, "font-size": 11, fill: "currentColor" });
       t.textContent = base; svg.appendChild(t);
     }
+    (barres || []).forEach(function (b) {
+      var idx = [];
+      frets.forEach(function (f, i) { if (f === b) idx.push(i); });
+      if (idx.length < 2) return;
+      var cy = y0 + (b - base) * sy + sy / 2;
+      svg.appendChild(el("rect", { x: x0 + idx[0] * sx - 5.5, y: cy - 5.5, width: (idx[idx.length - 1] - idx[0]) * sx + 11,
+        height: 11, rx: 5.5, class: "dot" }));
+    });
     frets.forEach(function (f, i) {
       var cx = x0 + i * sx;
-      if (f === "x") {
+      if (f < 0) {
         svg.appendChild(el("path", { d: "M" + (cx - 4) + " 6l8 8M" + (cx + 4) + " 6l-8 8", class: "mute", "stroke-width": 1.8 }));
-      } else if (f === "0") {
+      } else if (f === 0) {
         svg.appendChild(el("circle", { cx: cx, cy: 10, r: 4.5, class: "open", "stroke-width": 1.8 }));
       } else {
-        var row = +f - base;
-        svg.appendChild(el("circle", { cx: cx, cy: y0 + row * sy + sy / 2, r: 5.5, class: "dot" }));
+        var cy = y0 + (f - base) * sy + sy / 2;
+        svg.appendChild(el("circle", { cx: cx, cy: cy, r: 5.5, class: "dot" }));
+        if (fingers && fingers[i] > 0) {
+          var n = el("text", { x: cx, y: cy + 3.5, "text-anchor": "middle", "font-size": 9, class: "finger" });
+          n.textContent = fingers[i]; svg.appendChild(n);
+        }
       }
     });
+    return svg;
+  }
+  /* Dos octavas desde un do: `keys` son las teclas del acorde (0 a 23) y `bass`, el bajo (0 a 11). */
+  function pianoSVG(keys, bass, label) {
+    var WHITE = [0, 2, 4, 5, 7, 9, 11], BLACK = { 1: 0, 3: 1, 6: 3, 8: 4, 10: 5 };
+    var w = 13, h = 64, svg = el("svg", { viewBox: "0 0 " + 14 * w + " " + (h + 4), role: "img",
+      "aria-label": "Teclas del acorde " + label });
+    function cls(k) { return "key" + (keys.indexOf(k) >= 0 ? " on" : "") + (bass === k ? " bass" : ""); }
+    for (var o = 0; o < 2; o++) {
+      WHITE.forEach(function (pc, i) {
+        svg.appendChild(el("rect", { x: (o * 7 + i) * w, y: 2, width: w, height: h, rx: 1.5, class: cls(o * 12 + pc) }));
+      });
+    }
+    for (var o2 = 0; o2 < 2; o2++) {
+      for (var pc in BLACK) {
+        var k = o2 * 12 + +pc;
+        svg.appendChild(el("rect", { x: (o2 * 7 + BLACK[pc]) * w + w * .65, y: 2, width: w * .7, height: h * .6,
+          rx: 1.2, class: cls(k) + " black" }));
+      }
+    }
+    return svg;
+  }
+  document.querySelectorAll(".ac-chord[data-frets]").forEach(function (box) {
+    var frets = box.getAttribute("data-frets").split(/\s+/).map(function (f) { return f === "x" ? -1 : +f; });
     var name = document.createElement("span");
     name.className = "ac-chord-name";
     name.textContent = box.getAttribute("data-name");
     box.appendChild(name);
-    box.appendChild(svg);
+    box.appendChild(guitarSVG(frets, null, null, box.getAttribute("data-name")));
   });
+
+  /* Panel de acorde en la página de canción: al pasar el cursor (escritorio) o al tocar. Los datos
+     vienen del JSON de la página: forma estándar de guitarra, teclas y la forma propia de la versión. */
+  (function () {
+    var dataEl = document.getElementById("acordes-data");
+    var buttons = document.querySelectorAll(".ac-chord-btn");
+    if (!dataEl || !buttons.length) return;
+    var data;
+    try { data = JSON.parse(dataEl.textContent); } catch (e) { return; }
+    var KEY = "acordia-instrumento";
+    var instrument = "guitarra";
+    try { var saved = localStorage.getItem(KEY); if (saved === "teclado" || saved === "guitarra") instrument = saved; } catch (e) {}
+    var panel, nameEl, notesEl, tabs = {}, body, tabEl, badge, next, noteEl;
+    var anchor = null, pinned = false, form = 0, timer = null;
+    var phone = window.matchMedia ? window.matchMedia("(max-width: 575.98px)") : { matches: false };
+
+    function node(tag, cls, text) {
+      var n = document.createElement(tag);
+      if (cls) n.className = cls;
+      if (text) n.textContent = text;
+      return n;
+    }
+    function build() {
+      panel = node("div", "ac-chord-panel");
+      panel.setAttribute("role", "dialog");
+      panel.hidden = true;
+      var head = node("div", "ac-cp-head");
+      nameEl = node("strong", "ac-cp-name");
+      notesEl = node("span", "ac-cp-notes");
+      var close = node("button", "btn-close");
+      close.type = "button";
+      close.setAttribute("aria-label", "Cerrar");
+      close.addEventListener("click", function () { hide(true); });
+      head.appendChild(nameEl); head.appendChild(notesEl); head.appendChild(close);
+      var tabBar = node("div", "ac-cp-tabs");
+      [["guitarra", "Guitarra"], ["teclado", "Teclado"]].forEach(function (pair) {
+        var b = node("button", "btn btn-sm", pair[1]);
+        b.type = "button";
+        b.addEventListener("click", function () {
+          instrument = pair[0];
+          try { localStorage.setItem(KEY, instrument); } catch (e) {}
+          render();
+        });
+        tabs[pair[0]] = b; tabBar.appendChild(b);
+      });
+      body = node("div", "ac-chord ac-cp-body");
+      tabEl = node("pre", "ac-mono ac-cp-tab");
+      noteEl = node("p", "ac-cp-note");
+      var foot = node("div", "ac-cp-foot");
+      badge = node("span", "ac-chip ac-chip-ok", "Forma de esta versión");
+      next = node("button", "btn btn-sm btn-outline-primary ac-cp-next");
+      next.type = "button";
+      next.addEventListener("click", function () { form++; render(); });
+      foot.appendChild(badge); foot.appendChild(next);
+      [head, tabBar, body, tabEl, noteEl, foot].forEach(function (n) { panel.appendChild(n); });
+      panel.addEventListener("pointerenter", function () { clearTimeout(timer); });
+      panel.addEventListener("pointerleave", function (e) { if (e.pointerType === "mouse" && !pinned) schedule(); });
+      document.body.appendChild(panel);
+    }
+    function forms() {
+      var name = anchor.getAttribute("data-chord");
+      var mode = (anchor.closest(".tab-pane") || {}).id || "";
+      mode = mode.replace(/^p-/, "");
+      var own = (data.own[mode] || {})[name];
+      var list = own ? [{ frets: own.frets, tab: own.tab, own: true }] : [];
+      return list.concat((data.chords[name] || {}).guitar || []);
+    }
+    function render() {
+      var name = anchor.getAttribute("data-chord");
+      var chord = data.chords[name];
+      if (!chord) return hide(true);
+      nameEl.textContent = chord.label;
+      notesEl.textContent = chord.notes.join(" · ");
+      panel.setAttribute("aria-label", "Acorde " + chord.label);
+      for (var k in tabs) {
+        tabs[k].className = "btn btn-sm " + (k === instrument ? "btn-primary" : "btn-outline-primary");
+        tabs[k].setAttribute("aria-pressed", k === instrument ? "true" : "false");
+      }
+      body.textContent = "";
+      var list = forms();
+      if (instrument === "teclado") {
+        body.appendChild(pianoSVG(chord.keys, chord.bass, chord.label));
+        tabEl.hidden = true; noteEl.hidden = true; badge.hidden = true; next.hidden = true;
+      } else if (!list.length) {
+        tabEl.hidden = true; badge.hidden = true; next.hidden = true;
+        noteEl.hidden = false;
+        noteEl.textContent = "Sin diagrama de guitarra para este acorde. Mira el teclado.";
+      } else {
+        form = ((form % list.length) + list.length) % list.length;
+        var f = list[form];
+        body.appendChild(guitarSVG(f.frets, f.fingers, f.barres, chord.label));
+        tabEl.hidden = false; tabEl.textContent = f.tab.join("\n");
+        noteEl.hidden = true;
+        badge.hidden = !f.own;
+        next.hidden = list.length < 2;
+        next.textContent = "Otra forma (" + (form + 1) + "/" + list.length + ")";
+      }
+      place();
+    }
+    function place() {
+      if (phone.matches) { panel.style.top = ""; panel.style.left = ""; return; }
+      var r = anchor.getBoundingClientRect();
+      var w = panel.offsetWidth, h = panel.offsetHeight;
+      var left = Math.max(8, Math.min(r.left + window.scrollX + r.width / 2 - w / 2,
+        document.documentElement.clientWidth - w - 8));
+      var below = r.bottom + 8, top = below + window.scrollY;
+      if (below + h > window.innerHeight && r.top - h - 8 > 0) top = r.top - h - 8 + window.scrollY;
+      panel.style.left = left + "px";
+      panel.style.top = top + "px";
+    }
+    function show(btn, hold) {
+      clearTimeout(timer);
+      if (!panel) build();
+      if (anchor && anchor !== btn) anchor.setAttribute("aria-expanded", "false");
+      if (anchor !== btn) form = 0;
+      anchor = btn;
+      pinned = !!hold;
+      panel.hidden = false;
+      btn.setAttribute("aria-expanded", "true");
+      render();
+    }
+    function hide(restoreFocus) {
+      clearTimeout(timer);
+      if (!panel || panel.hidden) return;
+      panel.hidden = true;
+      if (anchor) {
+        anchor.setAttribute("aria-expanded", "false");
+        if (restoreFocus) anchor.focus();
+      }
+      pinned = false;
+    }
+    function schedule() { clearTimeout(timer); timer = setTimeout(function () { hide(false); }, 250); }
+
+    buttons.forEach(function (btn) {
+      btn.setAttribute("aria-expanded", "false");
+      btn.addEventListener("pointerenter", function (e) {
+        if (e.pointerType !== "mouse" || (panel && !panel.hidden && pinned)) return;
+        clearTimeout(timer);
+        timer = setTimeout(function () { show(btn, false); }, 120);
+      });
+      btn.addEventListener("pointerleave", function (e) {
+        if (e.pointerType === "mouse" && !pinned) schedule();
+      });
+      btn.addEventListener("click", function (e) {
+        if (panel && !panel.hidden && anchor === btn && pinned) return hide(false);
+        show(btn, true);
+        if (e.detail === 0 && tabs.guitarra) tabs[instrument].focus();  // con teclado, al panel
+      });
+    });
+    document.addEventListener("click", function (e) {
+      if (!panel || panel.hidden) return;
+      if (e.target.closest(".ac-chord-panel, .ac-chord-btn")) return;
+      hide(false);
+    });
+    document.addEventListener("keydown", function (e) { if (e.key === "Escape") hide(true); });
+    window.addEventListener("resize", function () { if (panel && !panel.hidden) place(); });
+  })();
+
+  /* Título y artista fijos: aparecen en la barra fija cuando el encabezado sale de pantalla. */
+  (function () {
+    var strip = document.querySelector("[data-ac-sticky-title]");
+    var heading = document.querySelector("main header h1");
+    if (!strip || !heading || !window.IntersectionObserver) return;
+    new IntersectionObserver(function (entries) {
+      strip.hidden = entries[entries.length - 1].isIntersecting;
+    }).observe(heading);
+  })();
 
   /* Lista de práctica con progreso (se recuerda en este navegador) */
   document.querySelectorAll("[data-ac-practice]").forEach(function (list) {
