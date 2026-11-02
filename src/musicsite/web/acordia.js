@@ -186,6 +186,12 @@
       }, Math.max(0, (time - ctx.currentTime) * 1000));
     }
     function schedule() {
+      /* Safari: con el contexto suspendido (o "interrupted" en iOS) el reloj no corre; no se agenda. */
+      if (ctx.state !== "running") {
+        if (ctx.resume) ctx.resume();
+        return;
+      }
+      if (nextTime < ctx.currentTime) nextTime = ctx.currentTime + 0.06;
       while (nextTime < ctx.currentTime + AHEAD) {
         click(nextTime, beat === 0);
         flash(beat, nextTime);
@@ -193,18 +199,31 @@
         beat = (beat + 1) % beats;
       }
     }
-    function start() {
-      var Ctor = window.AudioContext || window.webkitAudioContext;
-      if (!Ctor) return;
-      if (!ctx) ctx = new Ctor();
-      if (ctx.resume) ctx.resume();
-      playing = true;
+    /* iOS silencia Web Audio con el interruptor de silencio; "playback" lo evita (Safari 16.4+). */
+    function unlockIOS() {
+      try {
+        if (navigator.audioSession) navigator.audioSession.type = "playback";
+      } catch (e) { /* sin soporte */ }
+    }
+    function begin() {
+      if (!playing) return;
       beat = 0;
       nextTime = ctx.currentTime + 0.06;
       schedule();
+    }
+    function start() {
+      var Ctor = window.AudioContext || window.webkitAudioContext;
+      if (!Ctor) return;
+      unlockIOS();
+      if (!ctx) ctx = new Ctor();
+      playing = true;
+      clearInterval(timer);
       timer = setInterval(schedule, TICK);
       toggle.textContent = "Detener";
       toggle.setAttribute("aria-pressed", "true");
+      /* resume() es asíncrono en Safari: el primer clic se agenda cuando el reloj ya corre. */
+      var p = ctx.resume ? ctx.resume() : null;
+      if (p && p.then) p.then(begin, begin); else begin();
     }
     function stop() {
       playing = false;

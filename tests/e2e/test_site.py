@@ -3,7 +3,9 @@
     uv run pytest -m e2e --browser chromium
     uv run pytest -m e2e --browser webkit --device "iPhone 14"
 
-El sonido no se puede comprobar aquí: solo que el reloj de audio arranca y el pulso se mueve.
+Los altavoces no se pueden oír aquí: la lógica va contra un AudioContext simulado y
+test_audio_real.py comprueba, con un sink nulo de PulseAudio en el CI, que el contexto real corre
+y emite señal. Que suene en Safari/iPhone (interruptor de silencio) se comprueba de oído.
 """
 
 import re
@@ -13,6 +15,44 @@ from playwright.sync_api import Page, expect
 
 SONG = "/cancion-camara-lenta.html"  # 4/4 a 86 bpm
 SONG_BPM = 86
+
+
+SAFARI_AUDIO_STUB = """
+(() => {
+  // Imita a Safari: el contexto nace suspendido, el reloj no corre y resume() tarda.
+  window.__clicks = 0; window.__early = 0;
+  class Ctx {
+    constructor() { this.state = "suspended"; this._t = 0; this.destination = {}; }
+    get currentTime() { return this._t; }
+    resume() {
+      return new Promise((ok) => setTimeout(() => {
+        this.state = "running";
+        this._t0 = performance.now();
+        this._tick = setInterval(() => { this._t = (performance.now() - this._t0) / 1000; }, 5);
+        ok();
+      }, 300));
+    }
+    createGain() {
+      const p = { setValueAtTime() {}, exponentialRampToValueAtTime() {} };
+      return { gain: p, connect() {} };
+    }
+    createOscillator() {
+      const c = this;
+      return { frequency: {}, connect() {}, stop() {},
+        start() { window.__clicks++; if (c.state !== "running") window.__early++; } };
+    }
+  }
+  window.AudioContext = Ctx;
+})();
+"""
+
+
+@pytest.fixture
+def song_audio(page: Page, base_url: str) -> Page:
+    """Canción con un AudioContext simulado: el pulso no depende de que el runner tenga audio."""
+    page.add_init_script(SAFARI_AUDIO_STUB)
+    page.goto(base_url + SONG)
+    return page
 
 
 @pytest.fixture
@@ -58,7 +98,8 @@ def test_metronome_controls_stay_in_sync_and_clamp(song: Page):
     expect(bpm).to_have_value(str(SONG_BPM))
 
 
-def test_metronome_plays_pulses_and_stops(song: Page):
+def test_metronome_plays_pulses_and_stops(song_audio: Page):
+    song = song_audio
     toggle = song.locator("[data-ac-met-toggle]")
     toggle.click()
     expect(toggle).to_have_attribute("aria-pressed", "true")
@@ -108,3 +149,18 @@ def test_library_card_opens_song(page: Page, base_url: str):
     page.locator('a[href="cancion-camara-lenta.html"]').first.click()
     expect(page).to_have_url(re.compile(r"/cancion-camara-lenta\.html$"))
     expect(page.locator("h1")).to_have_text("Cámara lenta")
+
+
+def test_metronome_waits_for_running_context_like_safari(page: Page, base_url: str):
+    page.add_init_script(SAFARI_AUDIO_STUB)
+    page.goto(base_url + SONG)
+    page.locator("[data-ac-met-toggle]").click()
+    page.wait_for_timeout(150)
+    # Mientras el contexto sigue suspendido no se agenda ningún clic.
+    assert page.evaluate("window.__clicks") == 0
+    for _ in range(50):
+        if page.evaluate("window.__clicks") >= 2:
+            break
+        page.wait_for_timeout(100)
+    assert page.evaluate("window.__clicks") >= 2
+    assert page.evaluate("window.__early") == 0
