@@ -399,6 +399,33 @@
     var input = box.querySelector("[data-ac-met-bpm]");
     var range = box.querySelector("[data-ac-met-range]");
     var dotsBox = box.querySelector("[data-ac-met-dots]");
+    var label = toggle.querySelector("[data-ac-met-label]");
+    var countBox = toggle.querySelector("[data-ac-met-count]");
+    var countNums = [];
+    /* Cuenta inicial: mientras cuenta, el botón muestra 1 2 3 4 con el actual resaltado. Los
+       números solo existen en el DOM durante la cuenta (el texto del botón queda limpio). */
+    function showCount(index) {
+      if (index < 0) {
+        if (countNums.length) { countBox.textContent = ""; countNums = []; }
+        toggle.classList.remove("is-counting");
+        toggle.style.width = toggle.style.height = "";
+        return;
+      }
+      if (!countNums.length) {
+        /* El botón conserva el tamaño que tenía: la barra fija no puede crecer ni cambiar de fila. */
+        var w = toggle.offsetWidth, h = toggle.offsetHeight;
+        for (var k = 1; k <= COUNT_IN; k++) {
+          var s = document.createElement("span");
+          s.textContent = k;
+          countBox.appendChild(s);
+          countNums.push(s);
+        }
+        toggle.style.width = w + "px";
+        toggle.style.height = h + "px";
+        toggle.classList.add("is-counting");
+      }
+      countNums.forEach(function (x, k) { x.classList.toggle("is-on", k === index); });
+    }
     var dots = [];
     for (var i = 0; i < beats; i++) {
       var d = document.createElement("span");
@@ -448,26 +475,81 @@
       cur.group = null;
     }
     function clearCursor() {
-      document.querySelectorAll(".ac-bar.is-current, .ac-bar.is-beat").forEach(function (b) {
+      document.querySelectorAll(".ac-bar.is-current, .ac-bar.is-beat, .ac-part.is-beat").forEach(function (b) {
         b.classList.remove("is-current", "is-beat", "is-downbeat");
       });
       clearCounter();
       cur.pane = null; cur.seq = []; cur.idx = -1;
     }
+    /* El compás actual se mantiene centrado entre la barra fija y el borde de la ventana. Si la
+       persona hace scroll a mano (rueda, dedo o teclado), el seguimiento se pausa unos segundos. */
+    var PAUSE_MS = 4000, pausedUntil = 0;
+    function userScrolled() { pausedUntil = Date.now() + PAUSE_MS; }
+    ["wheel", "touchmove", "keydown"].forEach(function (ev) {
+      window.addEventListener(ev, userScrolled, { passive: true });
+    });
     function keepInView(el) {
+      if (Date.now() < pausedUntil) return;
       var tools = document.querySelector(".ac-sticky-tools");
       var top = (tools ? tools.getBoundingClientRect().bottom : 0) + 12;
       var r = el.getBoundingClientRect();
-      if (r.top >= top && r.bottom <= window.innerHeight - 12) return;
       var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-      var target = top + (window.innerHeight - top) / 3;
+      var target = top + (window.innerHeight - top - r.height) / 2;
+      if (Math.abs(r.top - target) < 2) return;
       window.scrollTo({ top: window.scrollY + r.top - target, behavior: reduce ? "auto" : "smooth" });
     }
+    /* Qué se ilumina en este pulso: la casilla entera, o, si trae varios acordes, solo la parte que
+       dura ese pulso (las partes se reparten el compás en proporción a su duración). */
+    function beatTarget(bar, inBar) {
+      var parts = bar.querySelectorAll(".ac-part");
+      if (!parts.length) return bar;
+      var total = 0, w = [];
+      parts.forEach(function (p) { var v = +p.getAttribute("data-weight") || 1; w.push(v); total += v; });
+      var slot = Math.floor(inBar * total / beats), acc = 0;
+      for (var k = 0; k < parts.length; k++) {
+        acc += w[k];
+        if (slot < acc) return parts[k];
+      }
+      return parts[parts.length - 1];
+    }
+    /* Compás de partida: la bandera elegida, si está en la pestaña visible (en su primera pasada). */
+    var startBar = null;
+    function startIndex() {
+      if (!startBar || !cur.seq.length) return 0;
+      for (var k = 0; k < cur.seq.length; k++) {
+        if (cur.seq[k].el === startBar && cur.seq[k].rep === 1) return k;
+      }
+      return 0;
+    }
+    function setStart(bar) {
+      if (startBar) {
+        startBar.classList.remove("is-start");
+        var old = startBar.querySelector(".ac-start-flag");
+        if (old) old.setAttribute("aria-pressed", "false");
+      }
+      startBar = bar === startBar ? null : bar;
+      if (startBar) {
+        startBar.classList.add("is-start");
+        startBar.querySelector(".ac-start-flag").setAttribute("aria-pressed", "true");
+      }
+    }
+    document.querySelectorAll(".ac-bars .ac-bar").forEach(function (bar) {
+      var flag = document.createElement("button");
+      flag.type = "button";
+      flag.className = "ac-start-flag";
+      flag.setAttribute("aria-pressed", "false");
+      flag.setAttribute("aria-label", "Partir desde este compás");
+      flag.title = "Partir desde aquí";
+      flag.innerHTML = '<svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true">'
+        + '<path d="M6 3v18h2v-7h9l-2-4 2-4H8V3z"/></svg>';
+      flag.addEventListener("click", function (e) { e.stopPropagation(); setStart(bar); });
+      bar.appendChild(flag);
+    });
     function cursor(n) {
       var pane = activePane();
       if (pane !== cur.pane) { clearCursor(); cur.pane = pane; cur.seq = buildSeq(pane); }
       if (!cur.seq.length) return;
-      var i = Math.floor(n / beats) % cur.seq.length;
+      var i = (startIndex() + Math.floor(n / beats)) % cur.seq.length;
       var step = cur.seq[i];
       if (i !== cur.idx) {
         if (cur.idx >= 0) cur.seq[cur.idx].el.classList.remove("is-current");
@@ -486,7 +568,8 @@
         cur.idx = i;
         keepInView(step.el);
       }
-      var el = step.el, first = n % beats === 0;
+      var inBar = n % beats, first = inBar === 0;
+      var el = beatTarget(step.el, inBar);
       el.classList.add("is-beat");
       el.classList.toggle("is-downbeat", first);
       setTimeout(function () { el.classList.remove("is-beat", "is-downbeat"); },
@@ -499,6 +582,7 @@
       setTimeout(function () {
         if (!playing) return;
         dots.forEach(function (x, k) { x.classList.toggle("is-on", k === index); });
+        showCount(isCount ? index : -1);
         if (!isCount) cursor(n);
       }, Math.max(0, (time - clock()) * 1000));
     }
@@ -550,9 +634,11 @@
     function start() {
       if (!muted && !(window.AudioContext || window.webkitAudioContext)) return;
       playing = true;
+      pausedUntil = 0;
+      if (startBar && activePane().contains(startBar)) keepInView(startBar);
       clearInterval(timer);
       timer = setInterval(schedule, TICK);
-      toggle.textContent = "Detener";
+      label.textContent = "Detener";
       toggle.setAttribute("aria-pressed", "true");
       if (muted) { begin(); return; }
       var audio = ensureAudio();
@@ -562,8 +648,9 @@
       playing = false;
       clearInterval(timer);
       dots.forEach(function (x) { x.classList.remove("is-on"); });
+      showCount(-1);
       clearCursor();
-      toggle.textContent = "Reproducir";
+      label.textContent = "Reproducir";
       toggle.setAttribute("aria-pressed", "false");
     }
     /* Cambia de modo sin cortar ni descompasar: se conserva lo que falta para el próximo pulso. */

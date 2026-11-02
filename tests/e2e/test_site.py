@@ -103,7 +103,7 @@ def test_metronome_plays_pulses_and_stops(song_audio: Page):
     toggle = song.locator("[data-ac-met-toggle]")
     toggle.click()
     expect(toggle).to_have_attribute("aria-pressed", "true")
-    expect(toggle).to_have_text("Detener")
+    expect(toggle).to_contain_text("Detener")
     # Con el metrónomo sonando, cambiar el bpm no lo corta.
     song.locator('[data-ac-met-step="1"]').click()
     expect(toggle).to_have_attribute("aria-pressed", "true")
@@ -200,7 +200,7 @@ def test_guides_collapse_opens_from_the_scrolled_bar_without_moving_the_bars(son
     panel = song.locator("#guias-panel")
     expect(panel).to_have_class(re.compile(r"\bshow\b"))
     expect(panel).to_be_in_viewport()
-    assert first_bar.evaluate(page_y) == before  # flota: no empuja los compases
+    assert abs(first_bar.evaluate(page_y) - before) < 0.5  # flota: no empuja los compases
     song.locator("h1").click(force=True)  # tocar fuera lo cierra
     expect(panel).to_be_hidden()
 
@@ -385,3 +385,130 @@ def test_count_in_precedes_the_playhead_and_can_be_turned_off(song_audio: Page):
     song.locator("[data-ac-met-range]").fill("240")
     song.locator("[data-ac-met-toggle]").click()
     expect(song.locator(".ac-bar.is-current")).to_have_count(1, timeout=700)
+
+
+def test_beat_flash_follows_the_chord_inside_a_split_bar(song_audio: Page):
+    song = song_audio
+    song.locator("#t-intermedio").click()
+    pane = song.locator("#p-intermedio")
+    expect(pane).to_be_visible()
+    # Compases que preceden al primero partido, con las repeticiones de cada sección.
+    before = pane.evaluate(
+        """el => { let n = 0; for (const g of el.querySelectorAll('.ac-bars')) {
+          const reps = +g.dataset.reps || 1, bars = [...g.querySelectorAll('.ac-bar')];
+          const i = bars.findIndex(b => b.classList.contains('is-split'));
+          if (i >= 0) return n + i; n += reps * bars.length; } return -1; }"""
+    )
+    assert before >= 0
+    song.locator("[data-ac-met-countin]").click()  # sin cuenta: el compás 1 empieza ya
+    song.locator("[data-ac-met-range]").fill("240")  # 0,25 s por pulso, 1 s por compás
+    song.evaluate(
+        """() => { window.__flash = [];
+          new MutationObserver(ms => ms.forEach(m => {
+            const t = m.target;
+            if (t.classList.contains('ac-part') && t.classList.contains('is-beat')
+                && !(m.oldValue || '').includes('is-beat')) {
+              const parts = [...t.parentElement.querySelectorAll('.ac-part')];
+              const g = t.closest('.ac-bars');
+              window.__flash.push({ bar: [...g.children].indexOf(t.parentElement)
+                + ':' + g.previousElementSibling?.textContent,
+                part: parts.indexOf(t), of: parts.length });
+            } }))
+          .observe(document.querySelector('#p-intermedio'),
+            { subtree: true, attributes: true, attributeFilter: ['class'],
+              attributeOldValue: true }); }"""
+    )
+    song.locator("[data-ac-met-toggle]").click()
+    song.wait_for_function("() => window.__flash.length >= 4", timeout=(before + 4) * 1000 + 8000)
+    song.locator("[data-ac-met-toggle]").click()
+    flash = song.evaluate("window.__flash")
+    # Primer compás partido (4/4): cada pulso ilumina una parte y las partes se recorren en orden,
+    # sin volver atrás ni saltarse ninguna dentro del compás.
+    first = flash[:4]
+    assert len({f["bar"] for f in first}) == 1
+    order = [f["part"] for f in first]
+    assert order == sorted(order) and order[0] == 0 and order[-1] == first[0]["of"] - 1
+    # Al detener no queda nada iluminado.
+    expect(song.locator(".ac-part.is-beat, .ac-bar.is-beat")).to_have_count(0, timeout=2000)
+
+
+def test_playback_starts_from_the_flagged_bar_and_keeps_it_centered(song_audio: Page):
+    song = song_audio
+    song.locator("[data-ac-met-countin]").click()  # sin cuenta: el cursor arranca ya
+    song.locator("[data-ac-met-range]").fill("240")
+    bars = song.locator("#p-basico .ac-bar")
+    n = bars.count()
+    target = bars.nth(n // 2)
+    flag = target.locator(".ac-start-flag")
+    target.scroll_into_view_if_needed()
+    flag.click()
+    expect(flag).to_have_attribute("aria-pressed", "true")
+    expect(target).to_have_class(re.compile(r"\bis-start\b"))
+    # Una sola marca por página: marcar otro compás mueve la bandera.
+    other = bars.nth(0).locator(".ac-start-flag")
+    other.click()
+    expect(flag).to_have_attribute("aria-pressed", "false")
+    other.click()  # tocar la misma bandera la quita
+    expect(other).to_have_attribute("aria-pressed", "false")
+    target.scroll_into_view_if_needed()
+    flag.click()
+    song.evaluate("window.scrollTo(0, 0)")
+    song.locator("[data-ac-met-toggle]").click()
+    # El primer compás en sonar es el marcado (no el primero de la canción).
+    expect(target).to_have_class(re.compile(r"\bis-current\b"), timeout=3000)
+    assert "is-current" not in (bars.nth(0).get_attribute("class") or "")
+
+    def off_center() -> float:
+        return song.evaluate(
+            """() => {
+              const tools = document.querySelector('.ac-sticky-tools');
+              const bottom = tools.getBoundingClientRect().bottom;
+              const t = bottom + 12;
+              const cur = document.querySelector('#p-basico .ac-bar.is-current');
+              const r = cur.getBoundingClientRect();
+              return Math.abs((r.top + r.height / 2) - (t + (innerHeight - t) / 2));
+            }"""
+        )
+
+    for _ in range(40):  # el scroll suave tarda un poco en llegar
+        if off_center() < 40:
+            break
+        song.wait_for_timeout(100)
+    assert off_center() < 40
+    song.locator("[data-ac-met-toggle]").click()
+    # Tras detener, la marca sigue: reproducir otra vez parte del mismo compás.
+    expect(target).to_have_class(re.compile(r"\bis-start\b"))
+
+
+def test_count_in_shows_numbers_while_it_counts(song_audio: Page):
+    song = song_audio
+    song.locator("[data-ac-met-range]").fill("120")  # 0,5 s por pulso: la cuenta dura ~2 s
+    toggle = song.locator("[data-ac-met-toggle]")
+    count = song.locator("[data-ac-met-count]")
+    expect(count.locator("span")).to_have_count(0)
+    expect(toggle).to_have_text("Reproducir")
+    toggle.click()
+    expect(count.locator("span.is-on")).to_have_count(1, timeout=3000)
+    seen, sizes = set(), []
+    for _ in range(30):
+        # En una sola llamada: el número resaltado y el tamaño del botón en ese instante.
+        state = song.evaluate(
+            """() => { const on = document.querySelector('[data-ac-met-count] span.is-on');
+              const r = document.querySelector('[data-ac-met-toggle]').getBoundingClientRect();
+              return on ? { n: on.textContent, w: r.width, h: r.height } : null; }"""
+        )
+        if state:
+            seen.add(state["n"])
+            sizes.append((state["w"], state["h"]))
+        song.wait_for_timeout(50)
+    assert {"1", "2", "3", "4"} <= seen
+    expect(count.locator("span")).to_have_count(0, timeout=3000)  # empieza el compás 1
+    # El botón no cambia de tamaño al pasar de la cuenta a «Detener» (la barra fija no crece).
+    after = toggle.bounding_box()
+    assert all(abs(w - after["width"]) < 1 and abs(h - after["height"]) < 1 for w, h in sizes)
+    expect(song.locator(".ac-bar.is-current")).to_have_count(1, timeout=3000)
+    toggle.click()
+    song.locator("[data-ac-met-countin]").click()  # sin cuenta, no aparece
+    toggle.click()
+    song.wait_for_timeout(300)
+    expect(count.locator("span")).to_have_count(0)

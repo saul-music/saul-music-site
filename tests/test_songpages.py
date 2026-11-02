@@ -226,16 +226,16 @@ def test_bar_with_several_chords_is_one_cell_with_proportional_parts():
     from musicsite.songpages import bar_html
 
     assert bar_html("F#-F#7") == (
-        '<div class="ac-bar is-split"><span class="ac-part" style="flex: 1">'
+        '<div class="ac-bar is-split"><span class="ac-part" style="flex: 1" data-weight="1">'
         + btn("F#", "F\u266f")
-        + '</span><span class="ac-part" style="flex: 1">'
+        + '</span><span class="ac-part" style="flex: 1" data-weight="1">'
         + btn("F#7", "F\u266f7")
         + "</span></div>"
     )
     held = bar_html("F#-%-F#7-B7")
     assert held.count("<span") == 3
-    assert 'style="flex: 2">' + btn("F#", "F\u266f") in held
-    assert 'style="flex: 1">' + btn("B7") in held
+    assert 'style="flex: 2" data-weight="2">' + btn("F#", "F\u266f") in held
+    assert 'style="flex: 1" data-weight="1">' + btn("B7") in held
 
 
 def test_whole_bar_repeat_is_still_a_plain_cell():
@@ -303,7 +303,8 @@ def test_percent_inside_a_bar_still_holds_the_chord():
     from musicsite.songpages import bar_html
 
     held = bar_html("F#-%-F#7-B7")
-    assert 'style="flex: 2">' + btn("F#", "F\u266f") in held and "is-repeat" not in held
+    assert 'style="flex: 2" data-weight="2">' + btn("F#", "F\u266f") in held
+    assert "is-repeat" not in held
 
 
 def test_own_shape_goes_only_to_its_version_and_the_page_embeds_the_data(tmp_path):

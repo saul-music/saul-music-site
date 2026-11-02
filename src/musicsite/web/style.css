@@ -498,10 +498,22 @@ a.card:hover { border-color: var(--ac-fill); transform: translateY(-2px); }
   content: "\25BC"; position: absolute; top: -.7rem; left: 50%; transform: translateX(-50%);
   font-size: .8rem; line-height: 1; color: var(--ac-accent); z-index: 1;
 }
-.ac-bar.is-beat { background: rgba(var(--ac-accent-rgb), .28); }
-.ac-bar.is-downbeat { background: var(--ac-fill); color: var(--ac-on-fill); }
+.ac-bar.is-beat, .ac-part.is-beat { background: rgba(var(--ac-accent-rgb), .28); }
+.ac-bar.is-downbeat, .ac-part.is-downbeat { background: var(--ac-fill); color: var(--ac-on-fill); }
 .ac-rep-count { margin-left: .5rem; font-size: .85rem; color: var(--ac-accent); font-weight: 600; }
 .ac-bars { scroll-margin-top: 12rem; }
+
+/* Partir desde cualquier compás: bandera en la esquina de cada casilla */
+.ac-start-flag {
+  position: absolute; top: 2px; left: 2px; z-index: 2; display: grid; place-items: center;
+  width: 1.4rem; height: 1.4rem; padding: 0; border: 0; border-radius: .35rem;
+  background: transparent; color: var(--ac-fg-muted); opacity: 0; cursor: pointer;
+}
+.ac-bar:hover .ac-start-flag, .ac-start-flag:focus-visible, .ac-bar.is-start .ac-start-flag { opacity: 1; }
+.ac-start-flag:hover, .ac-start-flag[aria-pressed="true"] { color: var(--ac-accent); }
+@media (hover: none) { .ac-start-flag { opacity: .5; } .ac-bar.is-start .ac-start-flag { opacity: 1; } }
+.ac-bar.is-start { box-shadow: inset 3px 0 0 var(--ac-accent); }
+.ac-bar.is-start.is-current { box-shadow: inset 0 0 0 2px var(--ac-accent), inset 3px 0 0 var(--ac-accent); }
 
 @media (max-width: 575.98px) {
   .ac-sticky-tools .card-body { padding: .5rem .75rem; gap: .5rem !important; }
@@ -528,6 +540,13 @@ a.card:hover { border-color: var(--ac-fill); transform: translateY(-2px); }
 .ac-met-mute[aria-pressed="true"] { background: var(--ac-fill); border-color: var(--ac-fill); color: var(--ac-on-fill); }
 .ac-met-mute[aria-pressed="true"] .ac-on { display: none; }
 .ac-met-mute[aria-pressed="true"] .ac-off { display: inline; }
+/* Cuenta inicial: 1 2 3 4 dentro del botón principal, que no crece ni agrega una fila */
+.ac-met-toggle { min-width: 8.5rem; }
+.ac-met-toggle.is-counting { white-space: nowrap; overflow: hidden; padding-inline: 0; }
+.ac-met-toggle.is-counting [data-ac-met-label] { display: none; }
+.ac-met-count { display: inline-flex; gap: .45rem; align-items: baseline; font-weight: 600; }
+.ac-met-count span { opacity: .55; }
+.ac-met-count span.is-on { opacity: 1; font-weight: 800; text-decoration: underline; text-underline-offset: .2em; }
 .ac-met-countin { display: inline-flex; align-items: center; gap: .4rem; }
 .ac-met-countin[aria-pressed="true"] { background: var(--ac-fill); border-color: var(--ac-fill); color: var(--ac-on-fill); }
 @media (max-width: 575.98px) {

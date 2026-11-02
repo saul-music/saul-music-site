@@ -85,7 +85,7 @@ def bar_html(token: str, repeat: bool = False) -> str:
         else:
             chords.append([part, 1])
     spans = "".join(
-        f'<span class="ac-part" style="flex: {weight}">{chord_html(chord)}</span>'
+        f'<span class="ac-part" style="flex: {weight}" data-weight="{weight}">{chord_html(chord)}</span>'
         for chord, weight in chords
     )
     return f'<div class="ac-bar is-split{mark}">{spans}</div>'
