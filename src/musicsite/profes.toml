@@ -4,6 +4,8 @@
 #   { artista = "Los Bunkers", tema = "ven-aqui" } un tema (slug del repertorio)
 #   { artista = "*" }                              todo el repertorio
 # modo: "linea" y/o "presencial". hoy: disponible hoy. Sin precio: «Precio por definir».
+# puntuacion (1 a 5) y resenas: solo en perfiles de ejemplo (mock = true); sin ellas, la guía figura
+# como «Nuevo». Nunca se inventa una nota para una persona real.
 
 [[profe]]
 id = "gonzalo-pincheira"
@@ -38,6 +40,8 @@ barrios = ["Rock", "Pop"]
 instrumentos = ["Guitarra"]
 hoy = true
 precio = 12000
+puntuacion = 4.9
+resenas = 31
 nota = "Clases de 45 minutos."
 ensena = [{ artista = "Los Tres" }, { artista = "Los Bunkers" }, { artista = "Gepe", tema = "hablar-de-ti" }]
 
@@ -52,6 +56,8 @@ instrumentos = ["Guitarra", "Teclado"]
 hoy = false
 proxima = "mañana"
 precio = 15000
+puntuacion = 4.7
+resenas = 18
 nota = "Trabaja con principiantes adultos."
 ensena = [{ artista = "Javiera Mena" }, { artista = "Gepe" }]
 
@@ -65,6 +71,8 @@ barrios = ["Rock"]
 instrumentos = ["Guitarra", "Bajo"]
 hoy = true
 precio = 10000
+puntuacion = 4.8
+resenas = 22
 nota = "Toca en una banda local."
 ensena = [{ artista = "Los Bunkers" }, { artista = "Los Tres", tema = "he-barrido-el-sol" }]
 
@@ -78,6 +86,8 @@ barrios = ["Indie"]
 instrumentos = ["Guitarra"]
 hoy = true
 precio = 11000
+puntuacion = 4.6
+resenas = 12
 nota = "Guitarra indie paso a paso."
 ensena = [
   { artista = "Javiera Mena", tema = "otra-era" },
@@ -96,6 +106,8 @@ instrumentos = ["Guitarra"]
 hoy = false
 proxima = "jueves"
 precio = 13000
+puntuacion = 4.9
+resenas = 9
 nota = "Rasgueo de pop desde cero."
 ensena = [
   { artista = "Los Tres" },
@@ -114,5 +126,7 @@ instrumentos = ["Teclado"]
 hoy = false
 proxima = "sábado"
 precio = 12000
+puntuacion = 4.5
+resenas = 7
 nota = "Teclado para quien ya toca guitarra."
 ensena = [{ artista = "Javiera Mena" }, { artista = "Los Jaivas" }]

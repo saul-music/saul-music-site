@@ -248,3 +248,40 @@ def test_accidentals_are_shown_as_music_symbols_without_touching_the_data():
     assert accidentals("Dsus4/F#") == "Dsus4/F\u266f"
     assert accidentals("Em") == "Em" and accidentals("Gdim") == "Gdim" and accidentals("%") == "%"
     assert bar_html("F#").count("F\u266f") == 1
+
+
+def test_metronome_bar_has_mute_and_a_guides_entry_only_when_there_are_guides(song, monkeypatch):
+    from musicsite import songpages
+
+    page = render(song, "publicable", preview=False)
+    assert "data-ac-met-mute" in page
+    assert "2 guías pueden enseñarte esta canción" in page or "data-ac-met-guides" in page
+    monkeypatch.setattr(songpages, "teachers_for", lambda slug: [])
+    empty = render(song, "publicable", preview=False)
+    assert "data-ac-met-guides" not in empty and "data-ac-met-help" not in empty
+    assert "guias-panel" not in empty
+
+
+def test_percent_bar_shows_the_previous_chord_dimmed():
+    from musicsite.songpages import structure
+
+    html = structure([{"nombre": "Interludio", "compases": ["E", "%", "D#m", "%", "%"]}])
+    bars = re.findall(r'<div class="ac-bar([^"]*)"[^>]*>([^<]*)</div>', html)
+    assert [chord for _, chord in bars] == ["E", "E", "D\u266fm", "D\u266fm", "D\u266fm"]
+    assert ["is-repeat" in cls for cls, _ in bars] == [False, True, False, True, True]
+    assert "%" not in re.sub(r"<[^>]*>", "", html)
+
+
+def test_percent_bar_repeats_a_split_bar_too():
+    from musicsite.songpages import structure
+
+    html = structure([{"nombre": "Puente", "compases": ["F#-F#7", "%"]}])
+    assert html.count("is-split") == 2 and html.count("is-repeat") == 1
+    assert html.count("F\u266f7") == 2
+
+
+def test_percent_inside_a_bar_still_holds_the_chord():
+    from musicsite.songpages import bar_html
+
+    held = bar_html("F#-%-F#7-B7")
+    assert 'style="flex: 2">F\u266f<' in held and "is-repeat" not in held

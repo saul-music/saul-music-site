@@ -64,6 +64,16 @@ def check_profile(profile: dict) -> list[str]:
         errors.append("modo solo admite linea y presencial")
     for rule in profile.get("ensena", []):
         errors += [f"regla {rule}: {e}" for e in check_rule(rule)]
+    score, reviews = profile.get("puntuacion"), profile.get("resenas")
+    if (score is None) != (reviews is None):
+        errors.append("puntuacion y resenas van juntas")
+    elif score is not None:
+        if not isinstance(score, int | float) or isinstance(score, bool) or not 1 <= score <= 5:
+            errors.append("puntuacion debe estar entre 1 y 5")
+        if not isinstance(reviews, int) or isinstance(reviews, bool) or reviews < 1:
+            errors.append("resenas debe ser un entero desde 1")
+        if not profile.get("mock"):
+            errors.append("puntuacion solo en perfiles de ejemplo (mock = true)")
     return errors
 
 
@@ -97,6 +107,40 @@ def songs_of(profile: dict) -> list[str]:
 
 def teachers_for(slug: str, profiles: list[dict] | None = None) -> list[dict]:
     return [p for p in profiles or load_profiles() if teaches(p, slug)]
+
+
+def top_teachers(slug: str, limit: int = 5, profiles: list[dict] | None = None) -> list[dict]:
+    """Las guías que pueden enseñar el tema, mejor puntuadas primero.
+
+    Con nota: por puntuación y luego por reseñas. Sin nota («Nuevo»): al final, primero las que
+    están disponibles hoy.
+    """
+
+    def key(p: dict):
+        rated = p.get("puntuacion") is not None
+        return (
+            not rated,
+            -(p.get("puntuacion") or 0),
+            -(p.get("resenas") or 0),
+            not p.get("hoy", False),
+            p["nombre"],
+        )
+
+    return sorted(teachers_for(slug, profiles), key=key)[:limit]
+
+
+def coverage(profile: dict, slug: str) -> str:
+    """Cuánto cubre la guía respecto de este tema: «Todo el repertorio», «Los Tres (todos)»…"""
+    best = None
+    for rule in profile["ensena"]:
+        if rule["artista"] == ALL:
+            best = best or "Todo el repertorio"
+        elif rule["artista"] == SONG_ARTIST.get(slug):
+            if rule.get("tema") == slug:
+                return "Este tema"
+            if "tema" not in rule:
+                best = f"{rule['artista']} (todos)"
+    return best or ""
 
 
 def describe(profile: dict) -> str:
@@ -147,7 +191,7 @@ def guide_card(profile: dict, index: int) -> str:
     mock = '<span class="ac-chip ac-chip-example">Ejemplo</span>' if profile.get("mock") else ""
     note = f" {esc(profile['nota'])}" if profile.get("nota") else ""
     name = esc(profile["nombre"])
-    return f"""      <div class="col" data-barrio="{",".join(profile["barrios"])}" data-inst="{",".join(profile["instrumentos"])}" data-modo="{modes}" data-hoy="{int(hoy)}" data-temas="{",".join(songs)}">
+    return f"""      <div class="col" id="guia-{profile["id"]}" data-barrio="{",".join(profile["barrios"])}" data-inst="{",".join(profile["instrumentos"])}" data-modo="{modes}" data-hoy="{int(hoy)}" data-temas="{",".join(songs)}">
         <div class="card h-100"><div class="card-body d-grid gap-3 align-content-start">
           <div class="d-flex gap-3 align-items-center">
             {avatar(profile, index)}
