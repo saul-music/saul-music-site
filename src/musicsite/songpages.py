@@ -19,6 +19,7 @@ import json
 import re
 import shutil
 import tomllib
+import unicodedata
 from pathlib import Path
 
 from jinja2 import Environment, FileSystemLoader, select_autoescape
@@ -345,7 +346,7 @@ def card(song: dict, slug: str, status: str) -> str:
             <{tag} class="card h-100"{attrs}>
               <div class="card-body d-grid gap-3">
                 <div class="d-flex justify-content-between align-items-start gap-2">{left}{right}</div>
-                <div><h3 class="h4 mb-1">{esc(song["titulo"])}</h3><p class="m-0 text-body-secondary">{esc(song["artista"])}</p></div>
+                <div><h4 class="h4 mb-1">{esc(song["titulo"])}</h4><p class="m-0 text-body-secondary">{esc(song["artista"])}</p></div>
                 <div class="d-flex flex-wrap gap-2">{chips}</div>
                 <div class="d-flex flex-wrap gap-3 small text-body-secondary ac-mono">{facts_html}</div>
               </div>
@@ -353,8 +354,53 @@ def card(song: dict, slug: str, status: str) -> str:
           </div>"""
 
 
+ARTICLES = ("los ", "las ", "la ", "el ")
+
+
+def sort_key(text: str) -> str:
+    """Clave de orden sin mayúsculas ni tildes: «Los Bunkers» y «Álvaro» se ordenan por B y A."""
+    plain = unicodedata.normalize("NFD", text.casefold())
+    return "".join(ch for ch in plain if unicodedata.category(ch) != "Mn")
+
+
+def artist_key(artist: str) -> str:
+    """Clave del artista; ignora el artículo inicial («Los Jaivas» va en la J)."""
+    key = sort_key(artist).strip()
+    for article in ARTICLES:
+        if key.startswith(article):
+            return key[len(article) :]
+    return key
+
+
+def render_library(entries: list[tuple[dict, str, str]]) -> str:
+    """Tarjetas (canción, slug, estado) ordenadas por artista y luego por título (S14)."""
+    ordered = sorted(entries, key=lambda e: (artist_key(e[0]["artista"]), sort_key(e[0]["titulo"])))
+    parts, current = [], None
+    for song, slug, status in ordered:
+        key = artist_key(song["artista"])
+        if key != current:
+            current = key
+            total = sum(1 for other, _, _ in ordered if artist_key(other["artista"]) == key)
+            parts.append(artist_head(song["artista"], total))
+        parts.append(card(song, slug, status))
+    return (
+        '        <div class="row row-cols-1 row-cols-md-3 g-3">\n'
+        + "\n".join(parts)
+        + "\n        </div>"
+    )
+
+
+def artist_head(artist: str, total: int) -> str:
+    """Cabecera de ancho completo que abre el grupo de temas de un artista."""
+    count = f"{total} tema" if total == 1 else f"{total} temas"
+    return (
+        f'          <div class="col-12 ac-artist-head" data-ac-artist="{esc(sort_key(artist))}">'
+        f'<h3 class="ac-artist"><span>{esc(artist)}</span><small>{count}</small></h3></div>'
+    )
+
+
 def library_html(directory: Path) -> str:
-    cards = []
+    entries = []
     for slug, *_ in REPERTOIRE:
         path = directory / f"{slug}.toml"
         if not path.exists():
@@ -363,37 +409,29 @@ def library_html(directory: Path) -> str:
         status = (
             "publicable" if not report.errors and report.status == "publicable" else report.status
         )
-        cards.append(card(load_song(path), slug, status))
-    return (
-        '        <div class="row row-cols-1 row-cols-md-3 g-3">\n'
-        + "\n".join(cards)
-        + "\n        </div>"
-    )
+        entries.append((load_song(path), slug, status))
+    return render_library(entries)
 
 
 def published_library_html(directory: Path) -> str:
-    """Biblioteca de lo publicado (S9): una tarjeta por tema de `directory`, todos publicables.
+    """Biblioteca de lo publicado (S9), ordenada por artista (S14): una tarjeta por tema de `directory`.
 
-    Va primero el repertorio inicial en su orden; los que aún no están publicados salen como
-    «Próximamente» solo con título y artista (sus datos son borrador y no se muestran). Los temas
-    nuevos, que no están en el repertorio, van al final por título."""
-    cards = []
+    Los del repertorio inicial que aún no están publicados salen como «Próximamente» solo con
+    título y artista (sus datos son borrador y no se muestran); los temas nuevos se mezclan por
+    su artista."""
+    entries = []
     for slug, title, artist, kind in REPERTOIRE:
         path = directory / f"{slug}.toml"
         if path.exists():
-            cards.append(card(load_song(path), slug, "publicable"))
+            entries.append((load_song(path), slug, "publicable"))
         else:
-            stub = {"titulo": title, "artista": artist, "tipo": kind}
-            cards.append(card(stub, slug, "borrador"))
+            entries.append(({"titulo": title, "artista": artist, "tipo": kind}, slug, "borrador"))
     known = {slug for slug, *_ in REPERTOIRE}
-    extra = [load_song(p) for p in sorted(directory.glob("*.toml")) if p.stem not in known]
-    for song in sorted(extra, key=lambda s: s["titulo"].lower()):
-        cards.append(card(song, song["slug"], "publicable"))
-    return (
-        '        <div class="row row-cols-1 row-cols-md-3 g-3">\n'
-        + "\n".join(cards)
-        + "\n        </div>"
-    )
+    for path in sorted(directory.glob("*.toml")):
+        if path.stem not in known:
+            song = load_song(path)
+            entries.append((song, song["slug"], "publicable"))
+    return render_library(entries)
 
 
 def apply_library(page: str, block: str) -> str:

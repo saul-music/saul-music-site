@@ -340,6 +340,50 @@
     });
   });
 
+  /* Buscadores de la Biblioteca: el de la portada pasa su texto al de la galería, que es el que queda lleno.
+     Filtra tarjetas por título o artista (sin tildes ni mayúsculas, todas las palabras); desde la portada,
+     buscar además lleva a la Biblioteca con solo los grupos que coinciden. */
+  (function () {
+    var form = document.querySelector("form[data-ac-search]");
+    var lib = document.getElementById("biblioteca");
+    var inner = document.getElementById("buscar-biblioteca");
+    if (!lib || !inner) return;
+    var hero = form && form.querySelector("input");
+    var empty = document.getElementById("sin-resultados");
+    var count = document.getElementById("lib-count");
+    var clear = document.getElementById("lib-clear");
+    function norm(t) { return (t || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase(); }
+    function filter(value) {
+      var words = norm(value).split(/\s+/).filter(Boolean);
+      var shown = 0, total = 0, head = null, headHas = false;
+      function closeHead() { if (head) head.hidden = !headHas; }
+      Array.prototype.forEach.call(lib.querySelectorAll(".row > .col, .row > .ac-artist-head"), function (el) {
+        if (el.classList.contains("ac-artist-head")) { closeHead(); head = el; headHas = false; return; }
+        var text = norm(Array.prototype.map.call(el.querySelectorAll("h4, p"), function (n) { return n.textContent; }).join(" "));
+        var ok = words.every(function (w) { return text.indexOf(w) !== -1; });
+        el.hidden = !ok;
+        total++;
+        if (ok) { shown++; headHas = true; }
+      });
+      closeHead();
+      if (empty) empty.hidden = shown > 0 || !words.length;
+      if (count) count.textContent = words.length ? shown + " de " + total + " temas" : "";
+      if (clear) clear.hidden = !words.length;
+    }
+    /* El texto vive en el campo de la galería; el de la portada solo lo escribe y, al buscar, se vacía. */
+    function apply() { filter(inner.value); }
+    inner.addEventListener("input", apply);
+    if (hero) hero.addEventListener("input", function () { inner.value = hero.value; apply(); });
+    if (clear) clear.addEventListener("click", function () { inner.value = ""; apply(); inner.focus(); });
+    if (form) form.addEventListener("submit", function (e) {
+      e.preventDefault();
+      inner.value = hero.value;
+      hero.value = "";
+      apply();
+      var calm = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      lib.scrollIntoView({ behavior: calm ? "auto" : "smooth", block: "start" });
+    });
+  })();
   /* Formularios del prototipo: no envían nada a ningún servidor */
   document.querySelectorAll("form[data-ac-demo]").forEach(function (f) {
     f.addEventListener("submit", function (e) {

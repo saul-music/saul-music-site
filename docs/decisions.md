@@ -205,3 +205,18 @@ título gancho; al tocarlo (o con Enter/Espacio) se despliega el texto.
 - **Pendiente (research):** el validador del admin es una copia y rechazaría estas líneas; hay que
   sincronizarlo (con el contrato) antes de publicar tips desde el admin. Fuera de alcance de este paso.
 
+
+## S14 · Biblioteca ordenada y agrupada por artista, con buscador propio (2026-11-02)
+
+- **Orden:** por artista sin tildes ni mayúsculas e ignorando el artículo inicial (Los/Las/La/El: «Los Bunkers»
+  va en la B), y dentro del artista por título. Los «Próximamente» y los temas nuevos se mezclan por su
+  artista; ya no van al final. Lo hace `songpages.render_library`, igual para el bloque estático y el
+  publicado.
+- **Grupos:** cada artista abre con una cabecera de ancho completo (nombre, «N temas» y una línea). El artista
+  pasa a `h3` y el título de cada tarjeta a `h4`.
+- **Buscador:** el de la portada dejó de ser un prototipo. Filtra las tarjetas por título o artista (sin
+  tildes ni mayúsculas, todas las palabras) en el navegador, sin servidor. La galería tiene su propio campo,
+  fijo bajo la barra, con contador y «Limpiar búsqueda»; el de la portada pasa su texto a ese campo y se
+  vacía al buscar, para que el texto viva en un solo lugar.
+- **Sin tecnología nueva.** `artistas.html` queda fuera de alcance.
+- **Se comprueba:** pruebas de unidad del orden y de las cabeceras, y dos e2e del buscador (5 navegadores).
