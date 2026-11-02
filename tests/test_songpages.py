@@ -212,15 +212,39 @@ def test_bar_with_several_chords_is_one_cell_with_proportional_parts():
     from musicsite.songpages import bar_html
 
     assert bar_html("F#-F#7") == (
-        '<div class="ac-bar is-split"><span class="ac-part" style="flex: 1">F#</span>'
-        '<span class="ac-part" style="flex: 1">F#7</span></div>'
+        '<div class="ac-bar is-split"><span class="ac-part" style="flex: 1">F\u266f</span>'
+        '<span class="ac-part" style="flex: 1">F\u266f7</span></div>'
     )
     held = bar_html("F#-%-F#7-B7")
     assert held.count("<span") == 3
-    assert 'style="flex: 2">F#<' in held and 'style="flex: 1">B7<' in held
+    assert 'style="flex: 2">F\u266f<' in held and 'style="flex: 1">B7<' in held
 
 
 def test_whole_bar_repeat_is_still_a_plain_cell():
     from musicsite.songpages import bar_html
 
     assert bar_html("%") == '<div class="ac-bar">%</div>'
+
+
+def test_each_section_exposes_its_repetitions_for_the_playhead():
+    from musicsite.songpages import structure
+
+    html = structure(
+        [
+            {"nombre": "Estrofa", "repeticiones": 4, "compases": ["E", "F#"]},
+            {"nombre": "Final", "compases": ["E"]},
+        ]
+    )
+    assert 'class="ac-bars" data-reps="4"' in html
+    assert 'class="ac-bars" data-reps="1"' in html
+
+
+def test_accidentals_are_shown_as_music_symbols_without_touching_the_data():
+    from musicsite.songpages import accidentals, bar_html
+
+    assert accidentals("F#m") == "F\u266fm"
+    assert accidentals("Bb") == "B\u266d"
+    assert accidentals("C7b9") == "C7\u266d9"
+    assert accidentals("Dsus4/F#") == "Dsus4/F\u266f"
+    assert accidentals("Em") == "Em" and accidentals("Gdim") == "Gdim" and accidentals("%") == "%"
+    assert bar_html("F#").count("F\u266f") == 1

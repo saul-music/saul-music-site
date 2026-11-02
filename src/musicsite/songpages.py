@@ -14,6 +14,7 @@ Uso:
 """
 
 import html
+import re
 import shutil
 import tomllib
 from pathlib import Path
@@ -45,11 +46,21 @@ def esc(value) -> str:
     return html.escape(str(value), quote=True)
 
 
+ACCIDENTALS = ((re.compile(r"(?<=[A-G0-9])#"), "\u266f"), (re.compile(r"(?<=[A-G0-9])b"), "\u266d"))
+
+
+def accidentals(chord: str) -> str:
+    """Solo para mostrar: F# -> F♯, Bb -> B♭, 7b9 -> 7♭9. El dato en el TOML no cambia."""
+    for pattern, symbol in ACCIDENTALS:
+        chord = pattern.sub(symbol, chord)
+    return chord
+
+
 def bar_html(token: str) -> str:
     """Una casilla por compás; con guiones, cada acorde ocupa el ancho de las partes que dura."""
     parts = token.split("-") if token != REPEAT else [token]
     if len(parts) == 1:
-        return f'<div class="ac-bar">{esc(token)}</div>'
+        return f'<div class="ac-bar">{esc(accidentals(token))}</div>'
     chords: list[list] = []
     for part in parts:
         if part == REPEAT and chords:
@@ -57,7 +68,7 @@ def bar_html(token: str) -> str:
         else:
             chords.append([part, 1])
     spans = "".join(
-        f'<span class="ac-part" style="flex: {weight}">{esc(chord)}</span>'
+        f'<span class="ac-part" style="flex: {weight}">{esc(accidentals(chord))}</span>'
         for chord, weight in chords
     )
     return f'<div class="ac-bar is-split">{spans}</div>'
@@ -76,7 +87,7 @@ def structure(sections: list[dict]) -> str:
         blocks.append(
             '          <div class="d-grid gap-2">\n'
             f'            <h2 class="h5 m-0">{esc(section.get("nombre", ""))}{label}</h2>\n'
-            f'            <div class="ac-bars">{bars}</div>\n'
+            f'            <div class="ac-bars" data-reps="{times}">{bars}</div>\n'
             "          </div>"
         )
     return "\n".join(blocks)
@@ -137,10 +148,10 @@ def teacher_panel(slug: str, title: str) -> str:
     return f"""    <aside class="card mb-4 ac-plan-featured" aria-label="Guías de este tema">
       <div class="card-body d-flex flex-wrap gap-3 align-items-center justify-content-between">
         <div class="d-flex flex-wrap gap-3 align-items-center">
-          <div class="d-flex gap-2 flex-shrink-0">{avatars}</div>
+          <div class="d-flex gap-2 flex-shrink-0 ac-teachers-avatars">{avatars}</div>
           <div class="d-grid" style="min-width: 0; grid-template-columns: minmax(0, 1fr)">
             <strong>{count} {noun} enseñarte «{esc(title)}»</strong>
-            <span class="small text-body-secondary">{names}{more}{example}</span>
+            <span class="small text-body-secondary ac-teachers-names">{names}{more}{example}</span>
           </div>
         </div>
         <a class="btn btn-primary" href="guias.html?tema={esc(slug)}">Ver guías</a>
@@ -270,7 +281,7 @@ def build(directory: Path, out: Path, preview: bool = False) -> list[Path]:
         # La vista previa se abre desde el disco: necesita el tema y el script junto a las páginas.
         from musicsite.app import WEB_DIR
 
-        for asset in ("style.css", "acordia.js"):
+        for asset in ("style.css", "acordia.js", "PetalumaScript.woff2"):
             shutil.copy(WEB_DIR / asset, out / asset)
     return written
 

@@ -79,7 +79,16 @@ def test_load_files_skips_hidden_unknown_and_subdirectories(tmp_path: Path):
 def test_web_dir_has_only_fixed_site_files():
     # Lo que está en web/ se publica entero: un archivo nuevo ahí debe ser contenido del sitio.
     # Las páginas de canción ya no son archivos: salen del template y de songs/.
-    fixed = {"index.html", "cancion.html", "guias.html", "artistas.html", "style.css", "acordia.js"}
+    fixed = {
+        "index.html",
+        "cancion.html",
+        "guias.html",
+        "artistas.html",
+        "style.css",
+        "acordia.js",
+        "PetalumaScript.woff2",
+        "PetalumaScript-OFL.txt",
+    }
     assert {p.name for p in WEB_DIR.iterdir()} == fixed
 
 

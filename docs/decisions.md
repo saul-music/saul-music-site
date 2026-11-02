@@ -64,3 +64,36 @@ matriz con `fail-fast: false` de chromium, firefox, webkit, Pixel 7 (chromium) e
 (webkit); la imagen solo se construye si todas pasan. Un navegador headless no oye el clic: el
 sonido y la precisión del pulso se revisan a mano. Sin caché de navegadores por ahora (una acción
 más que fijar); cada entrada instala solo el suyo.
+
+## S6 · No se sale al mercado sin SEO ni medición listos (2026-11-01)
+
+**Decisión del usuario:** el sitio todavía no sale al mercado y **no puede anunciarse ni promocionarse**
+mientras no estén hechos el trabajo de SEO y la medición de accesos. Se hará más adelante; esta
+decisión fija que es requisito de salida, junto a V2/S2 y M13.
+
+**Hoy (diagnóstico del 2026-11-01):** el HTML de cada tema sale completo desde el servidor (Jinja2), así
+que el renderizado no perjudica. Falta lo que lo rodea: sin `robots.txt` ni `sitemap.xml`; la
+descripción es la misma frase en todos los temas; sin `canonical`, Open Graph ni datos
+estructurados; contenido delgado (casi solo la grilla de acordes, sin letras por D-C15); URL
+`run.app` sin dominio propio; aviso «Prototipo» en todas las páginas.
+
+**Requisitos de SEO antes de salir:**
+1. Dominio propio decidido primero (sitemap y canonical llevan URLs absolutas; cambiarlo después
+   exige redirecciones).
+2. `sitemap.xml` generado desde `songs/` solo con los temas publicados, y `robots.txt` que lo apunte:
+   un tema nuevo entra solo.
+3. Título y descripción únicos por tema, más `canonical`, Open Graph y JSON-LD (`MusicComposition`).
+4. Contenido propio por tema (sin letras ni acordes copiados), temas relacionados y enlace desde la
+   ficha del artista.
+5. Prueba automática: cada tema publicado está en el sitemap y tiene título y descripción únicos.
+6. Retirar o reformular el aviso «Prototipo» al salir.
+
+**Requisitos de medición (listos antes del anuncio, para tener línea base):**
+- **Google Search Console:** dominio verificado y sitemap enviado.
+- **Analítica de accesos** activa. **Herramienta sin decidir** (Google Analytics u otra): al elegirla
+  se registra como decisión nueva. Condiciones: aviso de privacidad y consentimiento (Ley 21.719), CSP
+  del sitio ajustada (hoy solo permite jsDelivr y Google Fonts), ningún dato personal en el repo
+  público (M9) y revisar la regla de datos solo en `southamerica-west1` si la herramienta los envía
+  fuera de Santiago.
+
+**Estado:** no iniciado. Plan y aprobación explícita antes de cualquier código.

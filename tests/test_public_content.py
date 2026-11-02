@@ -8,7 +8,11 @@ from musicsite.app import HEADERS, SONGS_DIR, WEB_DIR
 from musicsite.songpages import render_published
 
 # Todo lo que se sirve: los archivos de web/ y las páginas de canción que salen del template.
-FILES = {p.name: p.read_text(encoding="utf-8").lower() for p in WEB_DIR.iterdir()}
+FILES = {
+    p.name: p.read_text(encoding="utf-8").lower()
+    for p in WEB_DIR.iterdir()
+    if p.suffix in {".html", ".css", ".js"}
+}
 SONG_PAGES = {
     f"cancion-{slug}.html": page.lower() for slug, page in render_published(SONGS_DIR).items()
 }
