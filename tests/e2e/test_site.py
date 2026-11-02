@@ -108,3 +108,48 @@ def test_library_card_opens_song(page: Page, base_url: str):
     page.locator('a[href="cancion-camara-lenta.html"]').first.click()
     expect(page).to_have_url(re.compile(r"/cancion-camara-lenta\.html$"))
     expect(page.locator("h1")).to_have_text("Cámara lenta")
+
+
+SAFARI_AUDIO_STUB = """
+(() => {
+  // Imita a Safari: el contexto nace suspendido, el reloj no corre y resume() tarda.
+  window.__clicks = 0; window.__early = 0;
+  class Ctx {
+    constructor() { this.state = "suspended"; this._t = 0; this.destination = {}; }
+    get currentTime() { return this._t; }
+    resume() {
+      return new Promise((ok) => setTimeout(() => {
+        this.state = "running";
+        this._t0 = performance.now();
+        this._tick = setInterval(() => { this._t = (performance.now() - this._t0) / 1000; }, 5);
+        ok();
+      }, 300));
+    }
+    createGain() {
+      const p = { setValueAtTime() {}, exponentialRampToValueAtTime() {} };
+      return { gain: p, connect() {} };
+    }
+    createOscillator() {
+      const c = this;
+      return { frequency: {}, connect() {}, stop() {},
+        start() { window.__clicks++; if (c.state !== "running") window.__early++; } };
+    }
+  }
+  window.AudioContext = Ctx;
+})();
+"""
+
+
+def test_metronome_waits_for_running_context_like_safari(page: Page, base_url: str):
+    page.add_init_script(SAFARI_AUDIO_STUB)
+    page.goto(base_url + SONG)
+    page.locator("[data-ac-met-toggle]").click()
+    page.wait_for_timeout(150)
+    # Mientras el contexto sigue suspendido no se agenda ningún clic.
+    assert page.evaluate("window.__clicks") == 0
+    for _ in range(50):
+        if page.evaluate("window.__clicks") >= 2:
+            break
+        page.wait_for_timeout(100)
+    assert page.evaluate("window.__clicks") >= 2
+    assert page.evaluate("window.__early") == 0
