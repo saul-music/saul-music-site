@@ -524,3 +524,42 @@ def test_payload_says_when_the_guitar_diagram_leaves_the_bass_out(tmp_path):
     assert chords["Gmaj7/A"]["guitar_note"] == {"base": "Gmaj7", "bass": "A"}
     assert chords["Gmaj7/A"]["guitar"]
     assert chords["Em7/B"]["keys"] and chords["Em7/B"]["bass"] == 11  # el teclado no cambia
+
+
+BAR = [{"nombre": "A", "compases": ["G"]}]
+TIP = [{"consejo": {"titulo": "t", "texto": "x"}}]
+
+
+def _song(title, basic=True, mid=False, adv=False, artist="Banda"):
+    song = {"titulo": title, "artista": artist, "tipo": "cancion", "acordes": ["G"]}
+    song["secciones"] = BAR if basic else []
+    song["intermedio_secciones"] = BAR if mid else []
+    song["avanzado_secciones"] = BAR if adv else []
+    return song
+
+
+def test_library_puts_the_song_with_more_versions_first_within_each_artist():
+    from musicsite.songpages import version_count
+
+    assert version_count(_song("x")) == 1
+    assert version_count(_song("x", mid=True, adv=True)) == 3
+    assert version_count(_song("x", basic=False, adv=True)) == 1
+    only_tips = {**_song("x"), "intermedio_secciones": TIP}
+    assert version_count(only_tips) == 1  # un nivel con solo tips no cuenta
+    assert version_count(_song("x", mid=True), "borrador") == 0  # «Próximamente»
+
+
+def test_library_order_by_versions_then_title_keeps_artists_alphabetical():
+    entries = [
+        (_song("Ana"), "ana", "publicable"),  # 1
+        (_song("Beto", mid=True), "beto", "publicable"),  # 2
+        (_song("Cora", mid=True, adv=True), "cora", "publicable"),  # 3
+        (_song("Dani", adv=True), "dani", "publicable"),  # 2, empata con Beto
+        (_song("Prox", mid=True, adv=True), "prox", "borrador"),  # 0: al final
+        (_song("Zoe", artist="Alfa"), "zoe", "publicable"),  # otro artista, va antes
+    ]
+    from musicsite.songpages import render_library
+
+    page = render_library(entries)
+    order = [page.index(f">{title}<") for title in ("Zoe", "Cora", "Beto", "Dani", "Ana", "Prox")]
+    assert order == sorted(order)

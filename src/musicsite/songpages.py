@@ -426,9 +426,27 @@ def artist_key(artist: str) -> str:
     return key
 
 
+def version_count(song: dict, status: str = "publicable") -> int:
+    """Cuántas versiones (Básico, Intermedio, Avanzado) tienen al menos un compás (S20).
+
+    Un nivel que solo trae tips no cuenta, y un tema «Próximamente» no tiene ninguna."""
+    if status != "publicable":
+        return 0
+    levels = ("secciones", "intermedio_secciones", "avanzado_secciones")
+    return sum(any(sec.get("compases") for sec in song.get(key, [])) for key in levels)
+
+
 def render_library(entries: list[tuple[dict, str, str]]) -> str:
-    """Tarjetas (canción, slug, estado) ordenadas por artista y luego por título (S14)."""
-    ordered = sorted(entries, key=lambda e: (artist_key(e[0]["artista"]), sort_key(e[0]["titulo"])))
+    """Tarjetas (canción, slug, estado): por artista y, dentro de cada uno, primero el tema con más
+    versiones y luego por título (S14, S20)."""
+    ordered = sorted(
+        entries,
+        key=lambda e: (
+            artist_key(e[0]["artista"]),
+            -version_count(e[0], e[2]),
+            sort_key(e[0]["titulo"]),
+        ),
+    )
     parts, current = [], None
     for song, slug, status in ordered:
         key = artist_key(song["artista"])
