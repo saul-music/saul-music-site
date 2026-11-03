@@ -112,7 +112,11 @@ def test_vendored_shapes_only_sound_notes_of_their_chord():
     for key, by_suffix in data["acordes"].items():
         for suffix, positions in by_suffix.items():
             root = chord(key)
-            c = theory.Chord(key, root.root, None, suffix, root.flats, root.letter, root.accidental)
+            base, _, bass = suffix.partition("/")  # «major/11» = forma con bajo (S19)
+            c = theory.Chord(
+                key, root.root, int(bass) if bass else None, base, root.flats,
+                root.letter, root.accidental,
+            )  # fmt: skip
             for position in positions:
                 total += 1
                 assert theory.position_ok(c, position["f"]), (key, suffix, position)
@@ -182,3 +186,56 @@ def test_vendoring_keeps_only_valid_shapes_with_absolute_frets(tmp_path):
     assert [p["f"] for p in positions] == [[-1, 3, 2, 0, 1, 0], [3, 3, 5, 5, 5, 3]]
     assert positions[1]["b"] == [3]  # cejilla en el traste 3, no en el 1 relativo
     assert "7sg" not in data["acordes"]["C"]  # sufijo que no sabemos interpretar
+
+
+def lowest(frets):
+    return min(theory.sounded(frets)) % 12
+
+
+@pytest.mark.parametrize("token", ["G/B", "D/F#", "C/E"])
+def test_slash_chords_from_chords_db_draw_their_bass(token):
+    c = chord(token)
+    shapes, drawn = theory.guitar_positions(c)
+    assert drawn and shapes
+    assert all(lowest(p["frets"]) == c.bass for p in shapes)
+    assert theory.standard_positions(c) == shapes
+
+
+def test_slash_without_its_own_shape_falls_back_to_the_base_chord_without_bass():
+    c = chord("Gmaj7/A")  # el bajo no es del acorde
+    shapes, drawn = theory.guitar_positions(c)
+    assert not drawn
+    assert shapes == theory.standard_positions(chord("Gmaj7"))
+
+
+def test_fallback_prefers_base_shapes_that_already_have_the_bass_lowest():
+    for token in ("Em7/B", "Em7/G", "F#m7/A", "D6/F#", "Gmaj7/B"):
+        c = chord(token)
+        shapes, drawn = theory.guitar_positions(c)
+        assert shapes, token
+        base = theory.standard_positions(chord(token.split("/")[0]))
+        matching = [p for p in base if lowest(p["frets"]) == c.bass]
+        assert (shapes, drawn) == ((matching, True) if matching else (base, False)), token
+
+
+def test_no_diagram_when_neither_the_slash_nor_the_base_chord_has_one():
+    assert theory.guitar_positions(chord("Absus4add9/C")) == (None, False)  # chords-db no trae Ab
+
+
+def test_chords_without_bass_are_unchanged():
+    assert theory.guitar_positions(chord("Gmaj7")) == (
+        theory.standard_positions(chord("Gmaj7")),
+        True,
+    )
+
+
+def test_every_slash_shape_in_the_data_plays_only_chord_notes_with_the_bass_lowest():
+    data = json.loads(theory.DATA_FILE.read_text(encoding="utf-8"))["acordes"]
+    for key, by_suffix in data.items():
+        for suffix, positions in by_suffix.items():
+            if "/" not in suffix:
+                continue
+            base, bass = suffix.split("/")
+            root = theory.DB_KEYS.index(key)
+            c = theory.Chord(f"{key}{suffix}", root, int(bass), base, False)
+            assert all(not theory.check_shape(c, p["f"]) for p in positions), (key, suffix)
