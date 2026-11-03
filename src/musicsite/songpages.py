@@ -254,7 +254,7 @@ def chords_payload(song: dict) -> dict:
         if chord is None:
             continue
         keys, bass = theory.piano_keys(chord)
-        standard = theory.standard_positions(chord)
+        standard, bass_drawn = theory.guitar_positions(chord)
         chords[name] = {
             "label": accidentals(name),
             "notes": [accidentals(n) for n in theory.note_names(chord)],
@@ -264,6 +264,12 @@ def chords_payload(song: dict) -> dict:
             if standard
             else None,
         }
+        if standard and not bass_drawn:  # el diagrama es el del acorde base (S19)
+            base = name.split("/")[0]
+            chords[name]["guitar_note"] = {
+                "base": accidentals(base),
+                "bass": accidentals(name.split("/")[1]),
+            }
     own = {
         mode: {
             name: {"frets": frets, "tab": list(theory.tab_lines(frets))}

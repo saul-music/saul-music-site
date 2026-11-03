@@ -287,3 +287,24 @@ En «Moizefala» (Intermedio), un compás como `Dmaj7-Em7/B-F#m7/A-D6/F#` desbor
   (`%` sigue alargando). En celular la letra baja a `min(1.2rem, 4.4vw)` solo ahí.
 - Comprobado en navegador con el tema publicado a 1100, 390 y 360 px: ninguna casilla desbordada. Sin formato nuevo;
   el cursor del metrónomo y el conteo de compases no cambian.
+
+## S19 · Guitarra para acordes con bajo: forma con bajo, o el acorde base sin el bajo (2026-11-03)
+
+Hasta S18, cualquier acorde con bajo (`G/B`, `Em7/B`) abría el panel solo con teclado. Ahora la guitarra se
+resuelve en este orden (`chordtheory.guitar_positions`):
+1. **Forma propia** del tema (`[intermedio.formas]`, S8): sigue mandando sobre todo.
+2. **Forma de chords-db con ese bajo** (`G/B`, `D/F#`, `C/E`…): 48 entradas nuevas en `chords-guitar.json`, claves
+   `«major/11»` (sufijo y clase del bajo). Solo entran las que `check_shape` acepta (sin notas ajenas y con el bajo
+   como nota más grave); 2 se descartaron.
+3. **Acorde base** (`Gmaj7/B` → `Gmaj7`): primero las formas cuya nota más grave ya es el bajo (esas sí lo
+   dibujan); si ninguna lo es, todas, **sin el bajo**.
+4. Sin acorde base con diagrama: «Sin diagrama de guitarra», como antes.
+- **Aviso:** cuando el bajo no está dibujado, el panel dice «Diagrama de Gmaj7. El bajo (B) no está dibujado:
+  míralo en el teclado.» (`guitar_note` en el payload). El teclado no cambia: ya marca el bajo.
+- **Datos:** `python -m musicsite.chordsdb vendor guitar.json --only-slash` agrega las formas con bajo sin tocar lo
+  ya vendorizado.
+- **Hallazgo de procedencia (pendiente):** el `chords-guitar.json` publicado **no coincide** con el `guitar.json` de
+  `@tombatossals/chords-db@0.5.1` en jsDelivr: ahí no existe `sus2sus4` y algunas formas difieren (p. ej. una
+  de `C`). Los datos de S16 vienen de otra fuente o versión que `fuente` nombra como 0.5.1. No cambia nada hoy (por eso
+  `--only-slash` no regenera), pero hay que aclarar el origen y corregir `THIRD_PARTY_NOTICES.md` si corresponde (L1).
+- **Fuera de alcance:** `G7b9` (sin bajo, no está en chords-db): forma propia por tema.

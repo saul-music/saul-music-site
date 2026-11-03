@@ -515,3 +515,12 @@ def test_bars_with_many_or_long_chords_take_two_columns(token, wide):
 def test_wide_bars_keep_the_repeat_mark():
     html = bar_html("Dmaj7-Em7/B-F#m7/A", repeat=True)
     assert "is-wide" in html and "is-repeat" in html
+
+
+def test_payload_says_when_the_guitar_diagram_leaves_the_bass_out(tmp_path):
+    body = with_modes("\n[intermedio]\npartitura = '''\nA: G/B Gmaj7/A Em7/B\n'''\n")
+    chords = chords_payload(load_song(write(tmp_path, "otra-era", body)))["chords"]
+    assert "guitar_note" not in chords["G/B"] and chords["G/B"]["guitar"]
+    assert chords["Gmaj7/A"]["guitar_note"] == {"base": "Gmaj7", "bass": "A"}
+    assert chords["Gmaj7/A"]["guitar"]
+    assert chords["Em7/B"]["keys"] and chords["Em7/B"]["bass"] == 11  # el teclado no cambia

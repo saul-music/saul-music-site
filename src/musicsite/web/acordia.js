@@ -188,7 +188,9 @@
         var f = list[form];
         body.appendChild(guitarSVG(f.frets, f.fingers, f.barres, chord.label));
         tabEl.hidden = false; tabEl.textContent = f.tab.join("\n");
-        noteEl.hidden = true;
+        var gn = chord.guitar_note;  // diagrama del acorde base: el bajo no está dibujado (S19)
+        noteEl.hidden = !(gn && !f.own);
+        if (!noteEl.hidden) noteEl.textContent = "Diagrama de " + gn.base + ". El bajo (" + gn.bass + ") no está dibujado: míralo en el teclado.";
         badge.hidden = !f.own;
         next.hidden = list.length < 2;
         next.textContent = "Otra forma (" + (form + 1) + "/" + list.length + ")";

@@ -239,15 +239,34 @@ def _database() -> dict:
     return json.loads(DATA_FILE.read_text(encoding="utf-8"))
 
 
-def standard_positions(chord: Chord) -> list[dict] | None:
-    """Formas estándar de guitarra ({frets, fingers, barres}); None si no hay para este acorde."""
-    if chord.bass is not None:
-        return None
-    by_suffix = _database()["acordes"].get(DB_KEYS[chord.root], {})
-    positions = by_suffix.get(chord.suffix)
+def _positions(root: int, key: str) -> list[dict] | None:
+    positions = _database()["acordes"].get(DB_KEYS[root], {}).get(key)
     if not positions:
         return None
     return [{"frets": p["f"], "fingers": p["d"], "barres": p["b"]} for p in positions]
+
+
+def standard_positions(chord: Chord) -> list[dict] | None:
+    """Formas estándar de guitarra ({frets, fingers, barres}) de este acorde tal cual, con su
+    bajo si lo tiene; None si chords-db no trae ninguna."""
+    key = chord.suffix if chord.bass is None else f"{chord.suffix}/{chord.bass}"
+    return _positions(chord.root, key)
+
+
+def guitar_positions(chord: Chord) -> tuple[list[dict] | None, bool]:
+    """Formas para mostrar y si dibujan el bajo: (formas, bajo_dibujado) (S19).
+
+    Sin bajo, o con una forma de chords-db para ese bajo (G/B), el bajo está dibujado. Si no hay,
+    se usa el acorde base (Gmaj7/B -> Gmaj7): primero las formas cuya nota más grave ya es el
+    bajo (esas sí lo dibujan) y, si ninguna lo es, todas, sin el bajo. Sin acorde base: None."""
+    exact = standard_positions(chord)
+    if exact or chord.bass is None:
+        return exact, True
+    base = _positions(chord.root, chord.suffix)
+    if not base:
+        return None, False
+    with_bass = [p for p in base if min(sounded(p["frets"])) % 12 == chord.bass]
+    return (with_bass, True) if with_bass else (base, False)
 
 
 def parse_shape(text: str) -> list[int]:

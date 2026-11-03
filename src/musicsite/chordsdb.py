@@ -27,9 +27,12 @@ def absolute(position: dict) -> list[int]:
     return [f + base - 1 if f > 0 else f for f in position["frets"]]
 
 
-def vendor(db_path: Path, out: Path = OUT) -> dict:
+def vendor(db_path: Path, out: Path = OUT, only_slash: bool = False) -> dict:
+    """Con `only_slash` se parte del archivo ya vendorizado y solo se agregan las formas con bajo
+    (G/B): lo demás no se toca (S19)."""
     db = json.loads(db_path.read_text(encoding="utf-8"))
-    chords: dict[str, dict] = {}
+    existing = json.loads(out.read_text(encoding="utf-8")) if only_slash else {}
+    chords: dict[str, dict] = existing.get("acordes", {})
     kept = dropped = 0
     for raw_key, entries in db["chords"].items():
         key = KEY_NAMES.get(raw_key, raw_key)
@@ -38,9 +41,19 @@ def vendor(db_path: Path, out: Path = OUT) -> dict:
             continue
         for entry in entries:
             suffix = entry["suffix"]
-            if suffix not in theory.INTERVALS:
+            if (
+                "/" in suffix
+            ):  # forma con bajo (G/B): se guarda como «major/11» (sufijo/clase del bajo)
+                chord = theory.parse(key + suffix)
+                if chord is None:
+                    continue
+                suffix = f"{chord.suffix}/{chord.bass}"
+            elif only_slash:
                 continue
-            chord = theory.Chord(key, root.root, None, suffix, root.flats)
+            elif suffix in theory.INTERVALS:
+                chord = theory.Chord(key, root.root, None, suffix, root.flats)
+            else:
+                continue
             positions = []
             for position in entry["positions"]:
                 frets = absolute(position)
@@ -53,7 +66,7 @@ def vendor(db_path: Path, out: Path = OUT) -> dict:
             if positions:
                 chords.setdefault(key, {})[suffix] = positions
     data = {
-        "fuente": SOURCE,
+        "fuente": existing.get("fuente", SOURCE),
         "licencia": "MIT (ver THIRD_PARTY_NOTICES.md)",
         "afinacion": list(theory.TUNING),
         "acordes": chords,
@@ -67,8 +80,11 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="musicsite.chordsdb", description=__doc__.split("\n")[0])
     parser.add_argument("command", choices=["vendor"])
     parser.add_argument("source", type=Path, help="guitar.json de chords-db")
+    parser.add_argument(
+        "--only-slash", action="store_true", help="agrega solo las formas con bajo (G/B)"
+    )
     args = parser.parse_args(argv)
-    vendor(args.source)
+    vendor(args.source, only_slash=args.only_slash)
     return 0
 
 
