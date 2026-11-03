@@ -308,3 +308,14 @@ resuelve en este orden (`chordtheory.guitar_positions`):
   de `C`). Los datos de S16 vienen de otra fuente o versión que `fuente` nombra como 0.5.1. No cambia nada hoy (por eso
   `--only-slash` no regenera), pero hay que aclarar el origen y corregir `THIRD_PARTY_NOTICES.md` si corresponde (L1).
 - **Fuera de alcance:** `G7b9` (sin bajo, no está en chords-db): forma propia por tema.
+
+## S20 · En la Biblioteca, dentro de cada artista, primero el tema con más versiones (2026-11-03)
+
+Los artistas siguen en orden alfabético (sin artículo ni tildes, S14). Dentro de cada artista el orden pasa a ser
+**más versiones primero**, y a igualdad de versiones, por título.
+- **Versiones** (`songpages.version_count`): cuántos de Básico, Intermedio y Avanzado tienen al menos un compás
+  (0 a 3). Un nivel que solo trae tips no cuenta. Un tema «Próximamente» vale 0 y queda al final de su artista.
+- **Empates:** alfabéticos; Avanzado no pesa más que Intermedio.
+- Un tema publicado sin base armónica (p. ej. «Corre que te pillo») también vale 0: sale tras los que tienen
+  acordes y antes de los «Próximamente» solo por orden alfabético entre ceros.
+- No cambia el buscador, los contadores por artista ni el HTML de las tarjetas; no hay indicador visual de versiones.
