@@ -478,6 +478,9 @@ a.card:hover { border-color: var(--ac-fill); transform: translateY(-2px); }
 }
 .ac-bar.is-repeat { color: var(--ac-fg-muted); opacity: .75; }
 .ac-bar.is-split { display: flex; padding-inline: 0; }
+/* S18: casillas con 3+ acordes o nombres largos (bajos) ocupan dos columnas; en celular, la fila. */
+.ac-bar.is-wide { grid-column: span 2; }
+.ac-bar.is-wide .ac-part { flex-basis: auto !important; }  /* cada acorde parte de su propio ancho; el sobrante se reparte por duración */
 .ac-part { flex-basis: 0; min-width: 0; padding-inline: .15rem; }
 
 /* Rasgueo: 8 tiempos */
@@ -517,6 +520,7 @@ a.card:hover { border-color: var(--ac-fill); transform: translateY(-2px); }
 /* Teléfono */
 @media (max-width: 575.98px) {
   .ac-bars { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .ac-bar.is-wide.is-split { font-size: min(1.2rem, 4.4vw); }  /* S18: 4 acordes con bajo caben en la fila */
   .ac-strum-cell { font-size: 1rem; }
 }
 
