@@ -237,8 +237,9 @@ título gancho; al tocarlo (o con Enter/Espacio) se despliega el texto.
   actualiza el hash con `history.replaceState` (sin llenar el historial ni mover el scroll); abrir un enlace
   con hash abre ese nivel, uno desconocido cae en Básico y `hashchange` se escucha.
 - **Final de la pasada.** Al sonar el último pulso del último compás (última repetición; desde la bandera, si
-  hay una) se detiene todo y «Reproducir» es reemplazado por «Volver al inicio». Ese botón solo deja el
-  cursor y el scroll en el primer compás: no reproduce. Se oculta al cambiar de nivel o mover la bandera.
+  hay una) se detiene todo, no queda ningún compás marcado (ni cursor ni bandera de partida) y
+  «Reproducir» es reemplazado por «Volver al inicio». Ese botón solo lleva el scroll, directo, al primer
+  compás del nivel visible: no reproduce. Se oculta al cambiar de nivel o mover la bandera.
 - **Sin tecnología nueva.** Bootstrap Tab y JS propio; sin dependencias.
 - **Se comprueba:** 4 pruebas e2e nuevas (selector único y hash, hash al cargar, final y reinicio sin sonido,
   cambio de nivel sonando) en chromium y iPhone 14. Pendiente: oírlo y verlo en Safari/iPhone real.

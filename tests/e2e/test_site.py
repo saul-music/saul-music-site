@@ -355,6 +355,7 @@ def test_pass_stops_at_the_last_bar_and_offers_to_go_back(song_audio: Page):
     expect(toggle).to_be_hidden()
     expect(toggle).to_have_attribute("aria-pressed", "false")
     expect(song.locator("#p-basico .ac-bar.is-current")).to_have_count(0)
+    expect(song.locator(".ac-bar.is-start")).to_have_count(0)  # tampoco queda la bandera
     clicks = song.evaluate("window.__clicks")
     song.wait_for_timeout(800)
     assert song.evaluate("window.__clicks") == clicks  # nada sigue sonando
@@ -363,7 +364,10 @@ def test_pass_stops_at_the_last_bar_and_offers_to_go_back(song_audio: Page):
     )  # arriba: volver tiene que bajar hasta el compás de partida
     restart.click()
     song.wait_for_timeout(300)
-    assert song.evaluate("scrollY") > 0  # el scroll va al compás de partida
+    assert song.evaluate("scrollY") > 0  # el scroll va al primer compás, no al de la bandera
+    first = bars.first.bounding_box()
+    tools = song.locator(".ac-sticky-tools").bounding_box()
+    assert first["y"] >= tools["y"] + tools["height"]  # el primer compás queda a la vista
     expect(restart).to_be_hidden()
     expect(toggle).to_be_visible()
     expect(toggle).to_have_attribute("aria-pressed", "false")  # solo vuelve: no reproduce

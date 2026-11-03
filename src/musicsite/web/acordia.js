@@ -751,16 +751,17 @@
     function finish() {
       if (!playing) return;
       stop();
+      setStart(null);  // terminó el tema: ningún compás queda marcado, ni cursor ni bandera
       toggle.hidden = true;
       restart.hidden = false;
       if (statusBox) statusBox.textContent = "Terminó la pasada";
       restart.focus({ preventScroll: true });
     }
-    /* «Volver al inicio»: deja el cursor y el scroll en el primer compás, sin reproducir. */
+    /* «Volver al inicio»: lleva el scroll al primer compás del nivel visible, sin reproducir. */
     if (restart) restart.addEventListener("click", function () {
       hideRestart();
       var seq = buildSeq(activePane());
-      if (seq.length) { pausedUntil = 0; keepInView(seq[startIndex(seq)].el, true); }
+      if (seq.length) { pausedUntil = 0; keepInView(seq[0].el, true); }
       toggle.focus({ preventScroll: true });
     });
     /* Cambiar de nivel (barra o hash) no corta la reproducción: el cursor sigue en el mismo compás. */
