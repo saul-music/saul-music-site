@@ -15,13 +15,22 @@ VALID = CONTRACT["valido"]["song"]
 SLUG = "tema-de-prueba"
 
 
+def toml_value(value):
+    """JSON sirve para escalares; las tablas pasan a tabla en línea de TOML."""
+    if isinstance(value, dict):
+        return (
+            "{ " + ", ".join(f"{json.dumps(k)} = {toml_value(v)}" for k, v in value.items()) + " }"
+        )
+    return json.dumps(value)
+
+
 def to_toml(song: dict) -> str:
     """Solo para pruebas: valores simples y tablas de un nivel (JSON ya escapa como TOML)."""
     flat = [
         f"{key} = {json.dumps(value)}" for key, value in song.items() if not isinstance(value, dict)
     ]
     tables = [
-        f"[{key}]\n" + "\n".join(f"{k} = {json.dumps(v)}" for k, v in value.items())
+        f"[{key}]\n" + "\n".join(f"{k} = {toml_value(v)}" for k, v in value.items())
         for key, value in song.items()
         if isinstance(value, dict)
     ]

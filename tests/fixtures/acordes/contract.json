@@ -22,7 +22,8 @@
     {"cambio": {"tipo": "otro"}, "contiene": "tipo debe ser"},
     {"cambio": {"barrio": "Jazz"}, "contiene": "barrio debe ser Rock, Pop o Indie"},
     {"cambio": {"intermedio": {"partitura": "A: G7 Cmaj7"}}, "errores": 0},
-    {"cambio": {"intermedio": {"partitura": "A: G/B"}}, "contiene": "no es un acorde válido para este modo"},
+    {"cambio": {"intermedio": {"partitura": "A: G/B D/F#"}}, "errores": 0},
+    {"cambio": {"intermedio": {"partitura": "A: G/H"}}, "contiene": "no es un acorde válido para este modo"},
     {"cambio": {"avanzado": {"partitura": "A: G/B"}}, "errores": 0},
     {"cambio": {"procedencia": {"metodo": "", "autor": "", "fecha": ""}}, "contiene": "procedencia («metodo»)"},
     {"cambio": {"revision": {"revisado": false, "v2_resuelto": true}}, "contiene": "v2_resuelto exige revisado"},
@@ -34,6 +35,11 @@
     {"cambio": {"partitura": "> xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx | Texto\nIntro x1: G Em\n"}, "contiene": "título del tip pasa de 60"},
     {"cambio": {"partitura": "> Título | xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\nIntro x1: G Em\n"}, "contiene": "texto del tip pasa de 280"},
     {"cambio": {"intermedio": {"partitura": "> Truco | Cambia el acorde.\nA: G7"}}, "errores": 0},
-    {"cambio": {"avanzado": {"partitura": "> Truco\nA: G/B"}}, "contiene": "un tip se escribe"}
+    {"cambio": {"avanzado": {"partitura": "> Truco\nA: G/B"}}, "contiene": "un tip se escribe"},
+    {"cambio": {"avanzado": {"partitura": "Intro: Em G/B", "tabs": {"Intro": "e|--0--|"}, "arreglos": {"Intro": "Rasgueo suave"}}}, "errores": 0},
+    {"cambio": {"avanzado": {"partitura": "Intro: Em", "tabs": {"Puente": "e|--0--|"}}}, "contiene": "no hay una sección con ese nombre"},
+    {"cambio": {"avanzado": {"partitura": "Intro: Em", "arreglos": {"Intro": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"}}}, "contiene": "pasa de 600"},
+    {"cambio": {"avanzado": {"partitura": "> tttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttt | yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy\nIntro: Em"}}, "errores": 0},
+    {"cambio": {"intermedio": {"partitura": "> t | xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\nIntro: Em"}}, "contiene": "el texto del tip pasa de 280"}
   ]
 }

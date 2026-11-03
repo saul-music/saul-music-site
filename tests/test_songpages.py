@@ -122,9 +122,8 @@ def test_extended_chords_are_valid_only_in_their_modes(tmp_path):
         "\n[avanzado]\npartitura = '''\nA: G/B D/F# C\n'''\n"
     )
     assert validate_file(write(tmp_path, "otra-era", ok)).errors == []
-    slash_in_middle = with_modes("\n[intermedio]\npartitura = '''\nA: G/B\n'''\n")
-    errors = validate_file(write(tmp_path, "otra-era", slash_in_middle)).errors
-    assert any("intermedio" in e and "G/B" in e for e in errors)
+    bad_bass = with_modes("\n[intermedio]\npartitura = '''\nA: G/H\n'''\n")
+    assert validate_file(write(tmp_path, "otra-era", bad_bass)).errors
     junk = with_modes("\n[avanzado]\npartitura = '''\nA: Hx\n'''\n")
     assert validate_file(write(tmp_path, "otra-era", junk)).errors
 
@@ -449,3 +448,46 @@ def test_tip_title_and_text_both_use_the_chord_font():
 
     out = tip_html({"titulo": "¿Suena `Em`?", "texto": "Cambia a `C#m7b5`."})
     assert out.count('class="ac-inline-chord"') == 2 and "`" not in out
+
+
+ADV = "\n[avanzado]\npartitura = '''\n> {t}\nIntro: Em G/B\nEstrofa x2: C D\n'''\n"
+
+
+def test_intermedio_accepts_bass_chords(tmp_path):
+    body = with_modes("\n[intermedio]\npartitura = '''\nA: G/B D/F# Am7/G\n'''\n")
+    assert validate_file(write(tmp_path, "otra-era", body)).errors == []
+
+
+def test_advanced_tabs_and_arrangements_by_section_render_in_place(tmp_path):
+    body = with_modes(
+        ADV.format(t="Técnica | Apaga la 6ª cuerda con el pulgar")
+        + "[avanzado.tabs]\n\"Intro\" = '''\ne|--0--|\n'''\n"
+        + '[avanzado.arreglos]\n"Estrofa" = "Rasgueo <b>abajo</b> y `Em` apagado"\n'
+    )
+    path = write(tmp_path, "otra-era", body)
+    assert validate_file(path).errors == []
+    page = render(load_song(path), "publicable", False)
+    assert page.index("e|--0--|") < page.index("Rasgueo")
+    assert "&lt;b&gt;abajo" in page and "<b>abajo" not in page
+
+
+@pytest.mark.parametrize(
+    "extra",
+    [
+        '[avanzado.tabs]\n"Puente" = "x"\n',
+        '[avanzado.tabs]\n"Intro" = ""\n',
+        '[avanzado.arreglos]\n"Intro" = "' + "x" * 601 + '"\n',
+        '[avanzado]\ntabs = "no es tabla"\n',
+    ],
+)
+def test_bad_tabs_and_arrangements_are_rejected(tmp_path, extra):
+    body = with_modes(ADV.format(t="T | t") + extra)
+    assert validate_file(write(tmp_path, "otra-era", body)).errors
+
+
+def test_advanced_tips_allow_longer_text_but_other_modes_do_not(tmp_path):
+    long_tip = "x" * 80 + " | " + "y" * 600
+    ok = with_modes(ADV.format(t=long_tip))
+    assert validate_file(write(tmp_path, "otra-era", ok)).errors == []
+    inter = with_modes("\n[intermedio]\npartitura = '''\n> t | " + "y" * 281 + "\nA: G\n'''\n")
+    assert any("tip" in e for e in validate_file(write(tmp_path, "otra-era", inter)).errors)

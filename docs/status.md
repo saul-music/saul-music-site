@@ -1,6 +1,6 @@
 # Estado del sitio
 
-> Registro vivo. Última actualización: 2026-11-02 (S9: el sitio muestra lo publicado desde el admin).
+> Registro vivo. Última actualización: 2026-11-02 (S17: niveles Intermedio y Avanzado).
 
 ## Paso actual
 
@@ -81,3 +81,4 @@ AAAA-MM-DD · paso · qué se hizo · qué quedó pendiente · decisiones nuevas
 2026-11-02 · acordes menores y sus4add9 (rama feat/acordes-menores) · S16: se suman m11, m69, mmaj7, mmaj7b5, mmaj9, mmaj11 y sus2sus4 (= sus4add9) a la teoría y a los diagramas; 1228 formas de chords-db (antes 893; 27 descartadas por notas ajenas), 12 tonalidades en cada menor nuevo y 11 en sus2sus4 (sin Ab); 357 tests · pendiente: PR y merge, sincronizar el validador de research (PR aparte), madd11 y m13 quedan fuera (forma propia por tema) · S16
 ```
 2026-11-02 · acordes en los tips (rama feat/tips-acordes-inline) · S15: lo que va entre backticks en el título o el texto de un tip usa la fuente de acordes, escapado y sin HTML; tests nuevos · pendiente: revisar a ojo en celular · S15
+2026-11-02 · niveles (rama feat/niveles-bajo-intermedio) · S17: bajos en Intermedio; `[avanzado.tabs]`, `[avanzado.arreglos]` y tips de 80/600 en Avanzado; 370 tests, contrato ampliado · pendiente: revisar en celular real, publicar un tema con estos campos desde el admin
