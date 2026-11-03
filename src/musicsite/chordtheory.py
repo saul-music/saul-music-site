@@ -53,6 +53,8 @@ INTERVALS: dict[str, tuple[int, ...]] = {
     "mmaj9": (0, 3, 7, 11, 14),
     "mmaj11": (0, 3, 7, 11, 14, 17),
     "sus2sus4": (0, 2, 5, 7),  # = sus4add9
+    "add#11": (0, 4, 7, 18),  # sin guitarra estándar: chords-db no los trae (S21)
+    "madd#11": (0, 3, 7, 18),
 }
 # Cómo se escribe en nuestras partituras -> sufijo de chords-db.
 ALIASES = {
@@ -88,13 +90,31 @@ ALIASES = {
     "mmaj11": "mmaj11",
     "sus2sus4": "sus2sus4",
     "sus4add9": "sus2sus4",
+    "add#11": "add#11",
+    "madd#11": "madd#11",
 }
 CHORD = re.compile(r"^([A-G])([#b]?)([^/]*)(?:/([A-G])([#b]?))?$")
 
 
 LETTERS = "CDEFGAB"
 # Grado de la escala al que corresponde cada intervalo (el 9 es la novena, grado 2).
-DEGREE = {0: 1, 1: 2, 2: 2, 3: 3, 4: 3, 5: 4, 6: 5, 7: 5, 8: 5, 9: 6, 10: 7, 11: 7, 14: 2, 17: 4}
+DEGREE = {
+    0: 1,
+    1: 2,
+    2: 2,
+    3: 3,
+    4: 3,
+    5: 4,
+    6: 5,
+    7: 5,
+    8: 5,
+    9: 6,
+    10: 7,
+    11: 7,
+    14: 2,
+    17: 4,
+    18: 4,
+}
 
 
 @dataclass(frozen=True)
