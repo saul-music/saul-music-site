@@ -62,6 +62,10 @@ def test_parse_returns_none_for_what_we_cannot_draw(token):
         ("Bsus4add9", ["B", "C#", "E", "F#"]),
         ("G/B", ["G", "B", "D"]),
         ("C/D", ["D", "C", "E", "G"]),
+        ("Dmadd#11", ["D", "F", "A", "G#"]),
+        ("Dadd#11", ["D", "F#", "A", "G#"]),
+        ("Cmadd#11", ["C", "Eb", "G", "F#"]),
+        ("Eadd#11", ["E", "G#", "B", "A#"]),
     ],
 )
 def test_notes_are_spelled_by_degree(token, notes):
@@ -239,3 +243,17 @@ def test_every_slash_shape_in_the_data_plays_only_chord_notes_with_the_bass_lowe
             root = theory.DB_KEYS.index(key)
             c = theory.Chord(f"{key}{suffix}", root, int(bass), base, False)
             assert all(not theory.check_shape(c, p["f"]) for p in positions), (key, suffix)
+
+
+@pytest.mark.parametrize("token", ["Dmadd#11", "Dadd#11", "Bmadd#11", "F#add#11"])
+def test_sharp_eleven_chords_have_piano_keys_but_no_standard_guitar_shape(token):
+    c = chord(token)
+    keys, bass = theory.piano_keys(c)
+    assert len(keys) == 4 and bass is None and all(0 <= k <= 23 for k in keys)
+    assert theory.guitar_positions(c)[0] is None  # chords-db no los trae (S21)
+
+
+def test_sharp_eleven_own_shape_is_accepted_only_with_chord_notes():
+    c = chord("Dmadd#11")  # D F A G#
+    assert theory.check_shape(c, theory.parse_shape("x x 0 1 3 1")) == []  # D G# D F
+    assert theory.check_shape(c, theory.parse_shape("x x 0 2 3 2"))  # suena G, que no es del acorde

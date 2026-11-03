@@ -319,3 +319,13 @@ Los artistas siguen en orden alfabético (sin artículo ni tildes, S14). Dentro 
 - Un tema publicado sin base armónica (p. ej. «Corre que te pillo») también vale 0: sale tras los que tienen
   acordes y antes de los «Próximamente» solo por orden alfabético entre ceros.
 - No cambia el buscador, los contadores por artista ni el HTML de las tarjetas; no hay indicador visual de versiones.
+## S21 · Acordes `add#11` y `madd#11` (2026-11-03)
+
+Se escriben **sin paréntesis**: `Dmadd#11` (D F A G♯) y `Dadd#11` (D F♯ A G♯). El validador del site y el del admin de
+research ya los aceptaban (`add` + `#11`); lo que faltaba era que el sitio supiera sus notas.
+- **Teoría** (`chordtheory`): sufijos `add#11` (0, 4, 7, 18) y `madd#11` (0, 3, 7, 18), con la #11 escrita como cuarta
+  aumentada (G♯ en Re). Dan el nombre de las notas y las teclas del piano.
+- **Guitarra:** chords-db no trae ningún sufijo `#11`, así que no hay forma estándar («Sin diagrama de guitarra»); se
+  escribe una forma propia por tema (`[intermedio.formas]`), que ya valida que solo suenen notas del acorde.
+- **Con paréntesis** (`Dm(add#11)`) sigue sin aceptarse: cambiaría el patrón de acordes en los dos repos y el contrato
+  por un solo acorde. **Descartado por ahora:** `add11` natural (`Dmadd11`) y `m7#11`.
