@@ -141,7 +141,7 @@ def test_metronome_stays_visible_next_to_the_bars(song: Page):
     box = tools.bounding_box()
     viewport_h = song.viewport_size["height"]
     assert box is not None and 0 <= box["y"] < viewport_h / 2
-    assert box["height"] < viewport_h * 0.3
+    assert box["height"] < viewport_h * 0.35  # incluye la fila del selector de nivel (S15)
     expect(song.locator("[data-ac-met-toggle]")).to_be_in_viewport()
 
 
@@ -164,7 +164,7 @@ def test_guides_entry_changes_shape_but_is_never_shown_twice(song: Page):
     expect(help_button).to_have_attribute("href", re.compile(r"guias\.html\?tema=camara-lenta"))
     assert (
         song.locator(".ac-sticky-tools").bounding_box()["height"]
-        < song.viewport_size["height"] * 0.3
+        < song.viewport_size["height"] * 0.35
     )
     # De vuelta arriba: la franja otra vez y el botón se oculta.
     song.evaluate("window.scrollTo(0, 0)")

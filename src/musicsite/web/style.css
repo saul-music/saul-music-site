@@ -538,13 +538,17 @@ a.card:hover { border-color: var(--ac-fill); transform: translateY(-2px); }
   background: var(--bs-body-bg); padding-block: .5rem; margin-bottom: 1rem;
 }
 
+.ac-met-reset-icon { display: none; }
+
 /* Selector de nivel dentro de la barra de reproducción */
 .ac-levels-bar { gap: .25rem; }
 .ac-levels-bar .nav-link { padding: .3rem .7rem; font-size: .9rem; white-space: nowrap; }
 @media (max-width: 575.98px) {
-  .ac-levels-bar { flex: 1 1 100%; justify-content: stretch; }
-  .ac-levels-bar .nav-item { flex: 1 1 0; }
-  .ac-levels-bar .nav-link { width: 100%; padding: .2rem .35rem; font-size: .85rem; text-align: center; }
+  /* En celular comparte fila con «Restablecer» (solo el ícono): la barra fija no puede crecer
+     (< 30 % de la pantalla). La base grande lo manda a su propia fila, bajo el tempo. */
+  .ac-levels-bar { flex: 1 1 14rem; min-width: 0; gap: .15rem; }
+  .ac-levels-bar .nav-item { flex: 1 1 0; min-width: 0; }
+  .ac-levels-bar .nav-link { width: 100%; padding: .2rem .25rem; font-size: .8rem; text-align: center; }
 }
 
 /* Cursor de compás */
@@ -640,6 +644,8 @@ a.card:hover { border-color: var(--ac-fill); transform: translateY(-2px); }
   }
   .ac-sticky-tools .ac-met-mute { padding-inline: .55rem; align-self: stretch; }
   .ac-sticky-tools .ac-met-reset-bpm { display: none; }
+  .ac-sticky-tools .ac-met-reset-text { display: none; }
+  .ac-sticky-tools .ac-met-reset-icon { display: inline; font-size: 1.1rem; line-height: 1; }
   .ac-sticky-tools .ac-metronome .ac-met-range { flex-basis: 4.5rem; min-width: 4.5rem; }
   .ac-sticky-tools .ac-metronome .card-body > .small, .ac-sticky-tools .ac-metronome .d-flex > .small { display: none; }
 }

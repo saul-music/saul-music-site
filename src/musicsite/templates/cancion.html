@@ -51,7 +51,7 @@
 {% for key, label, description in modes %}          <li class="nav-item" role="presentation"><button class="nav-link{{ ' active' if loop.first }}" id="t-{{ key }}" data-bs-toggle="pill" data-bs-target="#p-{{ key }}" type="button" role="tab" aria-controls="p-{{ key }}" aria-selected="{{ 'true' if loop.first else 'false' }}" data-ac-level="{{ key }}">{{ label }}</button></li>
 {% endfor %}        </ul>
         <div class="d-flex align-items-center gap-1" aria-hidden="true" data-ac-met-dots></div>
-        <button class="btn btn-ghost" type="button" data-ac-met-reset>Restablecer<span class="ac-met-reset-bpm"> a {{ bpm }}</span></button>
+        <button class="btn btn-ghost" type="button" data-ac-met-reset aria-label="Restablecer a {{ bpm }} bpm" title="Restablecer a {{ bpm }} bpm"><span class="ac-met-reset-icon" aria-hidden="true">&#8634;</span><span class="ac-met-reset-text">Restablecer<span class="ac-met-reset-bpm"> a {{ bpm }}</span></span></button>
         {% if guides_count %}<a class="btn ac-met-help" href="guias.html?tema={{ song.slug }}" data-ac-met-help role="button" data-bs-toggle="collapse" data-bs-target="#guias-panel" aria-controls="guias-panel" aria-expanded="false" hidden>¿Se complica esta parte? <strong>Habla con una guía</strong></a>{% endif %}
       </div>
     </section>
