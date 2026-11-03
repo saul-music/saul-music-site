@@ -224,3 +224,22 @@ título gancho; al tocarlo (o con Enter/Espacio) se despliega el texto.
   tinte dorado leve y bordes de 2 px arriba y abajo; en cada tema, cada sección de compases (Intro, Estrofa…)
   es un panel con borde, fondo propio y barra dorada a la izquierda (`.ac-score`). Solo CSS y una clase;
   funciona en oscuro y claro. Regla: lo que más importa se destaca así, sin colores nuevos.
+
+## S15 · Nivel en la barra de reproducción, en la URL, y final de la pasada (2026-11-02)
+
+- **Selector de nivel en la barra.** Básico, Intermedio y Avanzado pasan a la tarjeta del metrónomo (fija al
+  bajar) y se quitan las píldoras de debajo: un solo control, sin duplicados. En un tema sin bpm no hay
+  barra y las píldoras siguen en su lugar. Se puede cambiar de nivel en cualquier momento, también sonando:
+  el pulso no se corta, el cursor sigue en el mismo número de compás del panel nuevo y la bandera de
+  partida pasa con él. Si un nivel tiene menos compases que otro, el cursor da la vuelta; si está en
+  «Próximamente», no hay cursor.
+- **Nivel en la URL.** `#basico`, `#intermedio` y `#avanzado` (en español, sin tildes). Cambiar de nivel
+  actualiza el hash con `history.replaceState` (sin llenar el historial ni mover el scroll); abrir un enlace
+  con hash abre ese nivel, uno desconocido cae en Básico y `hashchange` se escucha.
+- **Final de la pasada.** Al sonar el último pulso del último compás (última repetición; desde la bandera, si
+  hay una) se detiene todo, no queda ningún compás marcado (ni cursor ni bandera de partida) y
+  «Reproducir» es reemplazado por «Volver al inicio». Ese botón solo lleva el scroll, directo, al primer
+  compás del nivel visible: no reproduce. Se oculta al cambiar de nivel o mover la bandera.
+- **Sin tecnología nueva.** Bootstrap Tab y JS propio; sin dependencias.
+- **Se comprueba:** 4 pruebas e2e nuevas (selector único y hash, hash al cargar, final y reinicio sin sonido,
+  cambio de nivel sonando) en chromium y iPhone 14. Pendiente: oírlo y verlo en Safari/iPhone real.

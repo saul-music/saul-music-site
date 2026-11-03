@@ -538,6 +538,15 @@ a.card:hover { border-color: var(--ac-fill); transform: translateY(-2px); }
   background: var(--bs-body-bg); padding-block: .5rem; margin-bottom: 1rem;
 }
 
+/* Selector de nivel dentro de la barra de reproducción */
+.ac-levels-bar { gap: .25rem; }
+.ac-levels-bar .nav-link { padding: .3rem .7rem; font-size: .9rem; white-space: nowrap; }
+@media (max-width: 575.98px) {
+  .ac-levels-bar { flex: 1 1 100%; justify-content: stretch; }
+  .ac-levels-bar .nav-item { flex: 1 1 0; }
+  .ac-levels-bar .nav-link { width: 100%; padding: .2rem .35rem; font-size: .85rem; text-align: center; }
+}
+
 /* Cursor de compás */
 .ac-bar { position: relative; transition: background-color .08s, color .08s; }
 .ac-bar.is-current { box-shadow: inset 0 0 0 2px var(--ac-accent); }

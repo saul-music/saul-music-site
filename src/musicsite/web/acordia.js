@@ -454,7 +454,7 @@
     var beats = +box.getAttribute("data-beats") || 4;
     var MIN = 30, MAX = 240, AHEAD = 0.12, TICK = 25;
     var bpm = home, playing = false, muted = false, ctx = null, timer = null, nextTime = 0, beat = 0, count = 0;
-    var COUNT_IN = 4, countIn = true, pre = 0;
+    var COUNT_IN = 4, countIn = true, pre = 0, endTimer = null;
     var cur = { pane: null, seq: [], idx: -1, counter: null, group: null };
     var MUTE_KEY = "acordia-sin-sonido", COUNT_KEY = "acordia-cuenta-inicial";
     var toggle = box.querySelector("[data-ac-met-toggle]");
@@ -552,15 +552,15 @@
     ["wheel", "touchmove", "keydown"].forEach(function (ev) {
       window.addEventListener(ev, userScrolled, { passive: true });
     });
-    function keepInView(el) {
-      if (Date.now() < pausedUntil) return;
+    function keepInView(el, instant) {
+      if (!instant && Date.now() < pausedUntil) return;
       var tools = document.querySelector(".ac-sticky-tools");
       var top = (tools ? tools.getBoundingClientRect().bottom : 0) + 12;
       var r = el.getBoundingClientRect();
       var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
       var target = top + (window.innerHeight - top - r.height) / 2;
       if (Math.abs(r.top - target) < 2) return;
-      window.scrollTo({ top: window.scrollY + r.top - target, behavior: reduce ? "auto" : "smooth" });
+      window.scrollTo({ top: window.scrollY + r.top - target, behavior: reduce || instant ? "auto" : "smooth" });
     }
     /* Qué se ilumina en este pulso: la casilla entera, o, si trae varios acordes, solo la parte que
        dura ese pulso (las partes se reparten el compás en proporción a su duración). */
@@ -578,14 +578,24 @@
     }
     /* Compás de partida: la bandera elegida, si está en la pestaña visible (en su primera pasada). */
     var startBar = null;
-    function startIndex() {
-      if (!startBar || !cur.seq.length) return 0;
-      for (var k = 0; k < cur.seq.length; k++) {
-        if (cur.seq[k].el === startBar && cur.seq[k].rep === 1) return k;
+    function startIndex(seq) {
+      if (!startBar || !seq.length) return 0;
+      for (var k = 0; k < seq.length; k++) {
+        if (seq[k].el === startBar && seq[k].rep === 1) return k;
       }
       return 0;
     }
+    /* Al cambiar de nivel la bandera pasa al mismo número de compás del panel nuevo. */
+    function moveStart(pane) {
+      if (!startBar) return;
+      var from = startBar.closest(".tab-pane");
+      if (!from || from === pane) return;
+      var n = Array.prototype.indexOf.call(from.querySelectorAll(".ac-bar"), startBar);
+      var to = pane.querySelectorAll(".ac-bar")[n] || null;
+      setStart(to);
+    }
     function setStart(bar) {
+      hideRestart();
       if (startBar) {
         startBar.classList.remove("is-start");
         var old = startBar.querySelector(".ac-start-flag");
@@ -613,7 +623,7 @@
       var pane = activePane();
       if (pane !== cur.pane) { clearCursor(); cur.pane = pane; cur.seq = buildSeq(pane); }
       if (!cur.seq.length) return;
-      var i = (startIndex() + Math.floor(n / beats)) % cur.seq.length;
+      var i = (startIndex(cur.seq) + Math.floor(n / beats)) % cur.seq.length;
       var step = cur.seq[i];
       if (i !== cur.idx) {
         if (cur.idx >= 0) cur.seq[cur.idx].el.classList.remove("is-current");
@@ -661,6 +671,13 @@
       var now = clock();
       if (nextTime < now) nextTime = now + 0.06;
       while (nextTime < now + AHEAD) {
+        /* Fin de la pasada: tras el último pulso del último compás (última repetición) se detiene todo. */
+        if (pre === 0 && count >= passBeats()) {
+          clearInterval(timer);
+          clearTimeout(endTimer);
+          endTimer = setTimeout(finish, Math.max(0, (nextTime - clock()) * 1000));
+          return;
+        }
         /* Cuenta inicial: suena (si hay sonido) y parpadea, pero el cursor de compases no avanza. */
         var isCount = pre > 0;
         if (!muted) click(nextTime, isCount ? pre === COUNT_IN : beat === 0);
@@ -711,12 +728,50 @@
     function stop() {
       playing = false;
       clearInterval(timer);
+      clearTimeout(endTimer);
       dots.forEach(function (x) { x.classList.remove("is-on"); });
       showCount(-1);
       clearCursor();
       label.textContent = "Reproducir";
       toggle.setAttribute("aria-pressed", "false");
     }
+    /* Total de pulsos de una pasada en el nivel visible: compases desde el de partida, con repeticiones. */
+    function passBeats() {
+      var seq = buildSeq(activePane());
+      return Math.max(0, seq.length - startIndex(seq)) * beats;
+    }
+    var restart = box.querySelector("[data-ac-met-restart]");
+    var statusBox = box.querySelector("[data-ac-met-status]");
+    function hideRestart() {
+      if (!restart || restart.hidden) return;
+      restart.hidden = true;
+      toggle.hidden = false;
+      if (statusBox) statusBox.textContent = "";
+    }
+    function finish() {
+      if (!playing) return;
+      stop();
+      setStart(null);  // terminó el tema: ningún compás queda marcado, ni cursor ni bandera
+      toggle.hidden = true;
+      restart.hidden = false;
+      if (statusBox) statusBox.textContent = "Terminó la pasada";
+      restart.focus({ preventScroll: true });
+    }
+    /* «Volver al inicio»: lleva el scroll al primer compás del nivel visible, sin reproducir. */
+    if (restart) restart.addEventListener("click", function () {
+      hideRestart();
+      var seq = buildSeq(activePane());
+      if (seq.length) { pausedUntil = 0; keepInView(seq[0].el, true); }
+      toggle.focus({ preventScroll: true });
+    });
+    /* Cambiar de nivel (barra o hash) no corta la reproducción: el cursor sigue en el mismo compás. */
+    document.addEventListener("shown.bs.tab", function (e) {
+      var target = e.target && e.target.getAttribute("data-bs-target");
+      var pane = target && document.querySelector(target);
+      if (!pane) return;
+      moveStart(pane);
+      hideRestart();
+    });
     /* Cambia de modo sin cortar ni descompasar: se conserva lo que falta para el próximo pulso. */
     function setMuted(value, save) {
       var remaining = playing ? Math.max(nextTime - clock(), 0.02) : 0;
@@ -757,4 +812,22 @@
     box.querySelector("[data-ac-met-reset]").addEventListener("click", function () { setBpm(home); });
     document.addEventListener("visibilitychange", function () { if (document.hidden && playing) stop(); });
   });
+  /* Nivel en la URL: #basico, #intermedio o #avanzado abre ese nivel y compartirlo lleva a él. */
+  (function () {
+    var buttons = document.querySelectorAll("#tabs [data-bs-toggle=pill]");
+    if (!buttons.length || !window.bootstrap) return;
+    function keyOf(btn) { return btn.id.replace(/^t-/, ""); }
+    function show(key) {
+      for (var k = 0; k < buttons.length; k++) {
+        if (keyOf(buttons[k]) === key) { window.bootstrap.Tab.getOrCreateInstance(buttons[k]).show(); return; }
+      }
+    }
+    var first = window.location.hash.slice(1);
+    if (first) show(first);
+    document.addEventListener("shown.bs.tab", function (e) {
+      if (!e.target.closest || !e.target.closest("#tabs")) return;
+      try { history.replaceState(null, "", "#" + keyOf(e.target)); } catch (err) {}
+    });
+    window.addEventListener("hashchange", function () { show(window.location.hash.slice(1)); });
+  })();
 })();
