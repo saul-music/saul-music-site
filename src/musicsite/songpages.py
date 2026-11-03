@@ -38,6 +38,7 @@ ENV = Environment(
 LIBRARY_START = "<!-- biblioteca:inicio -->"
 LIBRARY_END = "<!-- biblioteca:fin -->"
 SHOWN_CHORDS = 4
+WIDE_CHARS = 10  # letras de acordes en una casilla a partir de las cuales ocupa dos columnas
 
 MODES = [
     ("basico", "Básico", "Acordes mayores y menores, sin extensiones."),
@@ -71,13 +72,22 @@ def chord_html(chord: str) -> str:
     )
 
 
+def is_wide(parts: list[str]) -> bool:
+    """Una casilla con 3 o más acordes, o con nombres largos (bajos, extensiones), no cabe en un
+    cuarto de la fila: ocupa el doble de ancho (S18)."""
+    chords = [part for part in dict.fromkeys(parts) if part != REPEAT]
+    return len(chords) >= 3 or sum(len(chord) for chord in chords) >= WIDE_CHARS
+
+
 def bar_html(token: str, repeat: bool = False) -> str:
     """Una casilla por compás; con guiones, cada acorde ocupa el ancho de las partes que dura.
 
     `repeat` marca la casilla que repite el compás anterior: muestra sus acordes en gris atenuado.
     """
-    mark = ' is-repeat" title="Repite el compás anterior' if repeat else ""
     parts = token.split("-") if token != REPEAT else [token]
+    mark = ' is-repeat" title="Repite el compás anterior' if repeat else ""
+    if is_wide(parts):
+        mark = " is-wide" + mark
     if len(parts) == 1:
         return f'<div class="ac-bar{mark}">{chord_html(token)}</div>'
     chords: list[list] = []

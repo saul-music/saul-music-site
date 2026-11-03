@@ -9,6 +9,7 @@ from musicsite.acordes import main, validate_file
 from musicsite.songpages import (
     LIBRARY_END,
     LIBRARY_START,
+    bar_html,
     build,
     card,
     chords_payload,
@@ -491,3 +492,26 @@ def test_advanced_tips_allow_longer_text_but_other_modes_do_not(tmp_path):
     assert validate_file(write(tmp_path, "otra-era", ok)).errors == []
     inter = with_modes("\n[intermedio]\npartitura = '''\n> t | " + "y" * 281 + "\nA: G\n'''\n")
     assert any("tip" in e for e in validate_file(write(tmp_path, "otra-era", inter)).errors)
+
+
+@pytest.mark.parametrize(
+    ("token", "wide"),
+    [
+        ("G", False),
+        ("Gmaj7", False),
+        ("G-D", False),
+        ("G-%", False),
+        ("G-D-Em", True),  # 3 acordes
+        ("D-Em-F#m-%", True),
+        ("Em7/B-F#m7/A", True),  # nombres largos con bajo
+        ("Gmaj7/A", False),  # un solo acorde largo cabe en una casilla
+        ("Dmaj7-Em7/B-F#m7/A-D6/F#", True),
+    ],
+)
+def test_bars_with_many_or_long_chords_take_two_columns(token, wide):
+    assert ("is-wide" in bar_html(token)) is wide
+
+
+def test_wide_bars_keep_the_repeat_mark():
+    html = bar_html("Dmaj7-Em7/B-F#m7/A", repeat=True)
+    assert "is-wide" in html and "is-repeat" in html

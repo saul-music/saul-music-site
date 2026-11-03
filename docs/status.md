@@ -82,3 +82,4 @@ AAAA-MM-DD · paso · qué se hizo · qué quedó pendiente · decisiones nuevas
 ```
 2026-11-02 · acordes en los tips (rama feat/tips-acordes-inline) · S15: lo que va entre backticks en el título o el texto de un tip usa la fuente de acordes, escapado y sin HTML; tests nuevos · pendiente: revisar a ojo en celular · S15
 2026-11-02 · niveles (rama feat/niveles-bajo-intermedio) · S17: bajos en Intermedio; `[avanzado.tabs]`, `[avanzado.arreglos]` y tips de 80/600 en Avanzado; 370 tests, contrato ampliado · pendiente: revisar en celular real, publicar un tema con estos campos desde el admin
+2026-11-03 · casillas anchas (rama fix/compas-ancho-con-bajos) · S18: compases con 3+ acordes o nombres largos ocupan dos columnas (la fila en celular); arregla el desborde de «Moizefala» en Intermedio; 380 tests · pendiente: revisar a ojo en celular real

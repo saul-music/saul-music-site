@@ -277,3 +277,13 @@ resuelve `Chord.bass`. **Pendiente:** replicar los sufijos en el validador de re
 - Sin sintaxis ni tecnología nuevas. **Descartado:** tips de varias líneas (la partitura es una línea por
   elemento); se amplió el límite en su lugar. Contrato actualizado (`contract.json`); research debe copiarlo (M34).
 
+
+## S18 · Casillas anchas para compases con muchos acordes o bajos (2026-11-03)
+
+En «Moizefala» (Intermedio), un compás como `Dmaj7-Em7/B-F#m7/A-D6/F#` desbordaba su casilla (un cuarto de la fila).
+- **Regla** (`songpages.is_wide`): una casilla con **3 o más acordes distintos**, o con **10 o más letras** de acordes
+  sumadas, ocupa **dos columnas** (`is-wide`; en celular, la fila completa). Un solo acorde largo (`Gmaj7/A`) no cambia.
+- **Ancho de cada acorde:** en las casillas anchas parte de su propio ancho y el sobrante se reparte por duración
+  (`%` sigue alargando). En celular la letra baja a `min(1.2rem, 4.4vw)` solo ahí.
+- Comprobado en navegador con el tema publicado a 1100, 390 y 360 px: ninguna casilla desbordada. Sin formato nuevo;
+  el cursor del metrónomo y el conteo de compases no cambian.
