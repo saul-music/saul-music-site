@@ -26,6 +26,17 @@ def chord(token: str) -> theory.Chord:
         ("Dsus4", "sus4", 2, None),
         ("G/B", "major", 7, 11),
         ("C#m7b5", "m7b5", 1, None),
+        ("Bm11", "m11", 11, None),
+        ("Bm69", "m69", 11, None),
+        ("BmM7", "mmaj7", 11, None),
+        ("Bm(maj7)", "mmaj7", 11, None),
+        ("Bmmaj9", "mmaj9", 11, None),
+        ("Bmmaj11", "mmaj11", 11, None),
+        ("Bmmaj7b5", "mmaj7b5", 11, None),
+        ("Bsus4add9", "sus2sus4", 11, None),
+        ("Bsus4(add9)", "sus2sus4", 11, None),
+        ("Bsus2sus4", "sus2sus4", 11, None),
+        ("Bm/F#", "minor", 11, 6),
     ],
 )
 def test_parse_reads_root_quality_and_bass(token, suffix, root, bass):
@@ -33,7 +44,7 @@ def test_parse_reads_root_quality_and_bass(token, suffix, root, bass):
     assert (parsed.suffix, parsed.root, parsed.bass) == (suffix, root, bass)
 
 
-@pytest.mark.parametrize("token", ["%", "H", "Gmaj13", "Cadd9b5", "", "g"])
+@pytest.mark.parametrize("token", ["%", "H", "Gmaj13", "Cadd9b5", "", "g", "Bmadd11", "Bm13"])
 def test_parse_returns_none_for_what_we_cannot_draw(token):
     assert theory.parse(token) is None
 
@@ -46,6 +57,11 @@ def test_parse_returns_none_for_what_we_cannot_draw(token):
         ("Bbm7", ["Bb", "Db", "F", "Ab"]),
         ("Cdim7", ["C", "Eb", "Gb", "Bbb"]),
         ("D#m", ["D#", "F#", "A#"]),
+        ("Bm11", ["B", "D", "F#", "A", "C#", "E"]),
+        ("Bm69", ["B", "D", "F#", "G#", "C#"]),
+        ("BmM7", ["B", "D", "F#", "A#"]),
+        ("Bmmaj7b5", ["B", "D", "F", "A#"]),
+        ("Bsus4add9", ["B", "C#", "E", "F#"]),
         ("G/B", ["G", "B", "D"]),
         ("C/D", ["D", "C", "E", "G"]),
     ],
@@ -104,6 +120,21 @@ def test_vendored_shapes_only_sound_notes_of_their_chord():
                 assert theory.position_ok(c, position["f"]), (key, suffix, position)
                 assert len(position["f"]) == len(position["d"]) == 6
     assert total > 500
+
+
+NEW_MINORS = ["m11", "m69", "mmaj7", "mmaj7b5", "mmaj9", "mmaj11"]
+
+
+@pytest.mark.parametrize("suffix", NEW_MINORS)
+def test_every_minor_has_a_standard_shape_in_the_twelve_keys(suffix):
+    data = json.loads(theory.DATA_FILE.read_text(encoding="utf-8"))["acordes"]
+    assert [k for k, by_suffix in data.items() if suffix not in by_suffix] == []
+    assert theory.standard_positions(chord("Bm" + suffix[1:])) is not None
+
+
+def test_sus4add9_has_shapes_in_all_but_ab():
+    data = json.loads(theory.DATA_FILE.read_text(encoding="utf-8"))["acordes"]
+    assert [k for k, by_suffix in data.items() if "sus2sus4" not in by_suffix] == ["Ab"]
 
 
 def test_every_chord_in_the_repertoire_has_a_standard_shape():
