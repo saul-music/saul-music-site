@@ -430,3 +430,22 @@ def test_library_opens_each_artist_group_with_a_header_and_count():
     assert page.count('class="col-12 ac-artist-head"') == 2
     assert "<small>1 tema</small>" in page and "<small>2 temas</small>" in page
     assert page.index("Gepe") < page.index("Dos") < page.index("Uno")
+
+
+def test_tip_inline_puts_backticked_chords_in_the_chord_font_and_stays_escaped():
+    from musicsite.songpages import tip_inline
+
+    assert tip_inline("Prueba `C#m7b5` y `Gmaj7`") == (
+        'Prueba <span class="ac-inline-chord">C#m7b5</span> y '
+        '<span class="ac-inline-chord">Gmaj7</span>'
+    )
+    assert tip_inline("un ` suelto") == "un ` suelto"
+    assert tip_inline("`<b>x</b>`") == '<span class="ac-inline-chord">&lt;b&gt;x&lt;/b&gt;</span>'
+    assert "<b>" not in tip_inline("<b>hola</b> `G`")
+
+
+def test_tip_title_and_text_both_use_the_chord_font():
+    from musicsite.songpages import tip_html
+
+    out = tip_html({"titulo": "¿Suena `Em`?", "texto": "Cambia a `C#m7b5`."})
+    assert out.count('class="ac-inline-chord"') == 2 and "`" not in out

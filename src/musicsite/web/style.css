@@ -587,6 +587,8 @@ a.card:hover { border-color: var(--ac-fill); transform: translateY(-2px); }
 .ac-tip-chev { flex: none; transition: transform .15s; color: var(--ac-accent); }
 .ac-tip-btn[aria-expanded="true"] .ac-tip-chev { transform: rotate(180deg); }
 .ac-tip-body { margin: 0; padding: 0 .8rem .8rem 4.15rem; }
+/* Acorde escrito entre backticks dentro de un tip (S15): Petaluma se ve chica junto al texto, de ahí el tamaño. */
+.ac-inline-chord { font-family: "Petaluma Script", var(--ac-font-display); font-size: 1.25em; line-height: 1; }
 
 /* Partir desde cualquier compás: bandera en la esquina de cada casilla */
 .ac-start-flag {

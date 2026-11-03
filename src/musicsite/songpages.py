@@ -100,6 +100,18 @@ TIP_ICON = (
 )
 
 
+_INLINE_CHORD = re.compile(r"`([^`\n]+)`")
+
+
+def tip_inline(text: str) -> str:
+    """Escapa el texto de un tip y pone en la fuente de acordes lo que va entre `backticks` (S15).
+
+    Se escapa primero y solo después se envuelve: nunca entra HTML del autor. Un backtick sin pareja queda tal cual."""
+    return _INLINE_CHORD.sub(
+        lambda m: f'<span class="ac-inline-chord">{m.group(1)}</span>', esc(text)
+    )
+
+
 def tip_html(tip: dict) -> str:
     """Un tip entre secciones: tarjeta con ícono que brilla; cerrada muestra solo el título gancho."""
     title, text = tip["titulo"], tip["texto"]
@@ -109,9 +121,9 @@ def tip_html(tip: dict) -> str:
         '            <button type="button" class="ac-tip-btn" aria-expanded="false">'
         f'<span class="ac-tip-icon">{TIP_ICON}</span>'
         f'<span class="ac-tip-label"><span class="ac-tip-kicker">Tip</span>'
-        f'<span class="ac-tip-title">{esc(title)}</span></span>'
+        f'<span class="ac-tip-title">{tip_inline(title)}</span></span>'
         '<span class="ac-tip-chev" aria-hidden="true">\u25be</span></button>\n'
-        f'            <p class="ac-tip-body" hidden>{esc(text)}</p>\n'
+        f'            <p class="ac-tip-body" hidden>{tip_inline(text)}</p>\n'
         "          </div>"
     )
 
