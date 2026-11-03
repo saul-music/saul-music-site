@@ -1,7 +1,7 @@
 """Genera las páginas de canción y las tarjetas de la Biblioteca desde las transcripciones propias.
 
 Cada página tiene solo la sección Estructura, con tres pestañas: Básico (acordes mayores y menores),
-Intermedio (con extensiones) y Avanzado (extensiones, bajos e inversiones, y arreglos con tab). Una
+Intermedio (extensiones y bajos) y Avanzado (además tabs, arreglos y tips por sección). Una
 versión sin contenido muestra «Próximamente».
 
 Por defecto solo incluye los temas publicables: revisados y con los derechos resueltos (V2).
@@ -41,8 +41,8 @@ SHOWN_CHORDS = 4
 
 MODES = [
     ("basico", "Básico", "Acordes mayores y menores, sin extensiones."),
-    ("intermedio", "Intermedio", "Con extensiones: séptimas, sus, add y similares."),
-    ("avanzado", "Avanzado", "Extensiones, bajos e inversiones, y arreglos con tab."),
+    ("intermedio", "Intermedio", "Con extensiones y bajos: séptimas, sus, add, G/B."),
+    ("avanzado", "Avanzado", "Extensiones, bajos, tabs y arreglos por sección."),
 ]
 
 
@@ -128,8 +128,23 @@ def tip_html(tip: dict) -> str:
     )
 
 
-def structure(sections: list[dict]) -> str:
+def section_extras(song: dict, name: str) -> str:
+    """Arreglo y tab propios de una sección del Avanzado (S17), siempre escapados."""
+    html = ""
+    note = song.get("arreglos", {}).get(name)
+    if note:
+        html += f'\n            <p class="ac-arrangement small m-0">{tip_inline(note)}</p>'
+    tab = song.get("tabs", {}).get(name)
+    if tab:
+        html += (
+            f'\n            <pre class="ac-mono ac-tab small m-0">{esc(tab.strip(chr(10)))}</pre>'
+        )
+    return html
+
+
+def structure(sections: list[dict], song: dict | None = None) -> str:
     blocks = []
+    pending = set((song or {}).get("tabs", {})) | set((song or {}).get("arreglos", {}))
     for section in sections:
         if "consejo" in section:
             blocks.append(tip_html(section["consejo"]))
@@ -148,10 +163,15 @@ def structure(sections: list[dict]) -> str:
             bars.append(bar_html(shown, repeat=repeated))
             previous = shown
         bars = "".join(bars)
+        name = section.get("nombre", "")
+        extras = ""
+        if song and name in pending:  # solo en la primera vez que aparece la sección
+            extras = section_extras(song, name)
+            pending.discard(name)
         blocks.append(
             '          <div class="d-grid gap-2 ac-score">\n'
             f'            <h2 class="h5 m-0">{esc(section.get("nombre", ""))}{label}</h2>\n'
-            f'            <div class="ac-bars" data-reps="{times}">{bars}</div>\n'
+            f'            <div class="ac-bars" data-reps="{times}">{bars}</div>{extras}\n'
             "          </div>"
         )
     return "\n".join(blocks)
@@ -176,8 +196,14 @@ def load_song(path: Path) -> dict:
     compact, _ = parse_score(data.get("partitura", ""))
     data["secciones"] = list(data.get("secciones", [])) + compact
     for mode in ("intermedio", "avanzado"):
-        data[mode + "_secciones"], _ = parse_score(data.get(mode, {}).get("partitura", ""))
-    data["tab"] = data.get("avanzado", {}).get("tab", "").strip("\n")
+        data[mode + "_secciones"], _ = parse_score(
+            data.get(mode, {}).get("partitura", ""), advanced=mode == "avanzado"
+        )
+    advanced = data.get("avanzado", {})
+    data["tab"] = advanced.get("tab", "").strip("\n")
+    for key in ("tabs", "arreglos"):
+        table = advanced.get(key, {})
+        data[key] = table if isinstance(table, dict) else {}
     data["formas"] = own_shapes(data)
     return data
 
@@ -195,7 +221,7 @@ def mode_pane(key: str, song: dict, no_harmony: bool) -> str:
     else:
         sections = song.get(key + "_secciones", [])
         tab = song.get("tab", "") if key == "avanzado" else ""
-        body = structure(sections) if sections else ""
+        body = structure(sections, song if key == "avanzado" else None) if sections else ""
         if tab:
             body += f'\n          <pre class="ac-mono small m-0">{esc(tab)}</pre>'
         if not body:

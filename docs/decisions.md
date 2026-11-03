@@ -263,3 +263,17 @@ que no trae `Ab`. Se volvió a vendorizar con el mismo origen y la misma regla (
 descartadas por sonar notas ajenas. **Fuera, a propósito:** `madd11` y `m13` (chords-db no los trae y se usan
 poco): se escriben con la forma propia por tema (S8). Los slash chords menores no se importan: el bajo ya lo
 resuelve `Chord.bass`. **Pendiente:** replicar los sufijos en el validador de research (M16).
+
+## S17 · Bajos en Intermedio; tabs, arreglos y tips largos por sección en Avanzado (2026-11-02)
+
+- **Intermedio** acepta bajos e inversiones (`G/B`, `Am7/G`), además de las extensiones. Básico no cambia.
+  El Avanzado sigue aceptando todo lo del Intermedio.
+- **Avanzado** se distingue por contenido, no por acordes: `[avanzado.tabs]` y `[avanzado.arreglos]`
+  (clave = nombre de una sección de su partitura; tab hasta 2000 caracteres, arreglo hasta 600; se muestran
+  dentro de la sección, la primera vez que aparece), y tips de hasta 80/600 caracteres (Básico e Intermedio:
+  60/280). El `tab` general se conserva.
+- El validador comprueba que el nombre exista, que sea texto no vacío y los límites; todo se escapa (el arreglo
+  admite acordes entre acentos graves, como los tips, S15).
+- Sin sintaxis ni tecnología nuevas. **Descartado:** tips de varias líneas (la partitura es una línea por
+  elemento); se amplió el límite en su lugar. Contrato actualizado (`contract.json`); research debe copiarlo (M34).
+
