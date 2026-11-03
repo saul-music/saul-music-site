@@ -321,6 +321,66 @@ def test_difficulty_tabs_switch(song: Page):
     expect(song.locator("#p-basico")).to_be_hidden()
 
 
+def test_level_selector_lives_only_in_the_playback_bar_and_sets_the_hash(song: Page):
+    assert song.locator("#tabs").count() == 1  # sin pestañas duplicadas
+    expect(song.locator("[data-ac-metronome] #tabs")).to_have_count(1)
+    song.locator("[data-ac-metronome] #t-avanzado").click()
+    expect(song.locator("#p-avanzado")).to_be_visible()
+    assert song.evaluate("location.hash") == "#avanzado"
+    song.evaluate("location.hash = '#basico'")
+    expect(song.locator("#p-basico")).to_be_visible()
+
+
+def test_hash_opens_that_level_and_unknown_hash_falls_back_to_basic(page: Page, base_url: str):
+    page.goto(base_url + SONG + "#intermedio")
+    expect(page.locator("#p-intermedio")).to_be_visible()
+    expect(page.locator("#t-intermedio")).to_have_class(re.compile(r"\bactive\b"))
+    page.goto("about:blank")  # carga nueva: cambiar solo el hash no recarga la página
+    page.goto(base_url + SONG + "#no-existe")
+    expect(page.locator("#p-basico")).to_be_visible()
+
+
+def test_pass_stops_at_the_last_bar_and_offers_to_go_back(song_audio: Page):
+    song = song_audio
+    song.locator("[data-ac-met-countin]").click()  # sin cuenta
+    song.locator("[data-ac-met-range]").fill("240")
+    bars = song.locator("#p-basico .ac-bar")
+    last = bars.nth(bars.count() - 1)
+    last.scroll_into_view_if_needed()
+    last.locator(".ac-start-flag").click()  # parte en el último compás: la pasada es corta
+    toggle = song.locator("[data-ac-met-toggle]")
+    restart = song.locator("[data-ac-met-restart]")
+    toggle.click()
+    expect(restart).to_be_visible(timeout=20000)
+    expect(toggle).to_be_hidden()
+    expect(toggle).to_have_attribute("aria-pressed", "false")
+    expect(song.locator("#p-basico .ac-bar.is-current")).to_have_count(0)
+    clicks = song.evaluate("window.__clicks")
+    song.wait_for_timeout(800)
+    assert song.evaluate("window.__clicks") == clicks  # nada sigue sonando
+    restart.click()
+    expect(restart).to_be_hidden()
+    expect(toggle).to_be_visible()
+    expect(toggle).to_have_attribute("aria-pressed", "false")  # solo vuelve: no reproduce
+    song.wait_for_timeout(500)
+    assert song.evaluate("window.__clicks") == clicks
+
+
+def test_level_can_change_while_playing_without_stopping(song_audio: Page):
+    song = song_audio
+    song.locator("[data-ac-met-countin]").click()
+    song.locator("[data-ac-met-range]").fill("240")
+    toggle = song.locator("[data-ac-met-toggle]")
+    toggle.click()
+    expect(song.locator("#p-basico .ac-bar.is-current")).to_have_count(1, timeout=3000)
+    song.locator("[data-ac-metronome] #t-intermedio").click()
+    expect(toggle).to_have_attribute("aria-pressed", "true")
+    expect(song.locator("#p-intermedio")).to_be_visible()
+    if song.locator("#p-intermedio .ac-bar").count():
+        expect(song.locator("#p-intermedio .ac-bar.is-current")).to_have_count(1, timeout=3000)
+    toggle.click()
+
+
 def test_theme_toggle_changes_theme(song: Page):
     html = song.locator("html")
     before = html.get_attribute("data-bs-theme")
