@@ -257,8 +257,8 @@ acordes (Petaluma Script) y sin los backticks. Igual en la vista previa del admi
 ## S16 · Todos los acordes menores de chords-db y sus4add9 (2026-11-02)
 
 El sitio reconocía seis menores (`m`, `m6`, `m7`, `m7b5`, `m9`, `madd9`). Se suman los que chords-db 0.5.1
-trae y faltaban: `m11`, `m69`, `mmaj7` (alias `mM7`, `m(maj7)`), `mmaj7b5`, `mmaj9` y `mmaj11`, más
-`sus2sus4` (alias `sus4add9`, `sus4(add9)`). Cada uno tiene formas en las 12 tonalidades, salvo `sus2sus4`,
+trae y faltaban: `m11`, `m69`, `mmaj7` (alias `mM7`), `mmaj7b5`, `mmaj9` y `mmaj11`, más
+`sus2sus4` (alias `sus4add9`). Cada uno tiene formas en las 12 tonalidades, salvo `sus2sus4`,
 que no trae `Ab`. Se volvió a vendorizar con el mismo origen y la misma regla (`position_ok`): 1228 formas, 27
 descartadas por sonar notas ajenas. **Fuera, a propósito:** `madd11` y `m13` (chords-db no los trae y se usan
 poco): se escriben con la forma propia por tema (S8). Los slash chords menores no se importan: el bajo ya lo

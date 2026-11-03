@@ -83,13 +83,11 @@ ALIASES = {
     "m69": "m69",
     "mmaj7": "mmaj7",
     "mM7": "mmaj7",
-    "m(maj7)": "mmaj7",
     "mmaj7b5": "mmaj7b5",
     "mmaj9": "mmaj9",
     "mmaj11": "mmaj11",
     "sus2sus4": "sus2sus4",
     "sus4add9": "sus2sus4",
-    "sus4(add9)": "sus2sus4",
 }
 CHORD = re.compile(r"^([A-G])([#b]?)([^/]*)(?:/([A-G])([#b]?))?$")
 
