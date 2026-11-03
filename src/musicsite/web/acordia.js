@@ -552,15 +552,15 @@
     ["wheel", "touchmove", "keydown"].forEach(function (ev) {
       window.addEventListener(ev, userScrolled, { passive: true });
     });
-    function keepInView(el) {
-      if (Date.now() < pausedUntil) return;
+    function keepInView(el, instant) {
+      if (!instant && Date.now() < pausedUntil) return;
       var tools = document.querySelector(".ac-sticky-tools");
       var top = (tools ? tools.getBoundingClientRect().bottom : 0) + 12;
       var r = el.getBoundingClientRect();
       var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
       var target = top + (window.innerHeight - top - r.height) / 2;
       if (Math.abs(r.top - target) < 2) return;
-      window.scrollTo({ top: window.scrollY + r.top - target, behavior: reduce ? "auto" : "smooth" });
+      window.scrollTo({ top: window.scrollY + r.top - target, behavior: reduce || instant ? "auto" : "smooth" });
     }
     /* Qué se ilumina en este pulso: la casilla entera, o, si trae varios acordes, solo la parte que
        dura ese pulso (las partes se reparten el compás en proporción a su duración). */
@@ -760,7 +760,7 @@
     if (restart) restart.addEventListener("click", function () {
       hideRestart();
       var seq = buildSeq(activePane());
-      if (seq.length) { pausedUntil = 0; keepInView(seq[startIndex(seq)].el); }
+      if (seq.length) { pausedUntil = 0; keepInView(seq[startIndex(seq)].el, true); }
       toggle.focus({ preventScroll: true });
     });
     /* Cambiar de nivel (barra o hash) no corta la reproducción: el cursor sigue en el mismo compás. */

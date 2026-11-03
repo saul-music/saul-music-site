@@ -358,7 +358,10 @@ def test_pass_stops_at_the_last_bar_and_offers_to_go_back(song_audio: Page):
     clicks = song.evaluate("window.__clicks")
     song.wait_for_timeout(800)
     assert song.evaluate("window.__clicks") == clicks  # nada sigue sonando
+    song.evaluate("window.scrollTo(0, 0)")  # arriba: volver tiene que bajar hasta el compás de partida
     restart.click()
+    song.wait_for_timeout(300)
+    assert song.evaluate("scrollY") > 0  # el scroll va al compás de partida
     expect(restart).to_be_hidden()
     expect(toggle).to_be_visible()
     expect(toggle).to_have_attribute("aria-pressed", "false")  # solo vuelve: no reproduce
