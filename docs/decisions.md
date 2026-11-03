@@ -243,3 +243,13 @@ título gancho; al tocarlo (o con Enter/Espacio) se despliega el texto.
 - **Sin tecnología nueva.** Bootstrap Tab y JS propio; sin dependencias.
 - **Se comprueba:** 4 pruebas e2e nuevas (selector único y hash, hash al cargar, final y reinicio sin sonido,
   cambio de nivel sonando) en chromium y iPhone 14. Pendiente: oírlo y verlo en Safari/iPhone real.
+
+
+## S15 · Acordes entre backticks dentro de un tip (2026-11-02)
+
+En el título y el texto de un tip, lo que va entre `` ` `` (por ejemplo `` `C#m7b5` ``) se dibuja con la fuente de
+acordes (Petaluma Script) y sin los backticks. Igual en la vista previa del admin (research M33).
+
+- **Seguro:** el texto se escapa primero y solo después se envuelve en `<span class="ac-inline-chord">`; no se acepta HTML.
+- **Sin pareja:** un backtick suelto queda como texto. Los límites de 60 y 280 caracteres cuentan lo escrito, con backticks.
+- **Sin formato nuevo:** es solo presentación; el validador no cambia y los tips existentes se ven igual.
