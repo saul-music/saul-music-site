@@ -43,13 +43,12 @@ REPERTOIRE = [
 
 # Versión básica: nota, sostenido o bemol opcional y "m" para menor. Nada de 7, sus, add, 9, etc.
 BASIC_CHORD = re.compile(r"^[A-G][#b]?m?$")
-# Intermedio y Avanzado: extensiones (7, maj7, sus4, add9, m7b5...) y bajos (G/B). Lo que distingue
-# al Avanzado no son los acordes sino tabs, arreglos y tips por sección (S17).
+# Intermedio: extensiones (7, maj7, sus4, add9, m7b5...) y bajos (G/B). El Avanzado no tiene
+# partitura propia: hereda la de Intermedio y solo declara extras por sección (S31).
 SLASH_CHORD = re.compile(
     r"^[A-G][#b]?(?:mmaj|mMaj|mM|maj|Maj|min|m|dim|aug|\+)?(?:\d{1,2}|(?:sus|add|b|#)\d{0,2})*(?:/[A-G][#b]?)?$"
 )
 BARRIOS = {"", "Rock", "Pop", "Indie"}
-MODES = {"intermedio": SLASH_CHORD, "avanzado": SLASH_CHORD}
 TIME_SIGNATURE = re.compile(r"^\d{1,2}/\d{1,2}$")
 LEVELS = {"", "inicial", "medio", "avanzado"}
 KINDS = {"cancion", "instrumental"}
@@ -102,17 +101,15 @@ v2_resuelto = false   # true solo cuando los derechos (V2) estén resueltos
 # [intermedio]     # con extensiones y bajos: G7, Dsus4, Am9, G/B
 # partitura = '''
 # '''
-# [avanzado]       # lo del Intermedio, más tabs y arreglos por sección y tips más largos
-# partitura = '''
+# [avanzado]       # NO lleva partitura: muestra la de Intermedio y suma extras por sección
+# tab = '''       # opcional: una tab general, al final
 # '''
+# [avanzado.secciones."Intro"]   # el nombre debe ser el de una sección de Intermedio
 # tab = '''
-# '''
-# [avanzado.tabs]      # una tab por sección (el nombre debe existir en la partitura)
-# "Intro" = '''
 # e|--0--|
 # '''
-# [avanzado.arreglos]  # indicaciones por sección: rasgueo, arpegio, ritmo
-# "Estrofa" = "Rasgueo abajo-abajo-arriba, apagando en el 3"
+# arreglo = "Rasgueo abajo-abajo-arriba, apagando en el 3"
+# tips = ["Título | Texto largo del tip"]
 # Formas de guitarra: NO se piden. Cada acorde usa la forma estándar. Solo si quieres una forma
 # específica, de la 6ª a la 1ª cuerda (x = no suena, 0 = al aire):
 # [avanzado.formas]   # solo en esta versión (también [intermedio.formas])
@@ -181,12 +178,12 @@ v2_resuelto = false
 #partitura = '''
 #'''
 
-# --- Avanzado: lo del Intermedio, más tab, arreglos y tips más largos por sección ---
-#[avanzado]
-#partitura = '''
-#'''
+# --- Avanzado: NO se repiten los compases; muestra los de Intermedio y suma extras por sección ---
+#[avanzado.secciones."Estrofa"]       # el nombre debe ser igual al de una parte de Intermedio
+#arreglo = ""
 #tab = '''
 #'''
+#tips = []
 
 # --- OPCIONAL: cómo se toca un acorde en guitarra (para los tres niveles) ---
 # Si no escribes nada, el sitio muestra la forma estándar. Si un acorde se toca distinto en este
@@ -269,7 +266,7 @@ def init(directory: Path) -> list[Path]:
 
 TIP_TITLE_MAX = 60
 TIP_TEXT_MAX = 280
-# Avanzado admite tips más largos, y tabs y arreglos por sección (S17).
+# Avanzado: extras por sección (tab, arreglo, tips más largos), S17 y S31.
 ADVANCED_TIP_TITLE_MAX = 80
 ADVANCED_TIP_TEXT_MAX = 600
 TAB_MAX = 2000
@@ -294,7 +291,7 @@ def parse_tip(
     return {"consejo": {"titulo": title, "texto": text}}, None
 
 
-def parse_score(text: str, advanced: bool = False) -> tuple[list[dict], list[str]]:
+def parse_score(text: str) -> tuple[list[dict], list[str]]:
     """Convierte la notación compacta («Estrofa x2: G % D») en secciones.
 
     Las líneas «> Título | Texto» son tips y quedan en su lugar entre las secciones."""
@@ -304,12 +301,7 @@ def parse_score(text: str, advanced: bool = False) -> tuple[list[dict], list[str
         if not line or line.startswith("#"):
             continue
         if line.startswith(">"):
-            tip, error = parse_tip(
-                line,
-                f"partitura, línea {number}",
-                ADVANCED_TIP_TITLE_MAX if advanced else TIP_TITLE_MAX,
-                ADVANCED_TIP_TEXT_MAX if advanced else TIP_TEXT_MAX,
-            )
+            tip, error = parse_tip(line, f"partitura, línea {number}")
             if error:
                 errors.append(error)
             else:
@@ -353,21 +345,102 @@ def check_chord(token: str, where: str, errors: list[str]) -> None:
     )
 
 
-def check_by_section(kind: str, table: object, limit: int, names: set, errors: list[str]) -> None:
-    """Tabs y arreglos por sección del Avanzado: cada clave es el nombre de una sección."""
-    if not table:
+EXTRA_KEYS = ("tab", "arreglo", "tips")
+
+
+def advanced_extras(advanced: object) -> dict[str, dict]:
+    """Extras por sección del Avanzado (S31), leídos sin validar: lo que no se pueda leer se ignora.
+
+    `[avanzado.secciones."Nombre"]` → {nombre: {"tab": str, "arreglo": str, "tips": [consejo]}}."""
+    table = advanced.get("secciones", {}) if isinstance(advanced, dict) else {}
+    extras: dict[str, dict] = {}
+    for name, entry in table.items() if isinstance(table, dict) else []:
+        if not isinstance(entry, dict):
+            continue
+        tips = []
+        for text in entry.get("tips", []) if isinstance(entry.get("tips"), list) else []:
+            tip, error = (
+                parse_tip(f"> {text}", "", ADVANCED_TIP_TITLE_MAX, ADVANCED_TIP_TEXT_MAX)
+                if isinstance(text, str)
+                else (None, "x")
+            )
+            if not error:
+                tips.append(tip["consejo"])
+        extras[name] = {
+            "tab": entry["tab"] if isinstance(entry.get("tab"), str) else "",
+            "arreglo": entry["arreglo"] if isinstance(entry.get("arreglo"), str) else "",
+            "tips": tips,
+        }
+    return extras
+
+
+def check_advanced(advanced: object, names: set[str], has_score: bool, errors: list[str]) -> None:
+    """Avanzado hereda la partitura de Intermedio; aquí solo se validan sus extras (S31)."""
+    if not isinstance(advanced, dict):
+        errors.append("avanzado debe ser una tabla")
         return
+    if "partitura" in advanced:
+        errors.append(
+            "avanzado: ya no lleva partitura propia; muestra la de Intermedio. "
+            'Pon lo propio en [avanzado.secciones."Nombre"] (tab, arreglo, tips)'
+        )
+    for old in ("tabs", "arreglos"):
+        if old in advanced:
+            errors.append(
+                f'avanzado.{old} ya no existe: usa [avanzado.secciones."Nombre"] '
+                f"con {'tab' if old == 'tabs' else 'arreglo'} = ..."
+            )
+    if not isinstance(advanced.get("tab", ""), str):
+        errors.append("avanzado: tab debe ser texto")
+    table = advanced.get("secciones", {})
     if not isinstance(table, dict):
-        errors.append(f"avanzado.{kind} debe ser una tabla (\"Intro\" = '''texto''')")
+        errors.append('avanzado.secciones debe ser una tabla ([avanzado.secciones."Nombre"])')
         return
-    for name, text in table.items():
-        where = f"avanzado.{kind} «{name}»"
+    if (table or advanced.get("tab")) and not has_score:
+        errors.append("avanzado: necesita la partitura de Intermedio (Avanzado la hereda)")
+        return
+    for name, entry in table.items():
+        where = f"avanzado.secciones «{name}»"
         if name not in names:
-            errors.append(f"{where}: no hay una sección con ese nombre en la partitura avanzada")
-        elif not isinstance(text, str) or not text.strip():
-            errors.append(f"{where}: debe ser texto, no vacío")
-        elif len(text) > limit:
-            errors.append(f"{where}: pasa de {limit} caracteres")
+            errors.append(
+                f"{where}: no hay una sección con ese nombre en la partitura de Intermedio"
+            )
+            continue
+        if not isinstance(entry, dict):
+            errors.append(f"{where}: debe ser una tabla (tab, arreglo, tips)")
+            continue
+        for key in entry:
+            if key not in EXTRA_KEYS:
+                errors.append(f"{where}: clave desconocida «{key}» (usa tab, arreglo o tips)")
+        if not any(key in entry for key in EXTRA_KEYS):
+            errors.append(
+                f"{where}: no tiene extras; escribe tab, arreglo o tips (o quita la sección)"
+            )
+        for key, limit in (("tab", TAB_MAX), ("arreglo", ARRANGEMENT_MAX)):
+            if key not in entry:
+                continue
+            text = entry[key]
+            if not isinstance(text, str) or not text.strip():
+                errors.append(f"{where}: {key} debe ser texto, no vacío")
+            elif len(text) > limit:
+                errors.append(f"{where}: {key} pasa de {limit} caracteres")
+        if "tips" in entry:
+            tips = entry["tips"]
+            if not isinstance(tips, list) or not tips:
+                errors.append(f"{where}: tips debe ser una lista de textos «Título | Texto»")
+                continue
+            for number, text in enumerate(tips, start=1):
+                if not isinstance(text, str):
+                    errors.append(f"{where}: tips[{number}] debe ser texto «Título | Texto»")
+                    continue
+                _, error = parse_tip(
+                    f"> {text}",
+                    f"{where}: tips[{number}]",
+                    ADVANCED_TIP_TITLE_MAX,
+                    ADVANCED_TIP_TEXT_MAX,
+                )
+                if error:
+                    errors.append(error)
 
 
 def check_shapes(mode: str, shapes: object, used: set[str], errors: list[str]) -> None:
@@ -458,26 +531,26 @@ def validate_file(path: Path) -> Report:
     for section in sections:
         for token in section.get("compases", []):
             theme_used.update(c for c in bar_parts(token) if c and c not in (REPEAT, REST))
-    for mode, pattern in MODES.items():
-        score = data.get(mode, {}).get("partitura", "")
-        mode_sections, mode_errors = parse_score(score, advanced=mode == "avanzado")
-        errors.extend(f"{mode}: {error}" for error in mode_errors)
-        used: set[str] = set()
-        for section in mode_sections:
-            for token in section.get("compases", []):
-                for chord in check_bar(token, mode, errors):
-                    used.add(chord)
-                    theme_used.add(chord)
-                    if not pattern.match(chord):
-                        errors.append(f"{mode}: «{chord}» no es un acorde válido para este modo")
-        check_shapes(mode, data.get(mode, {}).get("formas", {}), used, errors)
-    check_shapes("", data.get("formas", {}), theme_used, errors)
+    mode_sections, mode_errors = parse_score(data.get("intermedio", {}).get("partitura", ""))
+    errors.extend(f"intermedio: {error}" for error in mode_errors)
+    used: set[str] = set()
+    for section in mode_sections:
+        for token in section.get("compases", []):
+            for chord in check_bar(token, "intermedio", errors):
+                used.add(chord)
+                theme_used.add(chord)
+                if not SLASH_CHORD.match(chord):
+                    errors.append(f"intermedio: «{chord}» no es un acorde válido para este modo")
+    check_shapes("intermedio", data.get("intermedio", {}).get("formas", {}), used, errors)
     advanced = data.get("avanzado", {})
-    if not isinstance(advanced.get("tab", ""), str):
-        errors.append("avanzado: tab debe ser texto")
-    names = {s.get("nombre") for s in parse_score(advanced.get("partitura", ""), True)[0]}
-    check_by_section("tabs", advanced.get("tabs", {}), TAB_MAX, names, errors)
-    check_by_section("arreglos", advanced.get("arreglos", {}), ARRANGEMENT_MAX, names, errors)
+    # Avanzado = la partitura de Intermedio: sus formas propias usan esos acordes.
+    check_shapes(
+        "avanzado", advanced.get("formas", {}) if isinstance(advanced, dict) else {}, used, errors
+    )
+    check_shapes("", data.get("formas", {}), theme_used, errors)
+    has_score = any(sec.get("compases") for sec in mode_sections)
+    names = {sec["nombre"] for sec in mode_sections if "nombre" in sec}
+    check_advanced(advanced, names, has_score, errors)
 
     origin = data.get("procedencia", {})
     review = data.get("revision", {})

@@ -1,6 +1,6 @@
 # Estado del sitio
 
-> Registro vivo. Última actualización: 2026-11-04 (S30: barra en dos filas, sin aviso de guías).
+> Registro vivo. Última actualización: 2026-11-04 (S31: Avanzado hereda Intermedio).
 
 ## Paso actual
 
@@ -133,3 +133,14 @@ AAAA-MM-DD · paso · qué se hizo · qué quedó pendiente · decisiones nuevas
 - El usuario rechazó el aviso: se quita por completo (HTML, CSS, JS, pruebas). Niveles arriba y controles abajo; queda una prueba de
   orden de filas. Se conservan el borde del selector (S26), «Opciones» en celular y «Habla con una guía».
 - **Pendiente:** revisar a ojo en celular real.
+
+
+## 2026-11-04 · Avanzado hereda Intermedio (S31, reemplaza parte de S17)
+
+- Avanzado ya no tiene partitura: muestra la de Intermedio y suma extras por sección en `[avanzado.secciones."Nombre"]` (`tab`, `arreglo`, `tips`).
+  `[avanzado.tabs]`, `[avanzado.arreglos]` y `[avanzado] partitura` dan un error de migración. `[avanzado.formas]` y `tab` general se conservan.
+- Validador, render (`songpages.py`), plantillas, guía de edición (control) y contrato compartido actualizados (24 casos nuevos). Formato exacto y
+  mensajes de error: `docs/decisions.md` S31. Pruebas: pytest, ruff y e2e con un tema sintético con Avanzado.
+- **Para research:** copiar `contract.json`, adaptar validador y editor, y correr `scripts/sync_site_render.py` para la copia del render.
+- Ningún tema publicado usa Avanzado: sin migración.
+

@@ -321,6 +321,28 @@ def test_summary_is_folded_and_draws_every_chord_of_its_tab(page: Page, shapes_u
         assert box["x"] >= 0 and box["x"] + box["width"] <= page.viewport_size["width"] + 1
 
 
+def test_advanced_shows_intermedio_bars_plus_section_extras(page: Page, advanced_url: str):
+    page.goto(advanced_url + SONG)
+    page.get_by_role("tab", name=re.compile("Avanzado")).click()
+    pane = page.locator("#p-avanzado")
+    expect(pane).to_be_visible()
+    inter = page.locator("#p-intermedio")
+    assert pane.locator(".ac-bar").count() == inter.locator(".ac-bar").count() > 0
+    expect(pane.locator(".ac-tab")).to_contain_text("e|--0--|")
+    expect(pane.locator(".ac-arrangement")).to_contain_text("Rasgueo suave")
+    expect(pane.locator(".ac-tip-title", has_text="Sonido")).to_have_count(1)
+    expect(inter.locator(".ac-tab")).to_have_count(0)
+    expect(pane.locator("details.ac-summary")).to_have_count(1)
+    pane.locator("details.ac-summary summary").focus()
+    page.keyboard.press("Enter")
+    expect(pane.locator(".ac-sum-item").first).to_be_visible()
+    pane.locator(".ac-chord-btn[data-chord='Emaj7']").first.click()
+    expect(page.locator(".ac-chord-panel")).to_be_visible()
+    assert page.evaluate(
+        "document.documentElement.scrollWidth <= document.documentElement.clientWidth"
+    )
+
+
 def test_barre_rule_shows_the_nearest_position_first(page: Page, base_url: str):
     """Regla de cejilla (S27): en el panel, la primera forma de un acorde que empieza desde el
     traste 3 es la de traste base más bajo (los datos de la página ya vienen ordenados)."""

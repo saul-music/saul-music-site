@@ -462,3 +462,54 @@ memoria en `sessionStorage` y la regla que lo ocultaba junto a «Habla con una g
 - **Barra:** **(1)** selector de nivel (borde de S26), **(2)** controles de reproducción (en celular, Reproducir + «Opciones»
   plegable). Se conserva el botón corto «Habla con una guía» y la franja de guías de arriba.
 - Se conserva de S29 la fila propia de los niveles (`.ac-met-levels-row`) y la barra compacta.
+
+
+## S31 · Avanzado hereda la partitura de Intermedio y declara solo extras por sección (2026-11-04)
+
+Reemplaza la parte de S17 que daba a Avanzado su propia partitura, `[avanzado.tabs]` y `[avanzado.arreglos]`. Se conservan de S17 los
+límites (tab 2000, arreglo 600, tips 80/600), el escape y que cada extra se muestra la primera vez que aparece su sección.
+Los bajos siguen siendo de Intermedio. Ningún tema (publicado, `songs/` ni `acordes-local/`) usaba Avanzado: no hay datos que migrar.
+
+**Contrato del formato** (compartido con research, `tests/fixtures/acordes/contract.json`; 24 casos nuevos, los de `avanzado.partitura`,
+`tabs` y `arreglos` se reemplazaron):
+```toml
+[intermedio]
+partitura = '''
+Intro: Em G/B
+Estrofa x2: C D
+'''
+
+[avanzado]                        # sin partitura
+tab = '''...'''                    # opcional: tab general, al final de la pestaña (se conserva)
+
+[avanzado.secciones."Intro"]      # clave = nombre de una sección de la partitura de INTERMEDIO
+tab = '''e|--0--|'''              # opcional, hasta 2000 caracteres
+arreglo = "Rasgueo suave con `Em`" # opcional, hasta 600 (acordes entre acentos graves, S15)
+tips = ["Título | Texto"]         # opcional, lista de «Título | Texto»: título ≤ 80, texto ≤ 600
+                                  # (Intermedio y Básico siguen en 60/280 con `> Título | Texto` en la partitura)
+
+[avanzado.formas]                 # S8, se conserva: acordes que aparecen en Intermedio
+"G/B" = "x 2 0 0 3 3"
+```
+- Cada sección entrada debe tener al menos una de `tab`, `arreglo`, `tips`. Una sección de Intermedio sin entrada se muestra igual, sin extras.
+- **Render:** la pestaña Avanzado es la partitura de Intermedio (compases y tips de Intermedio incluidos) más, en cada sección la primera
+  vez que aparece: `arreglo`, `tab` bajo los compases y los `tips` de Avanzado como tarjetas tras la sección. Hay Avanzado (`avanzado_secciones`
+  = secciones de Intermedio) solo si hay entradas en `secciones` o `tab`; si no, «Próximamente» y no cuenta en `version_count` (S20). Los acordes
+  del panel y del resumen plegado (S28) son los de Intermedio; Avanzado no admite acordes propios.
+- **Mensajes de error** (en español, con `avanzado` como prefijo; `N` desde 1):
+  `avanzado debe ser una tabla` · `avanzado: ya no lleva partitura propia; muestra la de Intermedio. Pon lo propio en [avanzado.secciones."Nombre"] (tab, arreglo, tips)` ·
+  `avanzado.tabs ya no existe: usa [avanzado.secciones."Nombre"] con tab = ...` · `avanzado.arreglos ya no existe: ... con arreglo = ...` ·
+  `avanzado: tab debe ser texto` · `avanzado.secciones debe ser una tabla ([avanzado.secciones."Nombre"])` ·
+  `avanzado: necesita la partitura de Intermedio (Avanzado la hereda)` (hay extras o `tab` y Intermedio no tiene compases; es el único error) ·
+  por sección, prefijo `avanzado.secciones «Nombre»:` → `no hay una sección con ese nombre en la partitura de Intermedio` ·
+  `debe ser una tabla (tab, arreglo, tips)` · `clave desconocida «k» (usa tab, arreglo o tips)` · `no tiene extras; escribe tab, arreglo o tips (o quita la sección)` ·
+  `tab debe ser texto, no vacío` / `arreglo debe ser texto, no vacío` · `tab pasa de 2000 caracteres` / `arreglo pasa de 600 caracteres` ·
+  `tips debe ser una lista de textos «Título | Texto»` · `tips[N] debe ser texto «Título | Texto»` ·
+  `tips[N]: un tip se escribe «> Título | Texto» (con título y texto)` / `tips[N]: el título del tip pasa de 80 caracteres` / `tips[N]: el texto del tip pasa de 600 caracteres`.
+  Las formas de Avanzado siguen: `avanzado.formas «Dm7»: el acorde no aparece en la versión avanzado` (se compara con los acordes de Intermedio).
+- **Plantillas:** la técnica y la simple dejan de traer `[avanzado] partitura`; traen `[avanzado.secciones."Nombre"]` comentado.
+- **Cómo sincroniza research:** copiar `tests/fixtures/acordes/contract.json` y adaptar su validador (`parse_score` ya no recibe `advanced`; la
+  validación de Avanzado es `check_advanced` + `advanced_extras` de `musicsite/acordes.py`), el editor y la copia vendorizada del render
+  (`scripts/sync_site_render.py` de research, que toma `songpages.py` y `acordia.js`; `load_song` compone Avanzado y `structure(sections, extras)`
+  renderiza los extras). `acordia.js` no cambió.
+- **Descartado:** compatibilidad con la partitura propia de Avanzado (nada la usa; un archivo viejo da el error de migración de arriba).
