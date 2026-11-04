@@ -567,6 +567,8 @@ a.card:hover { border-color: var(--ac-fill); transform: translateY(-2px); }
    (display: contents) y el botón no existe; en celular se agrupan y se despliegan con «Opciones». */
 .ac-met-extra { display: contents; }
 .ac-met-options { display: none; }
+.ac-met-options-mute { display: inline-flex; align-items: center; line-height: 1; }
+.ac-met-options-mute[hidden] { display: none; }
 .ac-met-options-chev { display: inline-block; transition: transform .15s; }
 .ac-met-options[aria-expanded="true"] .ac-met-options-chev { transform: rotate(180deg); }
 .ac-sticky-tools [data-ac-met-reset] { order: 2; }
