@@ -30,28 +30,31 @@
         <button class="btn btn-primary ac-met-toggle" type="button" data-ac-met-toggle aria-pressed="false"><span data-ac-met-label>Reproducir</span><span class="ac-met-count ac-mono" data-ac-met-count aria-hidden="true"></span></button>
         <button class="btn btn-primary ac-met-restart" type="button" data-ac-met-restart hidden>Volver al inicio</button>
         <span class="visually-hidden" role="status" data-ac-met-status></span>
-        <button class="btn btn-outline-primary ac-met-mute" type="button" data-ac-met-mute aria-pressed="false" title="Seguir el tempo sin sonido">
-          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4z"/><path class="ac-on" d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/><path class="ac-off" d="M17 9l5 6M22 9l-5 6"/></svg>
-          <span class="ac-met-mute-text">Sin sonido</span>
-        </button>
-        <button class="btn btn-outline-primary ac-met-countin" type="button" data-ac-met-countin aria-pressed="true" title="Cuatro clics de cuenta antes de empezar">
-          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 5l3 14h8l3-14z"/><path d="M12 15L16 6"/></svg>
-          <span class="ac-met-countin-text">Cuenta inicial</span>
-        </button>
-        <div class="d-flex align-items-center gap-2">
-          <button class="btn btn-outline-primary" type="button" data-ac-met-step="-1" aria-label="Bajar un bpm">−</button>
-          <label class="visually-hidden" for="met-bpm">Tempo en bpm</label>
-          <input class="form-control ac-mono text-center ac-met-input" id="met-bpm" type="number" inputmode="numeric" min="30" max="240" step="1" value="{{ bpm }}" data-ac-met-bpm>
-          <span class="small text-body-secondary">bpm</span>
-          <button class="btn btn-outline-primary" type="button" data-ac-met-step="1" aria-label="Subir un bpm">+</button>
-        </div>
-        <label class="visually-hidden" for="met-range">Tempo, control deslizante</label>
-        <input class="form-range flex-grow-1 ac-met-range" id="met-range" type="range" min="30" max="240" step="1" value="{{ bpm }}" data-ac-met-range>
+        <button class="btn btn-outline-primary ac-met-options" type="button" data-ac-met-options aria-expanded="false" aria-controls="met-extra">Opciones <span class="ac-met-options-chev" aria-hidden="true">&#9662;</span></button>
         <ul class="nav nav-pills flex-nowrap ac-levels ac-levels-bar" id="tabs" role="tablist" aria-label="Nivel">
 {% for key, label, description in modes %}          <li class="nav-item" role="presentation"><button class="nav-link{{ ' active' if loop.first }}" id="t-{{ key }}" data-bs-toggle="pill" data-bs-target="#p-{{ key }}" type="button" role="tab" aria-controls="p-{{ key }}" aria-selected="{{ 'true' if loop.first else 'false' }}" data-ac-level="{{ key }}">{{ label }}</button></li>
 {% endfor %}        </ul>
-        <div class="d-flex align-items-center gap-1" aria-hidden="true" data-ac-met-dots></div>
-        <button class="btn btn-ghost" type="button" data-ac-met-reset aria-label="Restablecer a {{ bpm }} bpm" title="Restablecer a {{ bpm }} bpm"><span class="ac-met-reset-icon" aria-hidden="true">&#8634;</span><span class="ac-met-reset-text">Restablecer<span class="ac-met-reset-bpm"> a {{ bpm }}</span></span></button>
+        <div class="ac-met-extra" id="met-extra" data-ac-met-extra>
+          <button class="btn btn-outline-primary ac-met-mute" type="button" data-ac-met-mute aria-pressed="false" title="Seguir el tempo sin sonido">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4z"/><path class="ac-on" d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/><path class="ac-off" d="M17 9l5 6M22 9l-5 6"/></svg>
+            <span class="ac-met-mute-text">Sin sonido</span>
+          </button>
+          <button class="btn btn-outline-primary ac-met-countin" type="button" data-ac-met-countin aria-pressed="true" title="Cuatro clics de cuenta antes de empezar">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 5l3 14h8l3-14z"/><path d="M12 15L16 6"/></svg>
+            <span class="ac-met-countin-text">Cuenta inicial</span>
+          </button>
+          <div class="d-flex align-items-center gap-2">
+            <button class="btn btn-outline-primary" type="button" data-ac-met-step="-1" aria-label="Bajar un bpm">−</button>
+            <label class="visually-hidden" for="met-bpm">Tempo en bpm</label>
+            <input class="form-control ac-mono text-center ac-met-input" id="met-bpm" type="number" inputmode="numeric" min="30" max="240" step="1" value="{{ bpm }}" data-ac-met-bpm>
+            <span class="small text-body-secondary">bpm</span>
+            <button class="btn btn-outline-primary" type="button" data-ac-met-step="1" aria-label="Subir un bpm">+</button>
+          </div>
+          <label class="visually-hidden" for="met-range">Tempo, control deslizante</label>
+          <input class="form-range flex-grow-1 ac-met-range" id="met-range" type="range" min="30" max="240" step="1" value="{{ bpm }}" data-ac-met-range>
+          <div class="d-flex align-items-center gap-1" aria-hidden="true" data-ac-met-dots></div>
+          <button class="btn btn-ghost" type="button" data-ac-met-reset aria-label="Restablecer a {{ bpm }} bpm" title="Restablecer a {{ bpm }} bpm"><span class="ac-met-reset-icon" aria-hidden="true">&#8634;</span><span class="ac-met-reset-text">Restablecer<span class="ac-met-reset-bpm"> a {{ bpm }}</span></span></button>
+        </div>
         {% if guides_count %}<a class="btn ac-met-help" href="guias.html?tema={{ song.slug }}" data-ac-met-help role="button" data-bs-toggle="collapse" data-bs-target="#guias-panel" aria-controls="guias-panel" aria-expanded="false" hidden>¿Se complica esta parte? <strong>Habla con una guía</strong></a>{% endif %}
       </div>
     </section>

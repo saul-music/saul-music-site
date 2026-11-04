@@ -8,7 +8,9 @@ test_audio_real.py comprueba, con un sink nulo de PulseAudio en el CI, que el co
 y emite señal. Que suene en Safari/iPhone (interruptor de silencio) se comprueba de oído.
 """
 
+import os
 import re
+from pathlib import Path
 
 import pytest
 from playwright.sync_api import Page, expect
@@ -47,17 +49,27 @@ SAFARI_AUDIO_STUB = """
 """
 
 
+def set_options(page: Page, open_: bool = True) -> None:
+    """En celular (<= 575 px) los controles secundarios están plegados bajo «Opciones» (S26): abre o
+    cierra el grupo. En escritorio el botón no se ve y no hace nada."""
+    button = page.locator("[data-ac-met-options]")
+    if button.is_visible() and (button.get_attribute("aria-expanded") == "true") != open_:
+        button.click()
+
+
 @pytest.fixture
 def song_audio(page: Page, base_url: str) -> Page:
     """Canción con un AudioContext simulado: el pulso no depende de que el runner tenga audio."""
     page.add_init_script(SAFARI_AUDIO_STUB)
     page.goto(base_url + SONG)
+    set_options(page)
     return page
 
 
 @pytest.fixture
 def song(page: Page, base_url: str) -> Page:
     page.goto(base_url + SONG)
+    set_options(page)
     return page
 
 
@@ -135,6 +147,7 @@ def test_playhead_walks_the_bars_and_counts_repetitions(song_audio: Page):
 
 
 def test_metronome_stays_visible_next_to_the_bars(song: Page):
+    set_options(song, False)  # la altura máxima se mide con las opciones plegadas
     tools = song.locator(".ac-sticky-tools")
     song.evaluate("window.scrollTo(0, document.body.scrollHeight)")
     song.wait_for_timeout(200)
@@ -147,6 +160,7 @@ def test_metronome_stays_visible_next_to_the_bars(song: Page):
 
 def test_guides_entry_changes_shape_but_is_never_shown_twice(song: Page):
     strip = song.locator(".ac-met-strip [data-ac-met-guides]")
+    set_options(song, False)
     help_button = song.locator(".ac-sticky-tools [data-ac-met-help]")
     # Arriba: solo la franja, antes de la barra fija; el botón corto está oculto.
     expect(strip).to_be_in_viewport()
@@ -347,6 +361,7 @@ def test_toggling_sound_while_playing_does_not_stop_it(song_audio: Page):
 def test_mute_choice_is_remembered(song_audio: Page, base_url: str):
     song_audio.locator("[data-ac-met-mute]").click()
     song_audio.goto(base_url + SONG)
+    set_options(song_audio)
     expect(song_audio.locator("[data-ac-met-mute]")).to_have_attribute("aria-pressed", "true")
 
 
@@ -486,6 +501,7 @@ def test_count_in_precedes_the_playhead_and_can_be_turned_off(song_audio: Page):
     count_btn.click()
     expect(count_btn).to_have_attribute("aria-pressed", "false")
     song.reload()
+    set_options(song)
     expect(song.locator("[data-ac-met-countin]")).to_have_attribute("aria-pressed", "false")
     song.locator("[data-ac-met-range]").fill("240")
     song.locator("[data-ac-met-toggle]").click()
@@ -652,6 +668,7 @@ def test_tips_open_by_keyboard_stay_in_place_and_stop_glowing_once_seen(page: Pa
 def test_tips_do_not_disturb_the_playhead(page: Page, tips_url: str):
     page.add_init_script(SAFARI_AUDIO_STUB)
     page.goto(tips_url + SONG)
+    set_options(page)
     page.locator("[data-ac-met-countin]").click()
     page.locator("[data-ac-met-range]").fill("240")
     page.locator("[data-ac-met-toggle]").click()
@@ -715,6 +732,7 @@ def test_rests_are_drawn_without_chord_button_and_the_playhead_crosses_them(
 ):
     page.add_init_script(SAFARI_AUDIO_STUB)
     page.goto(rests_url + SONG)
+    set_options(page)
     pane = page.locator("#p-basico")
     rests = pane.locator(".ac-rest")
     expect(rests).to_have_count(3)
@@ -844,3 +862,121 @@ def test_requests_page_is_in_the_nav_and_fits_the_screen(page: Page, base_url: s
         "document.documentElement.scrollWidth - document.documentElement.clientWidth"
     )
     assert overflow <= 0
+
+
+def test_level_selector_has_a_visible_border_and_a_distinct_active_option(song: Page):
+    bar = song.locator(".ac-levels-bar")
+    assert bar.evaluate("el => parseFloat(getComputedStyle(el).borderTopWidth)") >= 2
+    assert bar.evaluate("el => getComputedStyle(el).borderTopStyle") == "solid"
+    active = song.locator(".ac-levels-bar .nav-link.active")
+    other = song.locator(".ac-levels-bar .nav-link:not(.active)").first
+    fill = "el => getComputedStyle(el).backgroundColor"
+    assert active.evaluate(fill) != other.evaluate(fill)
+    other.focus()
+    song.keyboard.press("Tab")  # el foco por teclado se ve (anillo de 3 px)
+    song.locator(".ac-levels-bar .nav-link").nth(1).focus()
+    assert song.evaluate("parseFloat(getComputedStyle(document.activeElement).outlineWidth)") >= 2
+
+
+@pytest.mark.parametrize("scheme", ["light", "dark"])
+def test_level_selector_contrast_in_both_themes(page: Page, base_url: str, scheme: str):
+    page.emulate_media(color_scheme=scheme)
+    page.goto(base_url + SONG)
+    page.evaluate(f"document.documentElement.setAttribute('data-bs-theme', '{scheme}')")
+    page.wait_for_timeout(500)  # las transiciones de color terminan
+    ratio = page.evaluate(
+        """() => {
+          const lum = (c) => { const v = c.match(/[\\d.]+/g).slice(0, 3).map(Number).map((x) => {
+            x /= 255; return x <= 0.03928 ? x / 12.92 : Math.pow((x + 0.055) / 1.055, 2.4); });
+            return 0.2126 * v[0] + 0.7152 * v[1] + 0.0722 * v[2]; };
+          const bg = lum(getComputedStyle(document.body).backgroundColor);
+          const q = (s) => getComputedStyle(document.querySelector(s));
+          const bar = lum(q('.ac-levels-bar').borderTopColor);
+          const txt = lum(q('.ac-levels-bar .nav-link:not(.active)').color);
+          const cr = (a, b) => (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
+          return { border: cr(bar, bg), text: cr(txt, bg) };
+        }"""
+    )
+    assert ratio["border"] >= 3  # WCAG 1.4.11: componentes de interfaz
+    assert ratio["text"] >= 4.5
+
+
+def _is_mobile(page: Page) -> bool:
+    return page.viewport_size["width"] <= 575
+
+
+def test_options_group_is_collapsed_on_mobile_and_toggles_any_time(page: Page, base_url: str):
+    page.goto(base_url + SONG)
+    button = page.locator("[data-ac-met-options]")
+    extra = page.locator("[data-ac-met-extra]")
+    if not _is_mobile(page):
+        expect(button).to_be_hidden()  # escritorio: nada cambia, todo suelto en la barra
+        for sel in ("mute", "countin", "bpm", "range", "reset"):
+            expect(page.locator(f"[data-ac-met-{sel}]")).to_be_visible()
+        return
+    expect(button).to_be_visible()
+    expect(button).to_have_attribute("aria-expanded", "false")
+    expect(button).to_have_attribute("aria-controls", "met-extra")
+    expect(extra).to_be_hidden()
+    for sel in ("toggle", "options"):
+        expect(page.locator(f"[data-ac-met-{sel}]")).to_be_visible()
+    expect(page.locator(".ac-levels-bar")).to_be_visible()
+    closed_h = page.locator(".ac-sticky-tools").bounding_box()["height"]
+    assert closed_h < page.viewport_size["height"] * 0.25
+    button.click()
+    expect(button).to_have_attribute("aria-expanded", "true")
+    for sel in ("mute", "countin", "bpm", "range", "reset"):
+        expect(page.locator(f"[data-ac-met-{sel}]")).to_be_visible()
+    assert page.evaluate("document.documentElement.scrollWidth <= window.innerWidth")
+    button.click()
+    expect(extra).to_be_hidden()
+    expect(button).to_have_attribute("aria-expanded", "false")
+
+
+def test_options_can_be_closed_with_escape_and_keep_working_while_playing(
+    song_audio: Page,
+):
+    song = song_audio  # la fixture las deja abiertas en celular
+    button = song.locator("[data-ac-met-options]")
+    song.locator("[data-ac-met-countin]").click()
+    song.locator("[data-ac-met-range]").fill("240")
+    song.locator("[data-ac-met-toggle]").click()
+    expect(song.locator("#p-basico .ac-bar.is-current")).to_have_count(1, timeout=5000)
+    if _is_mobile(song):
+        song.locator("[data-ac-met-mute]").focus()
+        song.keyboard.press("Escape")
+        expect(button).to_have_attribute("aria-expanded", "false")
+        expect(song.locator("[data-ac-met-extra]")).to_be_hidden()
+        expect(song.locator("[data-ac-met-toggle]")).to_have_attribute("aria-pressed", "true")
+        expect(song.locator("#p-basico .ac-bar.is-current")).to_have_count(1)
+    song.locator("[data-ac-met-toggle]").click()
+    expect(song.locator(".ac-bar.is-current")).to_have_count(0)
+
+
+def test_playbar_has_no_horizontal_overflow_open_or_closed(page: Page, base_url: str):
+    page.goto(base_url + SONG)
+    for open_ in (False, True):
+        set_options(page, open_)
+        assert page.evaluate("document.documentElement.scrollWidth <= window.innerWidth")
+        right = page.evaluate(
+            "Math.max(...[...document.querySelectorAll('.ac-sticky-tools .btn, .ac-levels-bar')]"
+            ".filter(e => e.offsetParent).map(e => e.getBoundingClientRect().right))"
+        )
+        assert right <= page.viewport_size["width"] + 0.5
+
+
+def test_playbar_screenshots_for_review(page: Page, base_url: str, tmp_path_factory):
+    out = Path(os.environ.get("AC_SHOTS", "")) if os.environ.get("AC_SHOTS") else None
+    if out is None:
+        pytest.skip("solo para revisar a ojo: AC_SHOTS=<carpeta>")
+    out.mkdir(parents=True, exist_ok=True)
+    name = f"{page.context.browser.browser_type.name}-{page.viewport_size['width']}"
+    for scheme in ("light", "dark"):
+        page.emulate_media(color_scheme=scheme)
+        page.goto(base_url + SONG)
+        page.evaluate(f"document.documentElement.setAttribute('data-bs-theme', '{scheme}')")
+        for open_ in (False, True):
+            set_options(page, open_)
+            state = "abierto" if open_ else "cerrado"
+            page.wait_for_timeout(500)
+            page.screenshot(path=str(out / f"{name}-{scheme}-{state}.png"))

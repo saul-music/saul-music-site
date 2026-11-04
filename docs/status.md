@@ -1,6 +1,6 @@
 # Estado del sitio
 
-> Registro vivo. Última actualización: 2026-11-04 (S27: orden de formas de guitarra).
+> Registro vivo. Última actualización: 2026-11-04 (S26 y S27: barra de reproducción y orden de formas de guitarra).
 
 ## Paso actual
 
@@ -112,3 +112,11 @@ AAAA-MM-DD · paso · qué se hizo · qué quedó pendiente · decisiones nuevas
 - Pruebas: puras (regla, validador, payload) y de navegador (default primero, propia del nivel gana, navegación).
 - **Pendiente:** verificar en producción tras el deploy; ningún tema publicado usa `[formas]` todavía.
 
+
+## 2026-11-04 · Selector de nivel y barra plegable en celular (S26)
+
+- Selector de nivel con borde visible y activa destacada (claro/oscuro, foco accesible); en <= 575 px los controles secundarios
+  de la barra van bajo «Opciones» (plegable, `aria-expanded`); escritorio igual. Detalle en `decisions.md` (S26).
+- Pruebas: 6 de navegador nuevas (borde, contraste en ambos temas, plegado, Escape con el metrónomo andando, sin desborde, capturas
+  con `AC_SHOTS=<carpeta>`); las existentes abren el grupo con `set_options()`. Capturas revisadas en Pixel 7 y iPhone 14.
+- **Pendiente:** revisar a ojo en celular real; el botón «Opciones» no indica si «Sin sonido» está activo mientras está plegado.
