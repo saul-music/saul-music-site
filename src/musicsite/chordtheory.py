@@ -254,6 +254,9 @@ def position_ok(chord: Chord, frets: list[int]) -> bool:
     return chord.root in pcs and defining in pcs
 
 
+BARRE_FROM_FRET = 3  # S27: desde este traste base se aplica la regla de cejilla
+
+
 @cache
 def _database() -> dict:
     return json.loads(DATA_FILE.read_text(encoding="utf-8"))
@@ -273,6 +276,22 @@ def standard_positions(chord: Chord) -> list[dict] | None:
     return _positions(chord.root, key)
 
 
+def base_fret(frets: list[int]) -> int:
+    """Traste más bajo que se pisa (0 si todas las cuerdas suenan al aire o están mudas)."""
+    pressed = [f for f in frets if f > 0]
+    return min(pressed) if pressed else 0
+
+
+def nearest_barre_first(positions: list[dict]) -> list[dict]:
+    """Regla de cejilla (S27): si la primera forma de chords-db empieza en el traste 3 o más,
+    se ordenan todas por traste base ascendente, de modo que la posición más cercana a los
+    primeros trastes salga primero. Empate: se conserva el orden de chords-db (sort estable).
+    Si la primera forma empieza antes del traste 3 (abierta o cejilla baja), no se toca nada."""
+    if not positions or base_fret(positions[0]["frets"]) < BARRE_FROM_FRET:
+        return positions
+    return sorted(positions, key=lambda p: base_fret(p["frets"]))
+
+
 def guitar_positions(chord: Chord) -> tuple[list[dict] | None, bool]:
     """Formas para mostrar y si dibujan el bajo: (formas, bajo_dibujado) (S19).
 
@@ -281,12 +300,14 @@ def guitar_positions(chord: Chord) -> tuple[list[dict] | None, bool]:
     bajo (esas sí lo dibujan) y, si ninguna lo es, todas, sin el bajo. Sin acorde base: None."""
     exact = standard_positions(chord)
     if exact or chord.bass is None:
-        return exact, True
+        return (nearest_barre_first(exact) if exact else exact), True
     base = _positions(chord.root, chord.suffix)
     if not base:
         return None, False
     with_bass = [p for p in base if min(sounded(p["frets"])) % 12 == chord.bass]
-    return (with_bass, True) if with_bass else (base, False)
+    if with_bass:
+        return nearest_barre_first(with_bass), True
+    return nearest_barre_first(base), False
 
 
 def parse_shape(text: str) -> list[int]:

@@ -52,6 +52,17 @@
     {"cambio": {"partitura": "Intro: G ..\n"}, "contiene": "no es un acorde básico"},
     {"cambio": {"partitura": "Intro: G .G\n"}, "contiene": "no es un acorde básico"},
     {"cambio": {"partitura": "Intro: G .-\n"}, "contiene": "guion sin acorde"},
-    {"cambio": {"intermedio": {"partitura": "A: G . D-.-%-G"}}, "errores": 0}
+    {"cambio": {"intermedio": {"partitura": "A: G . D-.-%-G"}}, "errores": 0},
+    {"cambio": {"formas": {"G": "3 2 0 0 0 3"}}, "errores": 0},
+    {"cambio": {"formas": {"Em": "0 2 2 0 0 0", "C": "x 3 2 0 1 0"}}, "errores": 0},
+    {"cambio": {"intermedio": {"partitura": "A: G Em7"}, "formas": {"Em7": "0 2 0 0 0 0"}}, "errores": 0},
+    {"cambio": {"intermedio": {"partitura": "A: G Em7", "formas": {"Em7": "0 2 0 0 0 0"}}, "formas": {"G": "3 2 0 0 0 3"}}, "errores": 0},
+    {"cambio": {"formas": {"Am": "x 0 2 2 1 0"}}, "contiene": "formas «Am»: el acorde no aparece en ningún nivel del tema"},
+    {"cambio": {"formas": {"G": "3 2 0 0 0 1"}}, "contiene": "formas «G»: suena"},
+    {"cambio": {"formas": {"G": "3 2 0 0 0"}}, "contiene": "debe tener 6 valores"},
+    {"cambio": {"formas": {"G": "3 2 0 0 0 h"}}, "contiene": "no es un traste"},
+    {"cambio": {"formas": {"Gmaj13": "3 2 0 0 0 3"}}, "contiene": "no sé dibujar este acorde"},
+    {"cambio": {"formas": "G"}, "contiene": "formas debe ser una tabla"},
+    {"cambio": {"intermedio": {"partitura": "A: G", "formas": {"Em": "0 2 2 0 0 0"}}}, "contiene": "intermedio.formas «Em»: el acorde no aparece en la versión intermedio"}
   ]
 }
