@@ -410,3 +410,19 @@ acorde base (S19). Afecta a 44 acordes de chords-db (p. ej. Cm7: la cejilla del 
 - El prefijo de los errores de nivel sigue siendo `intermedio.formas «…»` / `avanzado.formas «…»` (sin cambios).
 - Payload de la página (`#acordes-data`): nueva clave `default` (`{acorde: {frets, tab}}`) junto a `chords` y `own`.
 
+
+## S26 · Selector de nivel con borde y barra de reproducción plegable en celular (2026-11-04)
+
+**Parte 1, selector de nivel.** Usuarios no notaban que Básico/Intermedio/Avanzado es un selector. Ahora es un control
+segmentado: borde de 2 px en el color de acento (≥ 3:1 contra el fondo en Noche y Marfil), opciones inactivas con el color
+de texto pleno (≥ 4,5:1), la activa rellena y en negrita con doble anillo, y foco por teclado de 3 px.
+
+**Parte 2, «Opciones» en celular (≤ 575 px).** La barra fija ocupaba demasiado. Quedan visibles Reproducir/pausar,
+«Opciones» y los niveles (dos filas); metrónomo, BPM, deslizante, «Sin sonido», «Cuenta inicial» y «Restablecer» van en un
+grupo `#met-extra` que se despliega y se repliega cuando se quiera (botón con `aria-expanded` y `aria-controls`; Escape
+lo cierra).
+- **Escritorio no cambia:** el grupo usa `display: contents` y el botón no se muestra; el orden visual se conserva con `order`.
+- **No toca el estado:** los controles siguen en el DOM (solo `display: none`), así que metrónomo, cursor y centrado (S10 a S12)
+  no cambian. El botón «Habla con una guía» queda fuera del grupo.
+- **Estado inicial plegado, sin recordarlo:** cada visita parte compacta. Descartado: recordarlo en `localStorage`.
+- Las pruebas de navegador abren el grupo en celular con `set_options()`; hay pruebas propias del plegado, del contraste y del desborde.

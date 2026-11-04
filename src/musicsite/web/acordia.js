@@ -839,6 +839,20 @@
       b.addEventListener("click", function () { setBpm(bpm + +b.getAttribute("data-ac-met-step")); });
     });
     box.querySelector("[data-ac-met-reset]").addEventListener("click", function () { setBpm(home); });
+    /* Opciones (celular): el botón existe siempre pero solo se muestra en ≤ 575 px (CSS). Despliega y
+       repliega los controles secundarios; no toca el estado del metrónomo. Escape lo cierra si el foco está dentro. */
+    var optBtn = box.querySelector("[data-ac-met-options]");
+    var extra = box.querySelector("[data-ac-met-extra]");
+    if (optBtn && extra) {
+      var setOptions = function (open) {
+        extra.classList.toggle("is-open", open);
+        optBtn.setAttribute("aria-expanded", open ? "true" : "false");
+      };
+      optBtn.addEventListener("click", function () { setOptions(optBtn.getAttribute("aria-expanded") !== "true"); });
+      extra.addEventListener("keydown", function (e) {
+        if (e.key === "Escape" && optBtn.getAttribute("aria-expanded") === "true") { setOptions(false); optBtn.focus(); }
+      });
+    }
     document.addEventListener("visibilitychange", function () { if (document.hidden && playing) stop(); });
   });
   /* Nivel en la URL: #basico, #intermedio o #avanzado abre ese nivel y compartirlo lleva a él. */
