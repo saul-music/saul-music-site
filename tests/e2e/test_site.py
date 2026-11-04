@@ -672,3 +672,37 @@ def test_library_search_is_shared_with_the_landing_and_stays_in_reach(page: Page
     expect(cards).to_have_count(total)
     expect(page.locator("#buscar")).to_have_value("")
     expect(page.locator("#lib-clear")).to_be_hidden()
+
+
+def test_rests_are_drawn_without_chord_button_and_the_playhead_crosses_them(
+    page: Page, rests_url: str
+):
+    page.add_init_script(SAFARI_AUDIO_STUB)
+    page.goto(rests_url + SONG)
+    pane = page.locator("#p-basico")
+    rests = pane.locator(".ac-rest")
+    expect(rests).to_have_count(3)
+    expect(rests.first).to_have_attribute("aria-label", "silencio")
+    expect(rests.first).to_be_visible()
+    # Un silencio no abre diagrama: no es un botón.
+    assert pane.locator("button .ac-rest").count() == 0
+    rests.first.click()
+    expect(page.locator(".ac-chord-panel")).to_have_count(0)
+    # Un compás partido con silencio tiene sus dos partes (silencio 1 + 2 de G ... ver la fixture).
+    split = pane.locator(".ac-bar.is-split").first
+    expect(split.locator(".ac-part")).to_have_count(2)
+    # El cursor pasa por el compás en silencio (es el primero) y avanza.
+    page.locator("[data-ac-met-countin]").click()
+    page.locator("[data-ac-met-range]").fill("240")
+    page.locator("[data-ac-met-toggle]").click()
+    first = pane.locator(".ac-bar.is-current")
+    expect(first).to_have_count(1, timeout=5000)
+    assert first.locator(".ac-rest").count() == 1
+    page.wait_for_function(
+        "() => !document.querySelector('#p-basico .ac-bar.is-current .ac-rest')", timeout=8000
+    )
+    page.locator("[data-ac-met-toggle]").click()
+    overflow = page.evaluate(
+        "document.documentElement.scrollWidth - document.documentElement.clientWidth"
+    )
+    assert overflow <= 0

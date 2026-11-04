@@ -58,3 +58,14 @@ def tips_url(tmp_path_factory) -> str:
     )
     (folder / "camara-lenta.toml").write_text(text, encoding="utf-8")
     yield from serve(create_app(songs=folder))
+
+
+@pytest.fixture(scope="session")
+def rests_url(tmp_path_factory) -> str:
+    """Sitio con «Cámara lenta» más silencios (compás entero y dentro de un compás partido, S22)."""
+    folder = tmp_path_factory.mktemp("songs-with-rests")
+    text = (SONGS_DIR / "camara-lenta.toml").read_text(encoding="utf-8")
+    assert "Intro x2: E F# B F#\n" in text
+    text = text.replace("Intro x2: E F# B F#\n", "Intro x2: . F# B-. .-%-F#\n", 1)
+    (folder / "camara-lenta.toml").write_text(text, encoding="utf-8")
+    yield from serve(create_app(songs=folder))

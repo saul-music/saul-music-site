@@ -41,6 +41,14 @@
     {"cambio": {"avanzado": {"partitura": "Intro: Em", "arreglos": {"Intro": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"}}}, "contiene": "pasa de 600"},
     {"cambio": {"avanzado": {"partitura": "> tttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttt | yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy\nIntro: Em"}}, "errores": 0},
     {"cambio": {"intermedio": {"partitura": "> t | xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\nIntro: Em"}}, "contiene": "el texto del tip pasa de 280"},
-    {"cambio": {"intermedio": {"partitura": "A: Bm11 Bm69 BmM7 Bmmaj7\nB: Bmmaj9 Bmmaj11 Bmmaj7b5 Bsus4add9"}}, "errores": 0}
+    {"cambio": {"intermedio": {"partitura": "A: Bm11 Bm69 BmM7 Bmmaj7\nB: Bmmaj9 Bmmaj11 Bmmaj7b5 Bsus4add9"}}, "errores": 0},
+    {"cambio": {"partitura": "Intro x1: G . Em\nCoro: C-. .-D G-%-. .-%-G\n"}, "errores": 0},
+    {"cambio": {"partitura": "Intro: . . . .\nCoro: G\n"}, "errores": 0},
+    {"cambio": {"partitura": "Intro: G . %\n"}, "contiene": "no puede repetir un silencio"},
+    {"cambio": {"partitura": "Intro: . %\n"}, "contiene": "no puede repetir un silencio"},
+    {"cambio": {"partitura": "Intro: G ..\n"}, "contiene": "no es un acorde básico"},
+    {"cambio": {"partitura": "Intro: G .G\n"}, "contiene": "no es un acorde básico"},
+    {"cambio": {"partitura": "Intro: G .-\n"}, "contiene": "guion sin acorde"},
+    {"cambio": {"intermedio": {"partitura": "A: G . D-.-%-G"}}, "errores": 0}
   ]
 }

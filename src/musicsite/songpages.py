@@ -26,7 +26,7 @@ from jinja2 import Environment, FileSystemLoader, select_autoescape
 from markupsafe import Markup
 
 from musicsite import chordtheory as theory
-from musicsite.acordes import REPEAT, REPERTOIRE, parse_score, validate_file
+from musicsite.acordes import REPEAT, REPERTOIRE, REST, parse_score, validate_file
 from musicsite.profes import avatar, coverage, price, teachers_for, top_teachers
 
 TEMPLATES_DIR = Path(__file__).parent / "templates"
@@ -61,8 +61,18 @@ def accidentals(chord: str) -> str:
     return chord
 
 
+REST_ICON = (
+    '<svg viewBox="0 0 24 28" width="14" height="22" fill="none" stroke="currentColor" '
+    'stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
+    '<path d="M9 2l7 7-6 6 6 6c-4-1-6 1-5 5"/></svg>'
+)
+
+
 def chord_html(chord: str) -> str:
-    """El acorde como botón que abre su diagrama; texto plano si no sabemos dibujarlo."""
+    """El acorde como botón que abre su diagrama; texto plano si no sabemos dibujarlo.
+    El silencio (S22) es un símbolo sin botón ni diagrama."""
+    if chord == REST:
+        return f'<span class="ac-rest" role="img" aria-label="silencio">{REST_ICON}</span>'
     shown = esc(accidentals(chord))
     if theory.parse(chord) is None:
         return shown
@@ -75,7 +85,7 @@ def chord_html(chord: str) -> str:
 def is_wide(parts: list[str]) -> bool:
     """Una casilla con 3 o más acordes, o con nombres largos (bajos, extensiones), no cabe en un
     cuarto de la fila: ocupa el doble de ancho (S18)."""
-    chords = [part for part in dict.fromkeys(parts) if part != REPEAT]
+    chords = [part for part in dict.fromkeys(parts) if part not in (REPEAT, REST)]
     return len(chords) >= 3 or sum(len(chord) for chord in chords) >= WIDE_CHARS
 
 
@@ -247,7 +257,9 @@ def chords_payload(song: dict) -> dict:
     for key in ("secciones", "intermedio_secciones", "avanzado_secciones"):
         for section in song.get(key, []):
             for token in section.get("compases", []):
-                used.update(part for part in token.split("-") if part and part != REPEAT)
+                used.update(
+                    part for part in token.split("-") if part and part not in (REPEAT, REST)
+                )
     chords = {}
     for name in sorted(used):
         chord = theory.parse(name)
