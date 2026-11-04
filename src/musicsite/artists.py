@@ -24,6 +24,8 @@ ARTISTS_END = "<!-- artistas:fin -->"
 SLUG = re.compile(r"[a-z0-9]+(?:-[a-z0-9]+)*")
 MAX_ARTISTS = 200
 MAX_LINKS = 10
+PHOTO_MAX_BYTES = 300 * 1024
+PHOTO = re.compile(r"fotos/[a-z0-9]+(?:-[a-z0-9]+)*-[0-9a-f]{12}\.jpg")
 log = logging.getLogger("musicsite.artists")
 
 FALLBACK: list[dict] = [
@@ -143,10 +145,58 @@ def parse_artists(text: str) -> list[dict]:
                 log.warning("artistas: se descarta un enlace de %s", slug)
                 continue
             links.append({"label": label.strip(), "url": url})
-        artists.append(
-            {"slug": slug, "name": name.strip(), "description": description.strip(), "links": links}
-        )
+        artist = {
+            "slug": slug,
+            "name": name.strip(),
+            "description": description.strip(),
+            "links": links,
+        }
+        photo = item.get("photo")
+        if photo is not None:
+            if (
+                isinstance(photo, str)
+                and PHOTO.fullmatch(photo)
+                and photo.startswith(f"fotos/{slug}-")
+            ):
+                artist["photo"] = photo
+            else:
+                log.warning("artistas: se descarta la foto de %s (ruta no válida)", slug)
+        artists.append(artist)
     return artists
+
+
+def read_photo(directory: Path, path: str) -> bytes | None:
+    """Los bytes de la foto si es un JPEG de tamaño razonable dentro de `directory`; si no, None."""
+    if not PHOTO.fullmatch(path):
+        return None
+    try:
+        data = (directory / path).read_bytes()
+    except OSError:
+        return None
+    if len(data) > PHOTO_MAX_BYTES or not data.startswith(b"\xff\xd8\xff"):
+        log.warning("artistas: se descarta la foto %s (no es un JPEG de hasta 300 KB)", path)
+        return None
+    return data
+
+
+def load_artists_and_photos(directory: Path | None) -> tuple[list[dict], dict[str, bytes]]:
+    """Artistas de la publicación y las fotos que sí sirven (ruta -> bytes).
+
+    Un artista cuya foto falta o no sirve se muestra sin foto: nunca bloquea la publicación."""
+    artists = load_artists(directory)
+    photos: dict[str, bytes] = {}
+    if directory is None:
+        return artists, photos
+    shown = []
+    for artist in artists:
+        path = artist.get("photo")
+        data = read_photo(directory, path) if path else None
+        if path and data is None:
+            artist = {k: v for k, v in artist.items() if k != "photo"}
+        elif path and data is not None:
+            photos[path] = data
+        shown.append(artist)
+    return shown, photos
 
 
 def load_artists(directory: Path | None) -> list[dict]:
@@ -182,9 +232,26 @@ def songs_by_artist(directory: Path) -> dict[str, list[tuple[str, str]]]:
     return result
 
 
+def description_html(text: str) -> str:
+    """La descripción como párrafos: una línea en blanco separa párrafos; un salto simple es `<br>`.
+
+    Todo se escapa (texto plano). Sin texto, nada. El interlineado y la separación van en línea:
+    `style.css` está copiado en research y tocarlo obliga a sincronizar."""
+    paragraphs = [
+        p.strip() for p in re.split(r"\n\s*\n", text.replace("\r\n", "\n").strip()) if p.strip()
+    ]
+    if not paragraphs:
+        return ""
+    body = "".join(
+        f'<p class="m-0">{"<br>".join(esc(line.strip()) for line in p.split(chr(10)))}</p>'
+        for p in paragraphs
+    )
+    return f'<div class="ac-artist-desc d-grid gap-3" style="line-height:1.65">{body}</div>'
+
+
 def artist_card(artist: dict, songs: list[tuple[str, str]]) -> str:
     name = artist["name"]
-    desc = f'<p class="m-0">{esc(artist["description"])}</p>' if artist["description"] else ""
+    desc = description_html(artist["description"])
     if songs:
         count = "1 tema disponible" if len(songs) == 1 else f"{len(songs)} temas disponibles"
         titles = "".join(
@@ -210,10 +277,20 @@ def artist_card(artist: dict, songs: list[tuple[str, str]]) -> str:
         if links
         else ""
     )
+    photo = artist.get("photo")
+    heading = f'<h2 class="h4 m-0">{esc(name)}</h2>'
+    if photo:
+        heading = (
+            '<div class="d-flex align-items-center gap-3">'
+            f'<img class="ac-artist-photo" src="{esc(photo)}" alt="Foto de {esc(name)}" '
+            'width="72" height="72" loading="lazy" decoding="async" '
+            'style="flex:none;border-radius:50%;object-fit:cover;border:2px solid var(--ac-oro)">'
+            f"{heading}</div>"
+        )
     return f"""        <div class="col" id="{esc(artist["slug"])}" data-ac-artist-card>
           <div class="card h-100">
             <div class="card-body d-grid gap-3 align-content-start">
-              <h2 class="h4 m-0">{esc(name)}</h2>
+              {heading}
               {desc}
               {status}
               {links_html}
@@ -236,7 +313,15 @@ def apply_artists(page: str, block: str) -> str:
     return page[:start] + "\n" + block + "\n    " + page[page.index(ARTISTS_END) :]
 
 
+def build_page_and_photos(
+    page: str, directory: Path | None, songs_dir: Path | None
+) -> tuple[str, dict[str, bytes]]:
+    """artistas.html listo y las fotos que cita (ruta -> bytes)."""
+    published = songs_by_artist(songs_dir) if songs_dir is not None else {}
+    artists, photos = load_artists_and_photos(directory)
+    return apply_artists(page, render_artists(artists, published)), photos
+
+
 def build_page(page: str, directory: Path | None, songs_dir: Path | None) -> str:
     """artistas.html listo: artistas de `directory` (o el respaldo) y temas de `songs_dir`."""
-    published = songs_by_artist(songs_dir) if songs_dir is not None else {}
-    return apply_artists(page, render_artists(load_artists(directory), published))
+    return build_page_and_photos(page, directory, songs_dir)[0]

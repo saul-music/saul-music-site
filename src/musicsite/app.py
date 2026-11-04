@@ -72,7 +72,10 @@ def create_app(
     @app.middleware("http")
     async def secure_headers(request: Request, call_next):  # type: ignore[no-untyped-def]
         response = await call_next(request)
-        response.headers.update(HEADERS)
+        for name, value in HEADERS.items():
+            if name == "Cache-Control" and name in response.headers:
+                continue  # las fotos con hash en el nombre fijan su propia caché larga
+            response.headers[name] = value
         return response
 
     @app.exception_handler(HTTPException)
@@ -87,6 +90,13 @@ def create_app(
             return Response(state.index, media_type=TYPES[".html"])
         if path == "/artistas.html" and state.artists is not None:
             return Response(state.artists, media_type=TYPES[".html"])
+        photo = state.photos.get(path[1:]) if path.startswith("/fotos/") else None
+        if photo is not None:  # el nombre lleva el hash: una foto nueva es otro archivo
+            return Response(
+                photo,
+                media_type="image/jpeg",
+                headers={"Cache-Control": "public, max-age=31536000, immutable"},
+            )
         song = state.pages.get(path)
         if song is not None:
             return Response(song, media_type=TYPES[".html"])

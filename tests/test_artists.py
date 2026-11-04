@@ -149,3 +149,98 @@ def test_new_artists_json_is_picked_up_with_the_next_release(editorial, monkeypa
     )
     clock.now += 61
     assert "Otra Banda" in client.get("/artistas.html").text
+
+
+# --- foto del artista (S32) ---------------------------------------------------------------------
+
+PHOTO_PATH = "fotos/banda-demo-0123456789ab.jpg"
+JPEG = b"\xff\xd8\xff\xe0" + b"\x00" * 64 + b"\xff\xd9"  # solo importa que parezca un JPEG
+
+
+def with_photo(editorial: Path, data: bytes | None = JPEG, path: str = PHOTO_PATH, **changes):
+    client = with_json(editorial, doc(artist(photo=path, **changes)))
+    release = (editorial / "current.txt").read_text().strip()
+    if data is not None:
+        target = editorial / release / path
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes(data)
+    return client, release
+
+
+def test_a_photo_is_shown_on_the_card_and_served_with_a_long_cache(editorial):
+    client, release = with_photo(editorial)
+    # la publicación se cargó antes de escribir la foto: se vuelve a cargar
+    client = TestClient(create_app(editorial=editorial))
+    page = client.get("/artistas.html").text
+    assert f'src="{PHOTO_PATH}"' in page and 'alt="Foto de Banda Demo"' in page
+    response = client.get(f"/{PHOTO_PATH}")
+    assert response.status_code == 200 and response.content == JPEG
+    assert response.headers["content-type"] == "image/jpeg"
+    assert "immutable" in response.headers["cache-control"]
+    assert client.head(f"/{PHOTO_PATH}").status_code == 200
+
+
+@pytest.mark.parametrize(
+    "data",
+    [None, b"GIF89a" + b"\x00" * 30, JPEG + b"\x00" * (300 * 1024)],
+    ids=["falta", "gif", "grande"],
+)
+def test_a_missing_or_bad_photo_means_no_photo_but_the_release_still_loads(editorial, data):
+    with_photo(editorial, data)
+    client = TestClient(create_app(editorial=editorial))
+    page = client.get("/artistas.html").text
+    assert "Banda Demo" in page and "<img" not in page.split("data-ac-artist-card")[1]
+    assert client.get(f"/{PHOTO_PATH}").status_code == 404
+
+
+@pytest.mark.parametrize(
+    "path",
+    [
+        "../secreto.jpg",
+        "fotos/../../x.jpg",
+        "fotos/banda-demo-0123456789ab.png",
+        "fotos/otro-0123456789ab.jpg",  # no empieza con el slug del artista
+        "http://example.org/x.jpg",
+        "fotos/banda-demo-XYZ.jpg",
+    ],
+)
+def test_photo_paths_outside_the_contract_are_dropped(path):
+    (parsed,) = parse_artists(doc(artist(photo=path)))
+    assert "photo" not in parsed
+
+
+def test_a_valid_photo_path_is_kept_by_the_parser():
+    (parsed,) = parse_artists(doc(artist(photo=PHOTO_PATH)))
+    assert parsed["photo"] == PHOTO_PATH
+
+
+def test_photos_are_not_served_from_outside_the_published_ones(editorial):
+    client, _ = with_photo(editorial)
+    client = TestClient(create_app(editorial=editorial))
+    for path in ("/fotos/otra-0123456789ab.jpg", "/fotos/", "/fotos/../manifest.json", "/fotos"):
+        assert client.get(path).status_code == 404
+
+
+# --- descripción con párrafos (S33) -------------------------------------------------------------
+
+
+def test_a_long_description_is_split_into_paragraphs_and_lines(editorial):
+    text = "Primer párrafo.\r\n\r\nSegundo párrafo,\nen dos líneas.\n\n\n   \nTercero."
+    page = with_json(editorial, doc(artist(description=text))).get("/artistas.html").text
+    card = page.split("data-ac-artist-card")[1]
+    assert card.count('<p class="m-0">') >= 3
+    assert '<p class="m-0">Primer párrafo.</p>' in card
+    assert '<p class="m-0">Segundo párrafo,<br>en dos líneas.</p>' in card
+    assert '<p class="m-0">Tercero.</p>' in card and "line-height" in card
+
+
+def test_description_paragraphs_are_still_escaped(editorial):
+    text = "<script>alert(1)</script>\n\n<b>negrita</b> & más"
+    page = with_json(editorial, doc(artist(description=text))).get("/artistas.html").text
+    assert "<script>alert(1)" not in page and "&lt;script&gt;" in page
+    assert "<b>negrita" not in page and "&lt;b&gt;negrita" in page and "&amp; más" in page
+
+
+def test_an_empty_or_blank_description_draws_nothing(editorial):
+    page = with_json(editorial, doc(artist(description="  \n\n "))).get("/artistas.html").text
+    assert "ac-artist-desc" not in page.split("data-ac-artist-card")[1]
