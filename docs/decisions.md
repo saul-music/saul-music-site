@@ -513,3 +513,15 @@ tips = ["Título | Texto"]         # opcional, lista de «Título | Texto»: tí
   (`scripts/sync_site_render.py` de research, que toma `songpages.py` y `acordia.js`; `load_song` compone Avanzado y `structure(sections, extras)`
   renderiza los extras). `acordia.js` no cambió.
 - **Descartado:** compatibilidad con la partitura propia de Avanzado (nada la usa; un archivo viejo da el error de migración de arriba).
+
+
+## S32 · «Opciones» avisa «Sin sonido» y el pipeline tiene límites de tiempo (2026-11-04)
+
+**Parte 1.** En celular, con el panel de S26 plegado, el modo «Sin sonido» (que se recuerda entre visitas) no se notaba. El botón «Opciones»
+muestra ahora un ícono de altavoz tachado y su nombre accesible pasa a «Opciones (sin sonido activado)» (`aria-label` y `title`); todo se
+quita al desactivar el modo. Solo celular (el botón no existe en escritorio). Probado en Pixel 7 e iPhone 14, con captura revisada.
+
+**Parte 2.** Los jobs e2e se colgaron de 12 a 30 min en `playwright install` (incidentes de GitHub Actions). Duraciones típicas de los últimos
+12 runs: lint y tests 12-26 s, e2e 150-270 s (atascos de 450-1120 s), imagen 11-24 s, publicar 35-46 s, desplegar 27-35 s. `timeout-minutes`:
+**e2e 20, lint y tests 10, imagen 10, publicar 10, desplegar 10**. Un atasco falla en vez de colgar; se reintenta el run. El pipeline sigue
+secuencial (D45): no cambian los `needs`.
