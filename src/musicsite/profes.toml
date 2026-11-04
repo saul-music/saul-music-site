@@ -129,4 +129,4 @@ precio = 12000
 puntuacion = 4.5
 resenas = 7
 nota = "Teclado para quien ya toca guitarra."
-ensena = [{ artista = "Javiera Mena" }, { artista = "Los Jaivas" }]
+ensena = [{ artista = "Javiera Mena" }]

@@ -409,7 +409,7 @@ def test_no_horizontal_scroll(song: Page):
 
 def test_unpublished_song_is_404(page: Page, base_url: str):
     # Petición directa: Firefox trata un 404 sin cuerpo como error de red al navegar.
-    response = page.request.get(base_url + "/cancion-el-errante.html")
+    response = page.request.get(base_url + "/cancion-cantar-y-amar.html")
     assert response.status == 404
 
 

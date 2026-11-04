@@ -50,14 +50,14 @@ def test_extended_or_invalid_chords_are_rejected(chord):
     assert not BASIC_CHORD.match(chord)
 
 
-def test_repertoire_has_twenty_unique_slugs():
+def test_repertoire_has_fifteen_unique_slugs():
     slugs = [slug for slug, *_ in REPERTOIRE]
-    assert len(slugs) == 20 and len(set(slugs)) == 20
+    assert len(slugs) == 15 and len(set(slugs)) == 15
 
 
 def test_init_creates_templates_and_never_overwrites(tmp_path):
     created = init(tmp_path)
-    assert len(created) == 20
+    assert len(created) == 15
     existing = tmp_path / "otra-era.toml"
     existing.write_text("# editado por una persona\n", encoding="utf-8")
     assert init(tmp_path) == []
@@ -67,7 +67,7 @@ def test_init_creates_templates_and_never_overwrites(tmp_path):
 def test_fresh_templates_are_valid_and_empty(tmp_path):
     init(tmp_path)
     reports = validate(tmp_path)
-    assert len(reports) == 20
+    assert len(reports) == 15
     assert all(report.status == "vacío" and not report.errors for report in reports)
 
 
@@ -127,10 +127,10 @@ def test_cli_exit_codes(tmp_path, capsys):
     assert main(["init", "--dir", str(tmp_path)]) == 0
     capsys.readouterr()
     assert main(["validate", "--dir", str(tmp_path)]) == 0
-    assert "20 archivos, 0 con errores" in capsys.readouterr().out
+    assert "15 archivos, 0 con errores" in capsys.readouterr().out
     write(tmp_path, "tema", GOOD.replace('"G", "D", "Em", "C"]', '"G7", "D", "Em", "C"]'))
     assert main(["validate", "--dir", str(tmp_path)]) == 1
-    assert "21 archivos, 1 con errores" in capsys.readouterr().out
+    assert "16 archivos, 1 con errores" in capsys.readouterr().out
 
 
 def test_module_reads_no_network_or_external_sites():
