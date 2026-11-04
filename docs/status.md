@@ -1,6 +1,6 @@
 # Estado del sitio
 
-> Registro vivo. Última actualización: 2026-11-04 (S32: aviso de «Sin sonido» en «Opciones» y timeouts del pipeline).
+> Registro vivo. Última actualización: 2026-11-04 (S33 foto del artista y S34 párrafos; antes S32 «Sin sonido»).
 
 ## Paso actual
 

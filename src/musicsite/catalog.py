@@ -21,10 +21,10 @@ import re
 import threading
 import time
 from collections.abc import Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 
-from musicsite.artists import build_page as build_artists_page
+from musicsite.artists import build_page_and_photos
 from musicsite.songpages import apply_library, published_library_html, render_published
 
 RELEASE = re.compile(r"releases/[0-9]{8}-[0-9]{6}-[0-9a-f]{4}")
@@ -41,6 +41,7 @@ class State:
     artists: bytes | None = (
         None  # artistas.html con artists.json (o el respaldo) y los conteos (S24)
     )
+    photos: dict[str, bytes] = field(default_factory=dict)  # "fotos/<archivo>.jpg" -> JPEG (S33)
 
 
 class Catalog:
@@ -65,8 +66,8 @@ class Catalog:
             pages = {
                 f"/cancion-{s}.html": h.encode() for s, h in render_published(git_songs).items()
             }
-        artists = self._artists_page(None, git_songs)
-        self._state = State("git", "", pages, None, artists)
+        artists, photos = self._artists_page(None, git_songs)
+        self._state = State("git", "", pages, None, artists, photos)
         self._next_check = self._clock() + self._ttl
         if editorial is not None:
             self._try_load(self._pointer())
@@ -118,17 +119,21 @@ class Catalog:
             raise ValueError(f"nombres de tema no válidos: {bad}")
         pages = {f"/cancion-{s}.html": h.encode() for s, h in render_published(directory).items()}
         index = apply_library(self._index_html, published_library_html(directory)).encode()
-        artists = self._artists_page(directory, directory)
-        return State("editorial", release, pages, index, artists)
+        artists, photos = self._artists_page(directory, directory)
+        return State("editorial", release, pages, index, artists, photos)
 
-    def _artists_page(self, directory: Path | None, songs: Path | None) -> bytes | None:
-        """artistas.html con `artists.json` de `directory` (o el respaldo) y los temas de `songs`.
+    def _artists_page(
+        self, directory: Path | None, songs: Path | None
+    ) -> tuple[bytes | None, dict[str, bytes]]:
+        """artistas.html con `artists.json` de `directory` (o el respaldo), los temas de `songs`
+        y las fotos que cita (ruta -> JPEG).
 
         Nunca impide cargar una publicación: si algo falla, esa página sigue siendo la de web/."""
         if not self._artists_html:
-            return None
+            return None, {}
         try:
-            return build_artists_page(self._artists_html, directory, songs).encode()
+            html, photos = build_page_and_photos(self._artists_html, directory, songs)
+            return html.encode(), photos
         except Exception as error:  # noqa: BLE001
             log.warning("catálogo: no se pudo armar artistas.html: %s", error)
-            return None
+            return None, {}

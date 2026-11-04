@@ -525,3 +525,18 @@ quita al desactivar el modo. Solo celular (el botón no existe en escritorio). P
 12 runs: lint y tests 12-26 s, e2e 150-270 s (atascos de 450-1120 s), imagen 11-24 s, publicar 35-46 s, desplegar 27-35 s. `timeout-minutes`:
 **e2e 20, lint y tests 10, imagen 10, publicar 10, desplegar 10**. Un atasco falla en vez de colgar; se reintenta el run. El pipeline sigue
 secuencial (D45): no cambian los `needs`.
+
+## S33 · Foto del artista en su tarjeta (2026-11-04)
+
+`artists.json` puede traer `photo` (`fotos/<slug>-<12 hex>.jpg`, de research M49). La tarjeta del artista la muestra, redonda de 72 px (estilo en línea: `style.css` está copiado en research y tocarlo obliga a sincronizar), con `alt="Foto de <nombre>"`, carga diferida y el nombre al lado.
+- **Servida desde la publicación:** `/fotos/<archivo>.jpg` sale del release vigente (el catálogo guarda los JPEG al cargar, hasta 200 de 300 KB como máximo) con `Cache-Control: public, max-age=31536000, immutable`: el nombre
+  lleva el hash, así que una foto nueva es otra URL. Solo se sirve lo que cita el `artists.json` vigente; cualquier otra ruta de `/fotos/` da 404.
+- **Nunca bloquea una publicación:** una ruta fuera del contrato (con `..`, otra extensión, otro slug), un archivo que falta, que no empieza como JPEG o pesa más de 300 KB se descarta y el artista sale sin foto.
+- Sin foto, la tarjeta es igual que antes. El respaldo de git no trae fotos. CSP sin cambios (`img-src 'self'`).
+
+## S34 · Descripción del artista en párrafos legibles (2026-11-04)
+
+La descripción de un artista (texto plano de research M49/M41) se dibuja como párrafos: una **línea en blanco separa párrafos** y un salto simple dentro de uno es un `<br>`. Antes todo salía como un solo
+bloque porque HTML colapsa los saltos. Cada párrafo va escapado, con interlineado de 1,65 y separación entre párrafos (estilo en línea, por lo mismo que S33: `style.css` está copiado en research). Una descripción vacía
+o solo de espacios no dibuja nada. Sin cambios en el contrato de `artists.json`.
+
