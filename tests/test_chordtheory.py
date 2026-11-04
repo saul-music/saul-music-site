@@ -30,6 +30,8 @@ def chord(token: str) -> theory.Chord:
         ("Bm69", "m69", 11, None),
         ("BmM7", "mmaj7", 11, None),
         ("BmMaj7", "mmaj7", 11, None),
+        ("BMaj7", "maj7", 11, None),
+        ("CMaj9", "maj9", 0, None),
         ("Bmmaj9", "mmaj9", 11, None),
         ("Bmmaj11", "mmaj11", 11, None),
         ("Bmmaj7b5", "mmaj7b5", 11, None),
