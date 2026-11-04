@@ -448,5 +448,8 @@ reproducción (en celular, Reproducir + «Opciones» plegable de S26), **(3)** a
   `sessionStorage`, con respaldo si no está disponible); en celular el texto se acorta a una línea.
 - No toca el metrónomo, el cursor ni el centrado (S10 a S12): es solo un enlace. Convive con la franja de guías de arriba y
   con el botón corto «Habla con una guía» de la barra, que no cambian.
+- **Sin duplicar:** cuando la franja de guías sale de pantalla y aparece el botón corto «Habla con una guía», el aviso se
+  oculta (CSS, `.ac-met-help:not([hidden]) ~ .ac-met-banner`). La barra fija compacta el espacio entre filas para no pasar
+  del 35 % de la pantalla en escritorio.
 - Los niveles pasan a una fila propia (`.ac-met-levels-row`, `order: -2`); el resto del orden visual se logra con `order` sin mover el DOM
   de los controles.

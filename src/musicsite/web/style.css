@@ -553,12 +553,15 @@ a.card:hover { border-color: var(--ac-fill); transform: translateY(-2px); }
   border: 2px solid var(--ac-accent); border-radius: 999px;
 }
 /* Orden de la barra (S29), de arriba abajo: niveles, reproducción, aviso de guías. */
+.ac-sticky-tools .card-body { gap: .5rem .75rem !important; padding-block: .6rem; }
 .ac-met-levels-row { order: -2; flex: 1 1 100%; min-width: 0; display: flex; }
 .ac-met-banner {
   order: 10; flex: 1 1 100%; display: flex; align-items: center; gap: .25rem;
   border: 1px dashed var(--ac-fill-2); border-radius: var(--ac-radius); padding: .1rem .25rem .1rem .6rem;
 }
 .ac-met-banner[hidden] { display: none; }
+/* Con la franja de guías fuera de pantalla aparece el botón corto «Habla con una guía»: el aviso sobraría. */
+.ac-met-help:not([hidden]) ~ .ac-met-banner { display: none; }
 .ac-met-banner-link { flex: 1 1 auto; min-width: 0; display: flex; align-items: center; gap: .5rem; padding: .3rem 0; color: var(--ac-fg); text-decoration: none; font-size: .9rem; }
 .ac-met-banner-link:hover .ac-met-banner-text strong { text-decoration: underline; }
 .ac-met-banner-icon { color: var(--ac-accent); font-size: 1.1rem; line-height: 1; }

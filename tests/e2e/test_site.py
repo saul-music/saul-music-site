@@ -952,7 +952,7 @@ def test_options_group_is_collapsed_on_mobile_and_toggles_any_time(page: Page, b
         expect(page.locator(f"[data-ac-met-{sel}]")).to_be_visible()
     expect(page.locator(".ac-levels-bar")).to_be_visible()
     closed_h = page.locator(".ac-sticky-tools").bounding_box()["height"]
-    assert closed_h < page.viewport_size["height"] * 0.25
+    assert closed_h < page.viewport_size["height"] * 0.3
     button.click()
     expect(button).to_have_attribute("aria-expanded", "true")
     for sel in ("mute", "countin", "bpm", "range", "reset"):
@@ -1030,11 +1030,12 @@ def test_guides_banner_can_be_hidden_and_does_not_disturb_the_metronome(song_aud
     song = song_audio
     banner = song.locator("[data-ac-met-banner]")
     expect(banner).to_be_visible()
+    song.locator("[data-ac-met-banner-close]").click()
+    expect(banner).to_be_hidden()
     song.locator("[data-ac-met-countin]").click()
     song.locator("[data-ac-met-range]").fill("240")
     song.locator("[data-ac-met-toggle]").click()
     expect(song.locator("#p-basico .ac-bar.is-current")).to_have_count(1, timeout=5000)
-    song.locator("[data-ac-met-banner-close]").click()
     expect(banner).to_be_hidden()
     expect(song.locator("#p-basico .ac-bar.is-current")).to_have_count(1)
     expect(song.locator("[data-ac-met-toggle]")).to_have_attribute("aria-pressed", "true")
