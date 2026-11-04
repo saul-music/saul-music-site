@@ -1012,43 +1012,10 @@ def test_playbar_screenshots_for_review(page: Page, base_url: str, tmp_path_fact
             page.screenshot(path=str(out / f"{name}-{scheme}-{state}.png"))
 
 
-def test_playbar_rows_levels_then_controls_then_guides_banner(page: Page, base_url: str):
+def test_playbar_rows_levels_then_controls(page: Page, base_url: str):
     page.goto(base_url + SONG)
     levels = page.locator(".ac-met-levels-row").bounding_box()
     toggle = page.locator("[data-ac-met-toggle]").bounding_box()
-    banner = page.locator("[data-ac-met-banner]").bounding_box()
     assert levels["y"] + levels["height"] <= toggle["y"] + 1  # niveles arriba de la reproducción
-    assert toggle["y"] + toggle["height"] <= banner["y"] + 1  # y el aviso al final
-    link = page.locator("[data-ac-met-banner] a")
-    expect(link).to_have_attribute("href", re.compile(r"guias\.html\?tema=camara-lenta"))
-    expect(link).to_contain_text("Editores-profes")
-    assert page.locator("[data-ac-met-banner] form, [data-ac-met-banner] input").count() == 0
+    assert page.locator(".ac-sticky-tools a[href*='guias.html']:visible").count() <= 1
     assert page.evaluate("document.documentElement.scrollWidth <= window.innerWidth")
-
-
-def test_guides_banner_can_be_hidden_and_does_not_disturb_the_metronome(song_audio: Page):
-    song = song_audio
-    banner = song.locator("[data-ac-met-banner]")
-    expect(banner).to_be_visible()
-    song.locator("[data-ac-met-banner-close]").click()
-    expect(banner).to_be_hidden()
-    song.locator("[data-ac-met-countin]").click()
-    song.locator("[data-ac-met-range]").fill("240")
-    song.locator("[data-ac-met-toggle]").click()
-    expect(song.locator("#p-basico .ac-bar.is-current")).to_have_count(1, timeout=5000)
-    expect(banner).to_be_hidden()
-    expect(song.locator("#p-basico .ac-bar.is-current")).to_have_count(1)
-    expect(song.locator("[data-ac-met-toggle]")).to_have_attribute("aria-pressed", "true")
-    song.locator("[data-ac-met-toggle]").click()
-    song.reload()  # se recuerda en la pestaña
-    expect(song.locator("[data-ac-met-banner]")).to_be_hidden()
-
-
-def test_playbar_with_banner_stays_compact_on_mobile(page: Page, base_url: str):
-    page.goto(base_url + SONG)
-    if not _is_mobile(page):
-        return
-    bar = page.locator(".ac-sticky-tools").bounding_box()
-    assert bar["height"] < page.viewport_size["height"] * 0.3
-    page.locator("[data-ac-met-banner-close]").click()
-    assert page.locator(".ac-sticky-tools").bounding_box()["height"] < bar["height"]

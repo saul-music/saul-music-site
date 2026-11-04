@@ -58,10 +58,6 @@
           <button class="btn btn-ghost" type="button" data-ac-met-reset aria-label="Restablecer a {{ bpm }} bpm" title="Restablecer a {{ bpm }} bpm"><span class="ac-met-reset-icon" aria-hidden="true">&#8634;</span><span class="ac-met-reset-text">Restablecer<span class="ac-met-reset-bpm"> a {{ bpm }}</span></span></button>
         </div>
         {% if guides_count %}<a class="btn ac-met-help" href="guias.html?tema={{ song.slug }}" data-ac-met-help role="button" data-bs-toggle="collapse" data-bs-target="#guias-panel" aria-controls="guias-panel" aria-expanded="false" hidden>¿Se complica esta parte? <strong>Habla con una guía</strong></a>{% endif %}
-        <div class="ac-met-banner" role="group" data-ac-met-banner aria-label="Editores-profes">
-          <a class="ac-met-banner-link" href="guias.html?tema={{ song.slug }}"><span class="ac-met-banner-icon" aria-hidden="true">&#9835;</span><span class="ac-met-banner-text"><strong>Editores-profes</strong> · clases por solicitud<span class="ac-met-banner-more"> (ejemplo del prototipo)</span></span></a>
-          <button class="btn btn-ghost ac-met-banner-close" type="button" data-ac-met-banner-close aria-label="Ocultar este aviso" title="Ocultar este aviso">&times;</button>
-        </div>
       </div>
     </section>
     {{ guides_panel }}

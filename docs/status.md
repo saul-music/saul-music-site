@@ -1,6 +1,6 @@
 # Estado del sitio
 
-> Registro vivo. Última actualización: 2026-11-04 (S29: barra de reproducción en filas con aviso de guías).
+> Registro vivo. Última actualización: 2026-11-04 (S30: barra en dos filas, sin aviso de guías).
 
 ## Paso actual
 
@@ -128,8 +128,8 @@ AAAA-MM-DD · paso · qué se hizo · qué quedó pendiente · decisiones nuevas
 - **Pendiente:** revisar a ojo en celular real y en claro/oscuro.
 
 
-## 2026-11-04 · Barra en filas con aviso de guías (S29)
+## 2026-11-04 · Barra en dos filas, sin aviso de guías (S30, reemplaza a S29)
 
-- Niveles arriba, controles en medio y aviso de guías abajo (ocultable); 3 pruebas de navegador nuevas (orden de filas, ocultar sin afectar el
-  metrónomo, altura compacta en celular). Capturas revisadas en Pixel 7 (claro y oscuro, abierto y cerrado).
-- **Pendiente:** revisar a ojo en celular real; el texto del aviso es de prototipo.
+- El usuario rechazó el aviso: se quita por completo (HTML, CSS, JS, pruebas). Niveles arriba y controles abajo; queda una prueba de
+  orden de filas. Se conservan el borde del selector (S26), «Opciones» en celular y «Habla con una guía».
+- **Pendiente:** revisar a ojo en celular real.
