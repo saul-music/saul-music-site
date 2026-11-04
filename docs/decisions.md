@@ -438,3 +438,18 @@ Cada pestaña de reproducción (Básico, Intermedio, Avanzado) trae, justo bajo 
 - **Celular:** rejilla `auto-fill minmax(7.5rem, 1fr)` (2 columnas a 360 px), sin desborde horizontal; comprobado en la matriz.
 - Un acorde sin guitarra estándar ni forma propia dice «Sin diagrama de guitarra» y conserva el piano. No hay ukelele ni dedos propios.
 
+
+## S29 · Barra de reproducción en filas: niveles, controles y aviso de guías (2026-11-04)
+
+Orden de arriba abajo, en escritorio y celular: **(1)** selector de nivel (con el borde de S26), **(2)** controles de
+reproducción (en celular, Reproducir + «Opciones» plegable de S26), **(3)** aviso de guías.
+- **Aviso (mockup):** «Editores-profes · clases por solicitud (ejemplo del prototipo)», enlace a `guias.html?tema=<slug>`.
+  No envía datos ni afirma precios ni disponibilidad. Se puede ocultar con «×» (se recuerda en la pestaña con
+  `sessionStorage`, con respaldo si no está disponible); en celular el texto se acorta a una línea.
+- No toca el metrónomo, el cursor ni el centrado (S10 a S12): es solo un enlace. Convive con la franja de guías de arriba y
+  con el botón corto «Habla con una guía» de la barra, que no cambian.
+- **Sin duplicar:** cuando la franja de guías sale de pantalla y aparece el botón corto «Habla con una guía», el aviso se
+  oculta (CSS, `.ac-met-help:not([hidden]) ~ .ac-met-banner`). La barra fija compacta el espacio entre filas para no pasar
+  del 35 % de la pantalla en escritorio.
+- Los niveles pasan a una fila propia (`.ac-met-levels-row`, `order: -2`); el resto del orden visual se logra con `order` sin mover el DOM
+  de los controles.

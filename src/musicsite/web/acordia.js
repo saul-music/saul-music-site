@@ -883,6 +883,15 @@
       b.addEventListener("click", function () { setBpm(bpm + +b.getAttribute("data-ac-met-step")); });
     });
     box.querySelector("[data-ac-met-reset]").addEventListener("click", function () { setBpm(home); });
+    /* Aviso de guías: se puede ocultar (se recuerda en la pestaña). Es solo un enlace: no toca el metrónomo. */
+    var banner = box.querySelector("[data-ac-met-banner]");
+    if (banner) {
+      try { if (sessionStorage.getItem("acordia-aviso-guias") === "off") banner.hidden = true; } catch (e) {}
+      banner.querySelector("[data-ac-met-banner-close]").addEventListener("click", function () {
+        banner.hidden = true;
+        try { sessionStorage.setItem("acordia-aviso-guias", "off"); } catch (e) {}
+      });
+    }
     /* Opciones (celular): el botón existe siempre pero solo se muestra en ≤ 575 px (CSS). Despliega y
        repliega los controles secundarios; no toca el estado del metrónomo. Escape lo cierra si el foco está dentro. */
     var optBtn = box.querySelector("[data-ac-met-options]");

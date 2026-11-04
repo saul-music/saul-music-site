@@ -81,7 +81,7 @@ def test_guides_appear_once_as_a_strip_before_the_player():
     page = render(song, "publicable", preview=False)
     # Una entrada con dos formas (franja y botón corto, oculto) que abren el mismo desplegable.
     assert page.count('data-bs-target="#guias-panel"') == 3  # franja, botón corto y cerrar
-    assert page.count('href="guias.html?tema=ven-aqui"') == 3  # franja y botón (respaldo) + panel
+    assert page.count('href="guias.html?tema=ven-aqui"') == 4  # franja, aviso, botón, panel
     assert "data-ac-met-help" in page and " hidden>¿Se complica" in page
     assert page.count("<aside") == 1 and "Ver guías" not in page
     # La franja va primero: antes de la barra del metrónomo, las pestañas y los compases.
