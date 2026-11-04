@@ -549,9 +549,21 @@ a.card:hover { border-color: var(--ac-fill); transform: translateY(-2px); }
 /* Selector de nivel dentro de la barra de reproducción (S26, parte 1): un control segmentado con borde bien visible,
    para que se note que es un selector; la opción activa va rellena y las otras con el color de texto pleno. */
 .ac-levels-bar {
-  gap: .15rem; padding: 3px; order: 1;
+  gap: .15rem; padding: 3px; margin: 0;
   border: 2px solid var(--ac-accent); border-radius: 999px;
 }
+/* Orden de la barra (S29), de arriba abajo: niveles, reproducción, aviso de guías. */
+.ac-met-levels-row { order: -2; flex: 1 1 100%; min-width: 0; display: flex; }
+.ac-met-banner {
+  order: 10; flex: 1 1 100%; display: flex; align-items: center; gap: .25rem;
+  border: 1px dashed var(--ac-fill-2); border-radius: var(--ac-radius); padding: .1rem .25rem .1rem .6rem;
+}
+.ac-met-banner[hidden] { display: none; }
+.ac-met-banner-link { flex: 1 1 auto; min-width: 0; display: flex; align-items: center; gap: .5rem; padding: .3rem 0; color: var(--ac-fg); text-decoration: none; font-size: .9rem; }
+.ac-met-banner-link:hover .ac-met-banner-text strong { text-decoration: underline; }
+.ac-met-banner-icon { color: var(--ac-accent); font-size: 1.1rem; line-height: 1; }
+.ac-met-banner-text strong { color: var(--ac-accent); }
+.ac-met-banner-close { flex: none; --bs-btn-padding-y: 0; --bs-btn-padding-x: .55rem; font-size: 1.4rem; line-height: 1.6; color: var(--ac-fg-muted); }
 .ac-levels-bar .nav-link {
   padding: .3rem .8rem; font-size: .9rem; white-space: nowrap; border-color: transparent;
   --bs-nav-link-color: var(--ac-fg); --bs-nav-link-hover-color: var(--ac-accent);
@@ -573,7 +585,10 @@ a.card:hover { border-color: var(--ac-fill); transform: translateY(-2px); }
      (reproducir + Opciones; niveles) y el resto se despliega bajo ellas. */
   .ac-met-options { display: inline-flex; align-items: center; gap: .35rem; }
   .ac-met-toggle { min-width: 7rem; }
-  .ac-levels-bar { order: 0; flex: 1 1 100%; min-width: 0; }
+  .ac-levels-bar { flex: 1 1 100%; min-width: 0; }
+  .ac-met-banner-link { font-size: .8rem; white-space: nowrap; }
+  .ac-met-banner-text { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+  .ac-met-banner-more { display: none; }
   .ac-levels-bar .nav-item { flex: 1 1 0; min-width: 0; }
   .ac-levels-bar .nav-link { width: 100%; padding: .25rem .25rem; font-size: .85rem; text-align: center; }
   .ac-met-extra {
