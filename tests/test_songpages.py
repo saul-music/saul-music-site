@@ -9,10 +9,13 @@ from musicsite.acordes import main, validate_file
 from musicsite.songpages import (
     LIBRARY_END,
     LIBRARY_START,
+    apply_count,
+    apply_library,
     bar_html,
     build,
     card,
     chords_payload,
+    count_published,
     json_script,
     load_song,
     render,
@@ -586,3 +589,25 @@ def test_library_order_by_versions_then_title_keeps_artists_alphabetical():
     page = render_library(entries)
     order = [page.index(f">{title}<") for title in ("Zoe", "Cora", "Beto", "Dani", "Ana", "Prox")]
     assert order == sorted(order)
+
+
+def test_count_only_counts_published_cards(song):
+    block = (
+        card(song, "a", "publicable") + card(song, "b", "borrador") + card(song, "c", "publicable")
+    )
+    assert count_published(block) == 2
+    assert count_published("") == 0
+
+
+def test_apply_count_pluralizes_and_tolerates_missing_markers():
+    page = "x <!-- temas:inicio --><strong>0 canciones disponibles</strong><!-- temas:fin --> y"
+    assert "<strong>16 canciones disponibles</strong>" in apply_count(page, 16)
+    assert "<strong>1 canción disponible</strong>" in apply_count(page, 1)
+    assert "<strong>0 canciones disponibles</strong>" in apply_count(page, 0)
+    assert apply_count("sin marcas", 5) == "sin marcas"
+
+
+def test_apply_library_updates_the_home_count(song):
+    page = f"<!-- temas:inicio -->?<!-- temas:fin -->{LIBRARY_START}\nviejo\n{LIBRARY_END}"
+    block = card(song, "a", "publicable") + card(song, "b", "borrador")
+    assert "<strong>1 canción disponible</strong>" in apply_library(page, block)

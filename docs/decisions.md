@@ -341,3 +341,11 @@ Un silencio se escribe `.`, solo o dentro de un compás partido. Se eligió el p
 - **En el sitio:** símbolo de silencio de negra (SVG, no depende de la tipografía) tenue y sin botón, con
   `aria-label="silencio"`. En Cámara lenta y el metrónomo dura lo que dura su parte y el pulso lo ilumina como a un acorde.
 - **Contrato compartido** (`tests/fixtures/acordes/contract.json`): 8 casos nuevos, idénticos en research (M36).
+
+## S23 · Contador de temas publicados en la portada (2026-11-04)
+
+La portada dice «N canciones disponibles con acordes, gratis» bajo el subtítulo del hero.
+- **Qué cuenta:** solo los temas publicados (tarjetas con enlace de la Biblioteca); los «Próximamente» no. 1 va en singular.
+- **Cómo:** marcas `<!-- temas:inicio -->`/`<!-- temas:fin -->` en `index.html`; `apply_library` actualiza el número a la vez
+  que la Biblioteca, así que sigue a lo publicado en el bucket (también al despublicar). Sin marcas, no cambia nada.
+- El `index.html` estático lleva el número de sus propias tarjetas (respaldo de git).
