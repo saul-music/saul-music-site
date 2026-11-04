@@ -151,7 +151,7 @@ def test_new_artists_json_is_picked_up_with_the_next_release(editorial, monkeypa
     assert "Otra Banda" in client.get("/artistas.html").text
 
 
-# --- foto del artista (S32) ---------------------------------------------------------------------
+# --- foto del artista (S33) ---------------------------------------------------------------------
 
 PHOTO_PATH = "fotos/banda-demo-0123456789ab.jpg"
 JPEG = b"\xff\xd8\xff\xe0" + b"\x00" * 64 + b"\xff\xd9"  # solo importa que parezca un JPEG
@@ -221,7 +221,7 @@ def test_photos_are_not_served_from_outside_the_published_ones(editorial):
         assert client.get(path).status_code == 404
 
 
-# --- descripción con párrafos (S33) -------------------------------------------------------------
+# --- descripción con párrafos (S34) -------------------------------------------------------------
 
 
 def test_a_long_description_is_split_into_paragraphs_and_lines(editorial):

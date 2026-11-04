@@ -1041,3 +1041,31 @@ def test_playbar_rows_levels_then_controls(page: Page, base_url: str):
     assert levels["y"] + levels["height"] <= toggle["y"] + 1  # niveles arriba de la reproducción
     assert page.locator(".ac-sticky-tools a[href*='guias.html']:visible").count() <= 1
     assert page.evaluate("document.documentElement.scrollWidth <= window.innerWidth")
+
+
+def test_options_button_flags_mute_while_the_panel_is_folded(song_audio: Page, tmp_path_factory):
+    """S32: en celular «Opciones» avisa «Sin sonido» con ícono y nombre accesible."""
+    page = song_audio
+    if not _is_mobile(page):
+        pytest.skip("«Opciones» solo existe en celular")
+    button = page.locator("[data-ac-met-options]")
+    flag = page.locator("[data-ac-met-options-mute]")
+    set_options(page, False)
+    expect(flag).to_be_hidden()
+    expect(button).not_to_have_attribute("aria-label", re.compile("sin sonido"))
+    set_options(page, True)
+    page.locator("[data-ac-met-mute]").click()
+    set_options(page, False)
+    expect(page.locator("[data-ac-met-extra]")).to_be_hidden()
+    expect(flag).to_be_visible()
+    expect(button).to_have_attribute("aria-label", "Opciones (sin sonido activado)")
+    expect(button).to_have_attribute("title", "Sin sonido activado")
+    assert page.evaluate("document.documentElement.scrollWidth <= window.innerWidth")
+    out = tmp_path_factory.mktemp("s32")
+    page.locator(".ac-sticky-tools").screenshot(path=str(out / "opciones-sin-sonido.png"))
+    print("CAPTURA", out / "opciones-sin-sonido.png")
+    set_options(page, True)
+    page.locator("[data-ac-met-mute]").click()
+    set_options(page, False)
+    expect(flag).to_be_hidden()
+    expect(button).to_have_attribute("aria-label", "Opciones")

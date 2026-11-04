@@ -846,15 +846,25 @@
       hideRestart();
     });
     /* Cambia de modo sin cortar ni descompasar: se conserva lo que falta para el próximo pulso. */
+    /* «Opciones» (celular) avisa que «Sin sonido» está activo aunque el panel esté plegado. */
+    var optMute = box.querySelector("[data-ac-met-options-mute]");
+    function syncOptionsMute() {
+      if (optMute) optMute.hidden = !muted;
+      var ob = box.querySelector("[data-ac-met-options]");
+      if (!ob) return;
+      ob.setAttribute("aria-label", muted ? "Opciones (sin sonido activado)" : "Opciones");
+      if (muted) ob.setAttribute("title", "Sin sonido activado"); else ob.removeAttribute("title");
+    }
     function setMuted(value, save) {
       var remaining = playing ? Math.max(nextTime - clock(), 0.02) : 0;
       muted = !!value;
       if (mute) mute.setAttribute("aria-pressed", muted ? "true" : "false");
+      syncOptionsMute();
       if (save) { try { localStorage.setItem(MUTE_KEY, muted ? "1" : "0"); } catch (e) {} }
       if (!playing) return;
       if (muted) { nextTime = clock() + remaining; return; }
       var audio = ensureAudio();
-      if (!audio) { muted = true; return; }
+      if (!audio) { muted = true; syncOptionsMute(); return; }
       audio.then(function () { nextTime = clock() + remaining; });
     }
 

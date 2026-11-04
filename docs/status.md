@@ -1,6 +1,6 @@
 # Estado del sitio
 
-> Registro vivo. Última actualización: 2026-11-04 (S32: foto del artista).
+> Registro vivo. Última actualización: 2026-11-04 (S33 foto del artista y S34 párrafos; antes S32 «Sin sonido»).
 
 ## Paso actual
 
@@ -144,3 +144,9 @@ AAAA-MM-DD · paso · qué se hizo · qué quedó pendiente · decisiones nuevas
 - **Para research:** copiar `contract.json`, adaptar validador y editor, y correr `scripts/sync_site_render.py` para la copia del render.
 - Ningún tema publicado usa Avanzado: sin migración.
 
+
+
+## 2026-11-04 · Aviso de «Sin sonido» y timeouts (S32)
+
+- «Opciones» (celular) muestra un ícono de silencio y `aria-label`/`title` «sin sonido activado» mientras el modo está activo; prueba e2e en Pixel 7 e iPhone 14 con captura revisada.
+- `timeout-minutes` en todos los jobs (e2e 20, resto 10) medido con los últimos 12 runs; pipeline sigue secuencial. Detalle: `docs/decisions.md` S32.

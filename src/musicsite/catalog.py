@@ -41,7 +41,7 @@ class State:
     artists: bytes | None = (
         None  # artistas.html con artists.json (o el respaldo) y los conteos (S24)
     )
-    photos: dict[str, bytes] = field(default_factory=dict)  # "fotos/<archivo>.jpg" -> JPEG (S32)
+    photos: dict[str, bytes] = field(default_factory=dict)  # "fotos/<archivo>.jpg" -> JPEG (S33)
 
 
 class Catalog:

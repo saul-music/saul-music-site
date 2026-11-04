@@ -514,7 +514,19 @@ tips = ["Título | Texto"]         # opcional, lista de «Título | Texto»: tí
   renderiza los extras). `acordia.js` no cambió.
 - **Descartado:** compatibilidad con la partitura propia de Avanzado (nada la usa; un archivo viejo da el error de migración de arriba).
 
-## S32 · Foto del artista en su tarjeta (2026-11-04)
+
+## S32 · «Opciones» avisa «Sin sonido» y el pipeline tiene límites de tiempo (2026-11-04)
+
+**Parte 1.** En celular, con el panel de S26 plegado, el modo «Sin sonido» (que se recuerda entre visitas) no se notaba. El botón «Opciones»
+muestra ahora un ícono de altavoz tachado y su nombre accesible pasa a «Opciones (sin sonido activado)» (`aria-label` y `title`); todo se
+quita al desactivar el modo. Solo celular (el botón no existe en escritorio). Probado en Pixel 7 e iPhone 14, con captura revisada.
+
+**Parte 2.** Los jobs e2e se colgaron de 12 a 30 min en `playwright install` (incidentes de GitHub Actions). Duraciones típicas de los últimos
+12 runs: lint y tests 12-26 s, e2e 150-270 s (atascos de 450-1120 s), imagen 11-24 s, publicar 35-46 s, desplegar 27-35 s. `timeout-minutes`:
+**e2e 20, lint y tests 10, imagen 10, publicar 10, desplegar 10**. Un atasco falla en vez de colgar; se reintenta el run. El pipeline sigue
+secuencial (D45): no cambian los `needs`.
+
+## S33 · Foto del artista en su tarjeta (2026-11-04)
 
 `artists.json` puede traer `photo` (`fotos/<slug>-<12 hex>.jpg`, de research M47). La tarjeta del artista la muestra, redonda de 72 px (estilo en línea: `style.css` está copiado en research y tocarlo obliga a sincronizar), con `alt="Foto de <nombre>"`, carga diferida y el nombre al lado.
 - **Servida desde la publicación:** `/fotos/<archivo>.jpg` sale del release vigente (el catálogo guarda los JPEG al cargar, hasta 200 de 300 KB como máximo) con `Cache-Control: public, max-age=31536000, immutable`: el nombre
@@ -522,9 +534,9 @@ tips = ["Título | Texto"]         # opcional, lista de «Título | Texto»: tí
 - **Nunca bloquea una publicación:** una ruta fuera del contrato (con `..`, otra extensión, otro slug), un archivo que falta, que no empieza como JPEG o pesa más de 300 KB se descarta y el artista sale sin foto.
 - Sin foto, la tarjeta es igual que antes. El respaldo de git no trae fotos. CSP sin cambios (`img-src 'self'`).
 
-## S33 · Descripción del artista en párrafos legibles (2026-11-04)
+## S34 · Descripción del artista en párrafos legibles (2026-11-04)
 
 La descripción de un artista (texto plano de research M47/M41) se dibuja como párrafos: una **línea en blanco separa párrafos** y un salto simple dentro de uno es un `<br>`. Antes todo salía como un solo
-bloque porque HTML colapsa los saltos. Cada párrafo va escapado, con interlineado de 1,65 y separación entre párrafos (estilo en línea, por lo mismo que S32: `style.css` está copiado en research). Una descripción vacía
+bloque porque HTML colapsa los saltos. Cada párrafo va escapado, con interlineado de 1,65 y separación entre párrafos (estilo en línea, por lo mismo que S33: `style.css` está copiado en research). Una descripción vacía
 o solo de espacios no dibuja nada. Sin cambios en el contrato de `artists.json`.
 
