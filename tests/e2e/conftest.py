@@ -72,6 +72,21 @@ def shapes_url(tmp_path_factory) -> str:
 
 
 @pytest.fixture(scope="session")
+def advanced_url(tmp_path_factory) -> str:
+    """«Cámara lenta» con Avanzado sintético (S31): hereda Intermedio y suma extras por sección."""
+    folder = tmp_path_factory.mktemp("songs-with-advanced")
+    text = (SONGS_DIR / "camara-lenta.toml").read_text(encoding="utf-8")
+    assert "\n[avanzado" not in text
+    text += (
+        "\n[avanzado.secciones.Intro]\ntab = '''\ne|--0--|\n'''\n"
+        'arreglo = "Rasgueo suave con `Emaj7`"\n'
+        'tips = ["Sonido | Deja sonar el acorde hasta el siguiente compás."]\n'
+    )
+    (folder / "camara-lenta.toml").write_text(text, encoding="utf-8")
+    yield from serve(create_app(songs=folder))
+
+
+@pytest.fixture(scope="session")
 def rests_url(tmp_path_factory) -> str:
     """Sitio con «Cámara lenta» más silencios (compás entero y dentro de un compás partido, S22)."""
     folder = tmp_path_factory.mktemp("songs-with-rests")
