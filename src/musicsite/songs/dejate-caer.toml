@@ -1,46 +1,54 @@
-# Transcripción propia de «Déjate caer» (Los Tres).
-# Solo acordes básicos: mayores y menores, sin extensiones (G, Em, C#m; no G7, Dsus4, Am9).
-# Se escribe de oído o con una fuente que se declare en [procedencia]. No se copia ningún texto
-# de otro sitio. No se publica nada hasta marcar revisado y v2_resuelto.
-
 slug = "dejate-caer"
 titulo = "Déjate caer"
 artista = "Los Tres"
 tipo = "cancion"
-barrio = "Rock"      # Rock, Pop o Indie (vacío si no aplica)
-
-tono = "Si menor"        # por ejemplo "Sol mayor"
-cejilla = ""     # por ejemplo "Sin cejilla" o "Cejilla 3"
-compas = "4/4"      # por ejemplo "4/4"
-bpm = 105          # entre 40 y 240
-nivel = "medio"       # inicial, medio o avanzado
-acordes = ["Bm", "A", "Em", "F#", "C", "Dm", "Cm", "Fm", "G"]     # los acordes que usa el tema, por ejemplo ["G", "D", "Em", "C"]
-
-forma = "Intro – Estrofa – Coro – Estrofa – Coro – Interludio – Puente – Estrofa final – Final"       # estructura general, por ejemplo "Intro - Estrofa - Coro - Estrofa - Coro - Final"
-confianza = "alta en acordes principales; media en estructura"   # alta, media o baja
-dudas = "Cambio armónico marcado hacia Cm en el interludio y el final. Verificar duraciones y el regreso a Si menor. Se simplificaron acordes con séptimas y disminuidos."       # qué hay que verificar de oído
-sin_base_armonica = false   # true en un instrumental sin progresión estable
-
-# Secciones en notación compacta, una por línea: «Nombre xN: acordes». Un acorde por compás;
-# «%» repite el compás anterior. Por ejemplo:
-#   Intro x1: G D
-#   Estrofa x2: G % D Em C
+barrio = "Rock"
+tono = "Si menor"
+cejilla = ""
+compas = "4/4"
+bpm = 105
+nivel = "medio"
+acordes = ["Bm", "A", "Em", "F#", "C", "Dm", "Cm", "Fm", "G"]
+forma = "Intro – Estrofa – Coro – Estrofa – Coro – Interludio – Puente – Estrofa final – Final"
+confianza = "alta en acordes principales; media en estructura"
+dudas = "Cambio armónico marcado hacia Cm en el interludio y el final. Verificar duraciones y el regreso a Si menor. Se simplificaron acordes con séptimas y disminuidos."
+sin_base_armonica = false
 partitura = '''
-Intro: Bm A Em F#
-Estrofa x2: Bm A Em C
-Coro: Bm F# Em F# Em F# Em Dm C Bm
-Segunda estrofa: Bm A Em C
-Interludio x3: Cm Fm G
-Puente: Cm % %
-Estrofa final: Bm A Em C
-Final: Cm Fm G Cm
+Estrofa: Bm % % A Em F# Em C Bm %
+Parte B: F# Em F# Em F# Em Dm C Bm %
+Solo Guitarra: Bm % % A Em F# Em C Bm %
+Estrofa: Bm % % A Em F# Em C Bm %
+Parte B: F# Em F# Em F# Em Dm C Bm %
+Puente x3: Cm Fm-G
+Puente: Cm %
+Estrofa x2: Bm % % A Em F# Em C Bm %
+Parte B: F# Em F# Em F# Em Dm C Bm %
+Puente x3: Cm Fm-G
+Acorde final: Cm
 '''
 
 [procedencia]
-metodo = "Acordes escritos y validados por el responsable del proyecto (declaración del 2026-10-30), a partir de un boceto V1 preparado con ChatGPT. V2 marcado como resuelto por decisión del responsable; no hay asesoría legal registrada."      # por ejemplo "de oído, con la grabación original"
-autor = "Responsable del proyecto (declaración suya)"       # quién transcribió
-fecha = "2026-10-30"       # AAAA-MM-DD
+metodo = "Acordes escritos y validados por el responsable del proyecto (declaración del 2026-10-30), a partir de un boceto V1 preparado con ChatGPT. V2 marcado como resuelto por decisión del responsable; no hay asesoría legal registrada."
+autor = "Responsable del proyecto (declaración suya)"
+fecha = "2026-10-30"
 
 [revision]
-revisado = true      # true cuando la transcripción está terminada y revisada
-v2_resuelto = true   # true solo cuando los derechos (V2) estén resueltos
+revisado = true
+v2_resuelto = true
+
+[intermedio]
+acordes = ["Bmadd1", "A", "Em", "C#m7b5", "C", "Dm7", "Cm", "Fm", "G7b9"]
+partitura = '''
+> Tip Guitarra + bajo | En las estrofas, la guitarra toca el acorde `C#m7b5` y va acompañado de bajo en `F#`, lo que forma el acorde `F#7sus4(b9)`. Si no estas tocando junto a un bajista, puedes omitir ese bajo
+Estrofa: Bm % % A Em C#m7b5/F# Em C Bm %
+Parte B: F#aug Em7 F#aug Em7 F#aug Em7 Dm7 C Bm %
+Solo Guitarra: Bm % % A Em C#m7b5/F# Em C Bm %
+Estrofa: Bm % % A Em C#m7b5/F# Em C Bm %
+Parte B: F#aug Em7 F#aug Em7 F#aug Em7 Dm7 C Bm %
+Puente x3: Cm Fm7-G7b9
+Puente: Cm %
+Estrofa x2: Bm % % A Em C#m7b5/F# Em C Bm %
+Parte B: F#aug Em7 F#aug Em7 F#aug Em7 Dm7 C Bm %
+Puente x3: Cm Fm7-G7b9
+Acorde final: Cm
+'''

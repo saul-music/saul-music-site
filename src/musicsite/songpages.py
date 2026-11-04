@@ -571,10 +571,11 @@ def apply_library(page: str, block: str) -> str:
 
 
 def update_library(directory: Path, index: Path) -> int:
-    """Reemplaza las tarjetas de index.html entre las marcas de la Biblioteca."""
-    block = library_html(directory)
+    """Reemplaza las tarjetas de index.html entre las marcas de la Biblioteca (igual que el sitio
+    con lo publicado) y devuelve cuántos temas publicados hay."""
+    block = published_library_html(directory)
     index.write_text(apply_library(index.read_text(encoding="utf-8"), block), encoding="utf-8")
-    return block.count('<div class="col">')
+    return count_published(block)
 
 
 def build(directory: Path, out: Path, preview: bool = False) -> list[Path]:

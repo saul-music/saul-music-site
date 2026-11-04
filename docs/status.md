@@ -1,6 +1,6 @@
 # Estado del sitio
 
-> Registro vivo. Última actualización: 2026-11-04 (S31: Avanzado hereda Intermedio).
+> Registro vivo. Última actualización: 2026-11-04 (S31: Avanzado hereda Intermedio; respaldo `songs/` al día con producción).
 
 ## Paso actual
 

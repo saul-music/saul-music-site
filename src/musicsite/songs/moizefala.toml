@@ -1,0 +1,63 @@
+slug = "moizefala"
+titulo = "Moizefala"
+artista = "Los Tres"
+tipo = "cancion"
+barrio = "Rock"
+tono = "Re mayor"
+cejilla = ""
+compas = "4/4"
+bpm = 78
+nivel = "medio"
+acordes = ["D", "F#m", "Em", "F#", "G", "A"]
+forma = ""
+confianza = "alta"
+dudas = ""
+sin_base_armonica = false
+partitura = '''
+Intro x2: D-Em-F#m-% Em
+Intro: A
+Instrumental: G % F#m %
+Estrofa x2: G % F#m %
+Instrumental: G % F#m %
+Estrofa x2: G % F#m %
+Pre-coro: G-F#m-Em-% F# Em
+Coro x4: D-A Em
+Intro x2: D-Em-F#m-% Em
+Estrofa x4: G % F#m %
+Coro x8: D-A Em
+Final x4: D-Em-F#m-% Em
+Acorde final: Em
+'''
+
+[procedencia]
+metodo = "De oído"
+autor = "Gonzalo Pincheira"
+fecha = "2/10/20216"
+
+[revision]
+revisado = true
+v2_resuelto = true
+
+[intermedio]
+acordes = ["Dmaj7", "F#m7", "Em9", "F#7", "Gmaj7", "Gmaj7/A"]
+partitura = '''
+> Combinaciones guitarras y bajo | Toca los acordes y el bajo segun se indica, y si tocas con 2 guitarras que ambas hagan distintas posiciones
+Intro x2: Dmaj7-Em7/B-F#m7/A-D6/F# Em7
+> Acordes con bajo no diatónico | El acorde `Gmaj7/A` es una simplificación del acorde `Asus4(9,13)`
+Intro: Gmaj7/A
+Instrumental: Gmaj7 % F#m7 %
+Estrofa x2: Gmaj7 % F#m7 %
+Instrumental: Gmaj7 % F#m7 %
+Estrofa x2: Gmaj7 % F#m7 %
+Pre-coro: Gmaj7-F#m7-Em7-% F#7 Em7
+Coro x4: D-A Em9
+Intro x2: Dmaj7-Em7/B-F#m7/A-D6/F# Em7
+Estrofa x4: Gmaj7 % F#m7 %
+Pre-coro: Gmaj7-F#m7-Em7-% F#7 Em7
+Coro x8: D-A Em9
+Final x2: Dmaj7-Em7/B-F#m7/A-D6/F# Em7
+> Cambio de estructura | En esta parte se produce un cambio de ritmica y extension por un compás más. Atención cuando escuches la grabación original
+Final: Dmaj7-Em7/B-F#m7/A Em7-F#m7-Em7/G-F#m7/A
+Final: Dmaj7-Em7/B-F#m7/A-D6/F# Em7
+Acorde final: Em11
+'''
