@@ -37,6 +37,8 @@ ENV = Environment(
 )
 LIBRARY_START = "<!-- biblioteca:inicio -->"
 LIBRARY_END = "<!-- biblioteca:fin -->"
+COUNT_START = "<!-- temas:inicio -->"
+COUNT_END = "<!-- temas:fin -->"
 SHOWN_CHORDS = 4
 WIDE_CHARS = 10  # letras de acordes en una casilla a partir de las cuales ocupa dos columnas
 
@@ -518,11 +520,27 @@ def published_library_html(directory: Path) -> str:
     return render_library(entries)
 
 
+def count_published(block: str) -> int:
+    """Temas con enlace (publicados) en el bloque de la Biblioteca; los «Próximamente» no cuentan."""
+    return block.count('<a class="card h-100"')
+
+
+def apply_count(page: str, total: int) -> str:
+    """`page` con «N canciones» entre las marcas de la portada; sin marcas, igual."""
+    if COUNT_START not in page:
+        return page
+    start = page.index(COUNT_START) + len(COUNT_START)
+    label = "1 canción disponible" if total == 1 else f"{total} canciones disponibles"
+    end = page.index(COUNT_END)
+    return page[:start] + f"<strong>{label}</strong>" + page[end:]
+
+
 def apply_library(page: str, block: str) -> str:
-    """`page` (index.html) con `block` entre las marcas de la Biblioteca."""
+    """`page` (index.html) con `block` entre las marcas de la Biblioteca y el conteo de la portada."""
     start = page.index(LIBRARY_START) + len(LIBRARY_START)
     end = page.index(LIBRARY_END)
-    return page[:start] + "\n" + block + "\n        " + page[end:]
+    page = page[:start] + "\n" + block + "\n        " + page[end:]
+    return apply_count(page, count_published(block))
 
 
 def update_library(directory: Path, index: Path) -> int:

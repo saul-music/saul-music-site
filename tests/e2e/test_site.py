@@ -706,3 +706,10 @@ def test_rests_are_drawn_without_chord_button_and_the_playhead_crosses_them(
         "document.documentElement.scrollWidth - document.documentElement.clientWidth"
     )
     assert overflow <= 0
+
+
+def test_home_count_matches_the_linked_cards_of_the_library(page: Page, base_url: str):
+    page.goto(f"{base_url}/")
+    shown = page.locator(".ac-count strong").inner_text()
+    linked = page.locator("#biblioteca a.card").count()
+    assert shown == f"{linked} canciones disponibles"

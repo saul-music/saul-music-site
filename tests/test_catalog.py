@@ -12,7 +12,7 @@ from fastapi.testclient import TestClient
 
 from musicsite.acordes import REPERTOIRE
 from musicsite.app import HEADERS, SONGS_DIR, WEB_DIR, create_app
-from musicsite.songpages import apply_library, library_html, update_library
+from musicsite.songpages import apply_count, apply_library, library_html, update_library
 
 FORBIDDEN = ["musicres", "run.app", "dashboard", "saulapp-music", "youtube", "bigquery", "secret"]
 VERSION = iter(range(1, 10_000))
@@ -85,7 +85,10 @@ def test_library_lists_published_and_marks_the_rest_as_coming_soon(editorial):
     assert index.count("Próximamente") >= len(REPERTOIRE) - 1  # el resto del repertorio
     assert "Dos veces" not in index and "Esquemas juveniles" in index  # título y artista visibles
     # lo que está fuera de la Biblioteca no cambia
-    static = (WEB_DIR / "index.html").read_text(encoding="utf-8")
+    assert (
+        "<strong>1 canción disponible</strong>" in index
+    )  # el conteo de la portada (los próximamente no cuentan)
+    static = apply_count((WEB_DIR / "index.html").read_text(encoding="utf-8"), 1)
     assert (
         index.split("<!-- biblioteca:inicio -->")[0]
         == static.split("<!-- biblioteca:inicio -->")[0]

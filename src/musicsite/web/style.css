@@ -750,3 +750,5 @@ a.card:hover { border-color: var(--ac-fill); transform: translateY(-2px); }
 /* Tabs y arreglos por sección del Avanzado (S17): la tab se desplaza en horizontal en celular. */
 .ac-tab { overflow-x: auto; padding: .6rem .8rem; border: 1px solid rgba(var(--ac-accent-rgb), .3); border-radius: .5rem; }
 .ac-arrangement { color: var(--bs-secondary-color); }
+
+.ac-count strong { color: var(--bs-body-color); }

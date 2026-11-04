@@ -1,6 +1,6 @@
 # Estado del sitio
 
-> Registro vivo. Última actualización: 2026-11-02 (S17: niveles Intermedio y Avanzado).
+> Registro vivo. Última actualización: 2026-11-04 (S23: contador de temas en la portada).
 
 ## Paso actual
 
