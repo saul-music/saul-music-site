@@ -1043,8 +1043,8 @@ def test_playbar_rows_levels_then_controls(page: Page, base_url: str):
     assert page.evaluate("document.documentElement.scrollWidth <= window.innerWidth")
 
 
-def test_options_button_flags_mute_while_the_panel_is_folded(song_audio: Page, base_url: str, tmp_path_factory):
-    """S32: en celular «Opciones» avisa «Sin sonido» con un ícono y un nombre accesible, plegado o no."""
+def test_options_button_flags_mute_while_the_panel_is_folded(song_audio: Page, tmp_path_factory):
+    """S32: en celular «Opciones» avisa «Sin sonido» con ícono y nombre accesible."""
     page = song_audio
     if not _is_mobile(page):
         pytest.skip("«Opciones» solo existe en celular")
