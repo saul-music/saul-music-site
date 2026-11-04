@@ -715,6 +715,7 @@ def test_home_count_matches_the_linked_cards_of_the_library(page: Page, base_url
     assert shown == f"{linked} canciones disponibles"
 
 
+<<<<<<< HEAD
 def test_artists_page_links_open_outside_and_the_library_link_filters_by_artist(
     page: Page, base_url: str
 ):
@@ -748,6 +749,58 @@ def test_library_query_parameter_is_text_only(page: Page, base_url: str):
 
 def test_artists_page_has_no_horizontal_scroll(page: Page, base_url: str):
     page.goto(f"{base_url}/artistas.html")
+=======
+def test_requests_demo_is_labelled_and_states_change_over_time(page: Page, base_url: str):
+    page.clock.install()
+    page.goto(f"{base_url}/pedidos.html")
+    items = page.locator("[data-ac-requests] > li")
+    expect(items).to_have_count(4)
+    expect(page.locator("[data-ac-requests] .ac-demo-badge")).to_have_count(4)
+    before = page.locator("[data-ac-requests] .ac-req-state").all_inner_texts()
+    assert set(before) == {"Recibida", "En revisión", "En preparación", "Publicada"}
+    page.clock.run_for(5100)
+    after = page.locator("[data-ac-requests] .ac-req-state").all_inner_texts()
+    assert after != before
+    expect(page.locator("[data-ac-req-announce]")).to_contain_text("Pedido de ejemplo")
+    for _ in range(12):  # tarde o temprano un pedido publicado sale y entra uno nuevo
+        if "Nuevo pedido" in page.locator("[data-ac-req-announce]").inner_text():
+            break
+        page.clock.run_for(5000)
+    expect(page.locator("[data-ac-req-announce]")).to_contain_text("Nuevo pedido de ejemplo")
+    expect(items).to_have_count(4)
+
+
+def test_requests_demo_respects_reduced_motion(page: Page, base_url: str):
+    page.emulate_media(reduced_motion="reduce")
+    page.clock.install()
+    page.goto(f"{base_url}/pedidos.html")
+    page.clock.run_for(5100)
+    expect(page.locator(".ac-req-flash")).to_have_count(0)
+    page.emulate_media(reduced_motion="no-preference")
+    page.clock.run_for(5000)
+    expect(page.locator(".ac-req-flash")).to_have_count(1)
+
+
+def test_mock_forms_send_nothing_and_say_so(page: Page, base_url: str):
+    sent = []
+    page.on("request", lambda r: sent.append(r) if r.method != "GET" else None)
+    page.goto(f"{base_url}/pedidos.html")
+    forms = page.locator("form[data-ac-mock-form]")
+    expect(forms).to_have_count(2)
+    for i in range(2):
+        form = forms.nth(i)
+        form.locator("input[type=text], textarea").first.fill("texto de prueba")
+        form.locator("button[type=submit]").click()
+        expect(form.locator("[data-ac-mock-note]")).to_contain_text("no se envió ni se guardó nada")
+    assert sent == []
+    expect(page).to_have_url(re.compile(r"/pedidos\.html$"))
+
+
+def test_requests_page_is_in_the_nav_and_fits_the_screen(page: Page, base_url: str):
+    page.goto(f"{base_url}/index.html")
+    assert page.locator("a[href='pedidos.html']").count() >= 1
+    page.goto(f"{base_url}/pedidos.html")
+>>>>>>> 9582e7f (feat: mockups de Pide una canción, pedidos ficticios y opinión (S25))
     overflow = page.evaluate(
         "document.documentElement.scrollWidth - document.documentElement.clientWidth"
     )
