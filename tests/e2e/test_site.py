@@ -715,7 +715,6 @@ def test_home_count_matches_the_linked_cards_of_the_library(page: Page, base_url
     assert shown == f"{linked} canciones disponibles"
 
 
-<<<<<<< HEAD
 def test_artists_page_links_open_outside_and_the_library_link_filters_by_artist(
     page: Page, base_url: str
 ):
@@ -749,7 +748,12 @@ def test_library_query_parameter_is_text_only(page: Page, base_url: str):
 
 def test_artists_page_has_no_horizontal_scroll(page: Page, base_url: str):
     page.goto(f"{base_url}/artistas.html")
-=======
+    overflow = page.evaluate(
+        "document.documentElement.scrollWidth - document.documentElement.clientWidth"
+    )
+    assert overflow <= 0
+
+
 def test_requests_demo_is_labelled_and_states_change_over_time(page: Page, base_url: str):
     page.clock.install()
     page.goto(f"{base_url}/pedidos.html")
@@ -800,7 +804,6 @@ def test_requests_page_is_in_the_nav_and_fits_the_screen(page: Page, base_url: s
     page.goto(f"{base_url}/index.html")
     assert page.locator("a[href='pedidos.html']").count() >= 1
     page.goto(f"{base_url}/pedidos.html")
->>>>>>> 9582e7f (feat: mockups de Pide una canción, pedidos ficticios y opinión (S25))
     overflow = page.evaluate(
         "document.documentElement.scrollWidth - document.documentElement.clientWidth"
     )
