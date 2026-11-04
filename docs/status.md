@@ -1,6 +1,6 @@
 # Estado del sitio
 
-> Registro vivo. Última actualización: 2026-11-04 (S24: sección Artistas con artists.json).
+> Registro vivo. Última actualización: 2026-11-04 (S25: mockups de pedidos y opinión).
 
 ## Paso actual
 
@@ -97,3 +97,9 @@ AAAA-MM-DD · paso · qué se hizo · qué quedó pendiente · decisiones nuevas
 - `artists.json` del release (fallback a los datos estáticos), enlaces externos en pestaña nueva, conteo de temas publicados y
   «Ver sus temas en la Biblioteca» (`?q=`). Pruebas: `tests/test_artists.py` y 4 de navegador. Detalle en `decisions.md` (S24).
 - **Pendiente:** revisar a ojo en celular real; probar con un `artists.json` real cuando el admin lo publique.
+
+## 2026-11-04 · Mockups de pedidos y opinión (S25)
+
+- `pedidos.html`/`pedidos.js`: demo sin envío con pedidos ficticios que cambian de estado; adaptador `createSource()` listo para una fuente real.
+  Pruebas: `tests/test_pedidos_demo.py` y 4 de navegador (reloj simulado, reduced-motion, sin envío, sin desborde). Revisado a 360 px en captura.
+- **Pendiente:** revisar a ojo en celular real y en claro/oscuro; elegir backend (etapa B) antes de conectar nada.

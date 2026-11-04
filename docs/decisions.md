@@ -367,3 +367,17 @@ La portada dice «N canciones disponibles con acordes, gratis» bajo el subtítu
 - **`?q=`:** `index.html?q=Nombre#biblioteca` llena el buscador de la galería (S14) y deja la Biblioteca a la vista; el valor se asigna
   como texto, nunca como HTML, y se recorta a 100 caracteres.
 - **Sin cambio de contrato:** el sitio ignora campos desconocidos de `artists.json`; no lee `index.json` para esto.
+
+## S25 · Mockups de «Pide una canción» y opinión, solo front (2026-11-04)
+
+- `pedidos.html` + `pedidos.js` (en la nav y el pie de todas las páginas): formulario de pedido (canción, nivel, correo opcional),
+  lista de pedidos públicos ficticios con estados Recibida → En revisión → En preparación → Publicada, y formulario de opinión.
+  **Ningún formulario envía ni lee nada** (sin `action`, `preventDefault`, aviso visible); sin red, sin almacenamiento y sin dependencias.
+- **Rotulado:** insignia «Demo / datos de ejemplo» en el encabezado, en cada sección y en cada pedido; `noindex`. Datos sintéticos:
+  títulos del repertorio público o genéricos «(ejemplo)», sin nombres, correos (solo el placeholder `tucorreo@ejemplo.com`), letras ni acordes.
+- **Tiempo real simulado:** cada 5 s avanza un pedido (los publicados salen y entra uno nuevo como Recibida), con barra y destello suaves;
+  `prefers-reduced-motion` quita transiciones y destello; un `aria-live` discreto anuncia el cambio.
+- **Adaptador:** la lista solo conoce `createSource()` -> `subscribe(onChange) -> unsubscribe`, con la lista completa en cada cambio.
+  Hoy `DemoSource`; **ahí se conecta Firebase Realtime Database en la etapa B** (decisión aparte, no se agrega ahora). Lo real
+  deberá, además, cambiar la CSP (`connect-src`, `form-action`) y el aviso de privacidad; nada de eso se adelanta.
+- No es la etapa B ni se anuncia el sitio (S6 sigue pendiente).

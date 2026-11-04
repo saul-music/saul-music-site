@@ -756,3 +756,34 @@ a.card:hover { border-color: var(--ac-fill); transform: translateY(-2px); }
 /* Sección Artistas (S24) */
 .ac-artist-library { justify-self: start; }
 .ac-artist-links a { overflow-wrap: anywhere; }
+
+/* Pide una canción: demo (S25) */
+.ac-demo-badge {
+  display: inline-flex; align-items: center; padding: .2rem .7rem;
+  border: 1px dashed var(--ac-accent); border-radius: 999px;
+  color: var(--ac-accent); font-size: .78rem; font-weight: 600;
+  letter-spacing: .05em; text-transform: uppercase; white-space: nowrap;
+}
+.ac-demo-badge-sm { font-size: .68rem; padding: .1rem .55rem; }
+.ac-req-state {
+  display: inline-flex; padding: .2rem .7rem; border-radius: 999px;
+  border: 1px solid var(--ac-line); font-size: .82rem; font-weight: 600;
+  transition: background-color .4s ease, color .4s ease, border-color .4s ease;
+}
+.ac-req-state[data-status="published"] { border-color: var(--ac-second); color: var(--ac-second); }
+.ac-req-state[data-status="preparing"] { border-color: var(--ac-accent); color: var(--ac-accent); }
+.ac-req-bar { display: grid; grid-template-columns: repeat(4, 1fr); gap: .35rem; }
+.ac-req-seg {
+  height: .4rem; border-radius: 999px; background: var(--ac-line);
+  transition: background-color .5s ease;
+}
+.ac-req-seg.on { background: var(--ac-accent); }
+.ac-req-flash { animation: ac-req-flash 1.4s ease-out; }
+@keyframes ac-req-flash {
+  from { box-shadow: 0 0 0 3px rgba(var(--ac-accent-rgb), .65); }
+  to { box-shadow: 0 0 0 3px rgba(var(--ac-accent-rgb), 0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ac-req-state, .ac-req-seg { transition: none; }
+  .ac-req-flash { animation: none; }
+}
