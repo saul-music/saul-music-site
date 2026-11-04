@@ -349,3 +349,167 @@ La portada dice «N canciones disponibles con acordes, gratis» bajo el subtítu
 - **Cómo:** marcas `<!-- temas:inicio -->`/`<!-- temas:fin -->` en `index.html`; `apply_library` actualiza el número a la vez
   que la Biblioteca, así que sigue a lo publicado en el bucket (también al despublicar). Sin marcas, no cambia nada.
 - El `index.html` estático lleva el número de sus propias tarjetas (respaldo de git).
+
+## S24 · Sección Artistas: `artists.json` del release, enlaces externos y conteo de temas (2026-11-04)
+
+- **Datos:** `artistas.html` lleva solo las marcas `<!-- artistas:inicio/fin -->`; `musicsite.artists` arma el bloque. Los artistas
+  salen de `artists.json` en el release vigente del bucket editorial, junto a `index.json`:
+  `{"format":1,"artists":[{"slug","name","description","links":[{"label","url"}]}]}`. Se lee con la misma mecánica que S9
+  (con la publicación, relectura cada 60 s, una publicación nunca rompe la anterior). **Respaldo:** `FALLBACK` en `artists.py`
+  (los 4 artistas de siempre) si el archivo no existe o no sirve; también en el modo `songs/` de git.
+- **Validación:** `format` = 1; 1 a 200 artistas; `slug` en minúsculas con guiones y sin repetir; nombre 1 a 80; descripción
+  ≤ 1500; hasta 10 enlaces por artista, con `label` de 1 a 100 y URL http/https absoluta (≤ 500, sin espacios). Un artista
+  mal formado o un archivo roto invalida todo el archivo (se usa el respaldo); **un enlace inválido solo se descarta**. Todo se escapa
+  (sin HTML en descripciones).
+- **Enlaces externos:** `target="_blank" rel="noopener noreferrer"` más texto oculto «(se abre en otra pestaña)».
+- **Conteo:** cuenta los temas publicados del release (igual que S23); un tema «Artista (versión)» cuenta para «Artista». Sin
+  temas: «Próximamente». Con temas: lista de títulos con enlace y botón «Ver sus temas en la Biblioteca».
+- **`?q=`:** `index.html?q=Nombre#biblioteca` llena el buscador de la galería (S14) y deja la Biblioteca a la vista; el valor se asigna
+  como texto, nunca como HTML, y se recorta a 100 caracteres.
+- **Sin cambio de contrato:** el sitio ignora campos desconocidos de `artists.json`; no lee `index.json` para esto.
+
+## S25 · Mockups de «Pide una canción» y opinión, solo front (2026-11-04)
+
+- `pedidos.html` + `pedidos.js` (en la nav y el pie de todas las páginas): formulario de pedido (canción, nivel, correo opcional),
+  lista de pedidos públicos ficticios con estados Recibida → En revisión → En preparación → Publicada, y formulario de opinión.
+  **Ningún formulario envía ni lee nada** (sin `action`, `preventDefault`, aviso visible); sin red, sin almacenamiento y sin dependencias.
+- **Rotulado:** insignia «Demo / datos de ejemplo» en el encabezado, en cada sección y en cada pedido; `noindex`. Datos sintéticos:
+  títulos del repertorio público o genéricos «(ejemplo)», sin nombres, correos (solo el placeholder `tucorreo@ejemplo.com`), letras ni acordes.
+- **Tiempo real simulado:** cada 5 s avanza un pedido (los publicados salen y entra uno nuevo como Recibida), con barra y destello suaves;
+  `prefers-reduced-motion` quita transiciones y destello; un `aria-live` discreto anuncia el cambio.
+- **Adaptador:** la lista solo conoce `createSource()` -> `subscribe(onChange) -> unsubscribe`, con la lista completa en cada cambio.
+  Hoy `DemoSource`; **ahí se conecta Firebase Realtime Database en la etapa B** (decisión aparte, no se agrega ahora). Lo real
+  deberá, además, cambiar la CSP (`connect-src`, `form-action`) y el aviso de privacidad; nada de eso se adelanta.
+- No es la etapa B ni se anuncia el sitio (S6 sigue pendiente).
+
+## S27 · Orden de las formas de guitarra: regla de cejilla y forma por defecto del tema (2026-11-04)
+
+Orden en que el panel de acorde ofrece las formas de guitarra (la primera es la que se ve al tocar el acorde; «Otra
+forma» recorre el resto):
+1. **Forma propia del nivel** (`[intermedio.formas]` o `[avanzado.formas]`, S8), etiqueta «Forma de esta versión».
+2. **Forma por defecto del tema** (`[formas]`, abajo), etiqueta «Forma de este tema».
+3. **Regla de cejilla:** formas estándar de chords-db reordenadas.
+4. El resto de chords-db en su orden. Una forma repetida (mismos trastes) se muestra una sola vez.
+
+**Regla de cejilla** (`chordtheory.nearest_barre_first`, constante `BARRE_FROM_FRET = 3`): *traste base* = traste más bajo
+que se pisa (los aires y las cuerdas mudas no cuentan; 0 si no se pisa ninguno). Si la **primera** forma de chords-db tiene
+traste base >= 3, todas se ordenan por traste base ascendente; **empate: se conserva el orden de chords-db**. Si la primera
+empieza antes del traste 3 (abierta o cejilla baja) no se toca nada. Se aplica también a las formas con bajo y a las del
+acorde base (S19). Afecta a 44 acordes de chords-db (p. ej. Cm7: la cejilla del traste 1 sale antes que la del 8).
+
+**Contrato del campo por defecto** (compartido con research, `tests/fixtures/acordes/contract.json`, 11 casos nuevos):
+- **Tabla TOML de primer nivel `[formas]`**, hermana de `[intermedio]`/`[avanzado]` (antes el validador rechazaba una
+  clave `formas` suelta; ahora es esta tabla). Una sola lista para los tres niveles.
+- **Formato:** `"<acorde>" = "<6 valores>"`, igual que S8: trastes de la 6ª a la 1ª cuerda, `x` = no suena, `0` = al aire,
+  enteros 0 a 24. Ejemplo: `[formas]` / `"F#" = "2 4 4 3 2 2"`.
+- **Validaciones** (mismos mensajes que S8, con el prefijo `formas «ACORDE»:`): debe ser una tabla («formas debe ser una
+  tabla»); el acorde se puede dibujar («no sé dibujar este acorde»); **aparece en algún nivel del tema** (lista `acordes`,
+  Básico, Intermedio o Avanzado; «el acorde no aparece en ningún nivel del tema»); 6 valores; cada valor es `x` o un
+  número; traste dentro de 0 a 24; al menos 3 cuerdas suenan; solo suenan notas del acorde («suena X, que no es del acorde
+  …»); con bajo (`G/B`) la nota más grave es el bajo.
+- El prefijo de los errores de nivel sigue siendo `intermedio.formas «…»` / `avanzado.formas «…»` (sin cambios).
+- Payload de la página (`#acordes-data`): nueva clave `default` (`{acorde: {frets, tab}}`) junto a `chords` y `own`.
+
+
+## S26 · Selector de nivel con borde y barra de reproducción plegable en celular (2026-11-04)
+
+**Parte 1, selector de nivel.** Usuarios no notaban que Básico/Intermedio/Avanzado es un selector. Ahora es un control
+segmentado: borde de 2 px en el color de acento (≥ 3:1 contra el fondo en Noche y Marfil), opciones inactivas con el color
+de texto pleno (≥ 4,5:1), la activa rellena y en negrita con doble anillo, y foco por teclado de 3 px.
+
+**Parte 2, «Opciones» en celular (≤ 575 px).** La barra fija ocupaba demasiado. Quedan visibles Reproducir/pausar,
+«Opciones» y los niveles (dos filas); metrónomo, BPM, deslizante, «Sin sonido», «Cuenta inicial» y «Restablecer» van en un
+grupo `#met-extra` que se despliega y se repliega cuando se quiera (botón con `aria-expanded` y `aria-controls`; Escape
+lo cierra).
+- **Escritorio no cambia:** el grupo usa `display: contents` y el botón no se muestra; el orden visual se conserva con `order`.
+- **No toca el estado:** los controles siguen en el DOM (solo `display: none`), así que metrónomo, cursor y centrado (S10 a S12)
+  no cambian. El botón «Habla con una guía» queda fuera del grupo.
+- **Estado inicial plegado, sin recordarlo:** cada visita parte compacta. Descartado: recordarlo en `localStorage`.
+- Las pruebas de navegador abren el grupo en celular con `set_options()`; hay pruebas propias del plegado, del contraste y del desborde.
+
+## S28 · Resumen plegado de posiciones al inicio de cada pestaña (2026-11-04)
+
+Cada pestaña de reproducción (Básico, Intermedio, Avanzado) trae, justo bajo su descripción, un `<details class="ac-summary">`
+**cerrado por defecto** («Posiciones de los acordes (N)») con guitarra y piano de todos los acordes que usa ESA pestaña
+(los de sus botones `.ac-chord-btn`, sin repetir, en orden de aparición).
+- **Misma forma que el panel:** la guitarra dibuja `formsFor(acorde, nivel)[0]` (S27: propia del nivel > `[formas]` del tema >
+  regla de cejilla > chords-db); el piano usa las teclas del acorde. Reutiliza `guitarSVG` y `pianoSVG` del panel.
+- **Carga:** nada se dibuja hasta la primera vez que se abre (evento `toggle`); la carga de la página no cambia.
+- **Celular:** rejilla `auto-fill minmax(7.5rem, 1fr)` (2 columnas a 360 px), sin desborde horizontal; comprobado en la matriz.
+- Un acorde sin guitarra estándar ni forma propia dice «Sin diagrama de guitarra» y conserva el piano. No hay ukelele ni dedos propios.
+
+
+## S29 · Barra de reproducción en filas: niveles, controles y aviso de guías (2026-11-04) — reemplazada por S30 (se quita el aviso; quedan los niveles arriba)
+
+Orden de arriba abajo, en escritorio y celular: **(1)** selector de nivel (con el borde de S26), **(2)** controles de
+reproducción (en celular, Reproducir + «Opciones» plegable de S26), **(3)** aviso de guías.
+- **Aviso (mockup):** «Editores-profes · clases por solicitud (ejemplo del prototipo)», enlace a `guias.html?tema=<slug>`.
+  No envía datos ni afirma precios ni disponibilidad. Se puede ocultar con «×» (se recuerda en la pestaña con
+  `sessionStorage`, con respaldo si no está disponible); en celular el texto se acorta a una línea.
+- No toca el metrónomo, el cursor ni el centrado (S10 a S12): es solo un enlace. Convive con la franja de guías de arriba y
+  con el botón corto «Habla con una guía» de la barra, que no cambian.
+- **Sin duplicar:** cuando la franja de guías sale de pantalla y aparece el botón corto «Habla con una guía», el aviso se
+  oculta (CSS, `.ac-met-help:not([hidden]) ~ .ac-met-banner`). La barra fija compacta el espacio entre filas para no pasar
+  del 35 % de la pantalla en escritorio.
+- Los niveles pasan a una fila propia (`.ac-met-levels-row`, `order: -2`); el resto del orden visual se logra con `order` sin mover el DOM
+  de los controles.
+
+
+## S30 · La barra de reproducción queda en dos filas, sin aviso de guías (2026-11-04)
+
+Reemplaza a S29. El usuario rechazó el concepto de aviso (banner) en la barra. Se quita por completo: HTML, CSS, JS (el «×», su
+memoria en `sessionStorage` y la regla que lo ocultaba junto a «Habla con una guía») y sus pruebas.
+- **Barra:** **(1)** selector de nivel (borde de S26), **(2)** controles de reproducción (en celular, Reproducir + «Opciones»
+  plegable). Se conserva el botón corto «Habla con una guía» y la franja de guías de arriba.
+- Se conserva de S29 la fila propia de los niveles (`.ac-met-levels-row`) y la barra compacta.
+
+
+## S31 · Avanzado hereda la partitura de Intermedio y declara solo extras por sección (2026-11-04)
+
+Reemplaza la parte de S17 que daba a Avanzado su propia partitura, `[avanzado.tabs]` y `[avanzado.arreglos]`. Se conservan de S17 los
+límites (tab 2000, arreglo 600, tips 80/600), el escape y que cada extra se muestra la primera vez que aparece su sección.
+Los bajos siguen siendo de Intermedio. Ningún tema (publicado, `songs/` ni `acordes-local/`) usaba Avanzado: no hay datos que migrar.
+
+**Contrato del formato** (compartido con research, `tests/fixtures/acordes/contract.json`; 24 casos nuevos, los de `avanzado.partitura`,
+`tabs` y `arreglos` se reemplazaron):
+```toml
+[intermedio]
+partitura = '''
+Intro: Em G/B
+Estrofa x2: C D
+'''
+
+[avanzado]                        # sin partitura
+tab = '''...'''                    # opcional: tab general, al final de la pestaña (se conserva)
+
+[avanzado.secciones."Intro"]      # clave = nombre de una sección de la partitura de INTERMEDIO
+tab = '''e|--0--|'''              # opcional, hasta 2000 caracteres
+arreglo = "Rasgueo suave con `Em`" # opcional, hasta 600 (acordes entre acentos graves, S15)
+tips = ["Título | Texto"]         # opcional, lista de «Título | Texto»: título ≤ 80, texto ≤ 600
+                                  # (Intermedio y Básico siguen en 60/280 con `> Título | Texto` en la partitura)
+
+[avanzado.formas]                 # S8, se conserva: acordes que aparecen en Intermedio
+"G/B" = "x 2 0 0 3 3"
+```
+- Cada sección entrada debe tener al menos una de `tab`, `arreglo`, `tips`. Una sección de Intermedio sin entrada se muestra igual, sin extras.
+- **Render:** la pestaña Avanzado es la partitura de Intermedio (compases y tips de Intermedio incluidos) más, en cada sección la primera
+  vez que aparece: `arreglo`, `tab` bajo los compases y los `tips` de Avanzado como tarjetas tras la sección. Hay Avanzado (`avanzado_secciones`
+  = secciones de Intermedio) solo si hay entradas en `secciones` o `tab`; si no, «Próximamente» y no cuenta en `version_count` (S20). Los acordes
+  del panel y del resumen plegado (S28) son los de Intermedio; Avanzado no admite acordes propios.
+- **Mensajes de error** (en español, con `avanzado` como prefijo; `N` desde 1):
+  `avanzado debe ser una tabla` · `avanzado: ya no lleva partitura propia; muestra la de Intermedio. Pon lo propio en [avanzado.secciones."Nombre"] (tab, arreglo, tips)` ·
+  `avanzado.tabs ya no existe: usa [avanzado.secciones."Nombre"] con tab = ...` · `avanzado.arreglos ya no existe: ... con arreglo = ...` ·
+  `avanzado: tab debe ser texto` · `avanzado.secciones debe ser una tabla ([avanzado.secciones."Nombre"])` ·
+  `avanzado: necesita la partitura de Intermedio (Avanzado la hereda)` (hay extras o `tab` y Intermedio no tiene compases; es el único error) ·
+  por sección, prefijo `avanzado.secciones «Nombre»:` → `no hay una sección con ese nombre en la partitura de Intermedio` ·
+  `debe ser una tabla (tab, arreglo, tips)` · `clave desconocida «k» (usa tab, arreglo o tips)` · `no tiene extras; escribe tab, arreglo o tips (o quita la sección)` ·
+  `tab debe ser texto, no vacío` / `arreglo debe ser texto, no vacío` · `tab pasa de 2000 caracteres` / `arreglo pasa de 600 caracteres` ·
+  `tips debe ser una lista de textos «Título | Texto»` · `tips[N] debe ser texto «Título | Texto»` ·
+  `tips[N]: un tip se escribe «> Título | Texto» (con título y texto)` / `tips[N]: el título del tip pasa de 80 caracteres` / `tips[N]: el texto del tip pasa de 600 caracteres`.
+  Las formas de Avanzado siguen: `avanzado.formas «Dm7»: el acorde no aparece en la versión avanzado` (se compara con los acordes de Intermedio).
+- **Plantillas:** la técnica y la simple dejan de traer `[avanzado] partitura`; traen `[avanzado.secciones."Nombre"]` comentado.
+- **Cómo sincroniza research:** copiar `tests/fixtures/acordes/contract.json` y adaptar su validador (`parse_score` ya no recibe `advanced`; la
+  validación de Avanzado es `check_advanced` + `advanced_extras` de `musicsite/acordes.py`), el editor y la copia vendorizada del render
+  (`scripts/sync_site_render.py` de research, que toma `songpages.py` y `acordia.js`; `load_song` compone Avanzado y `structure(sections, extras)`
+  renderiza los extras). `acordia.js` no cambió.
+- **Descartado:** compatibilidad con la partitura propia de Avanzado (nada la usa; un archivo viejo da el error de migración de arriba).

@@ -1,6 +1,6 @@
 # Estado del sitio
 
-> Registro vivo. Última actualización: 2026-11-04 (respaldo `songs/` al día con producción).
+> Registro vivo. Última actualización: 2026-11-04 (S31: Avanzado hereda Intermedio; respaldo `songs/` al día con producción).
 
 ## Paso actual
 
@@ -91,3 +91,56 @@ AAAA-MM-DD · paso · qué se hizo · qué quedó pendiente · decisiones nuevas
 2026-11-03 · silencios en producción · site: el punto `.` es un silencio (S22 del site, M36 de research; PR #43 y #42), probado en navegador y desplegado por pipeline · pendiente: probar con login real escribir un silencio, publicar y verlo en el sitio · S22, M36
 2026-11-03 · catálogo sin Los Jaivas, Congreso ni Subhira (rama fix/quitar-jaivas-congreso-subhira, PR #45) · se quitan 5 temas (2 publicados: Corre que te pillo y Takirari del Puerto), sus fichas en artistas.html, la Biblioteca y la regla de guía; REPERTOIRE pasa a 15 temas y los publicados a 14 · pendiente: publicar un release nuevo desde el admin y borrar sus borradores en GCP
 2026-11-03 · acorde mMaj7 (rama fix/acorde-mmaj-y-combos-anchos) · el validador y el teclado aceptan «DmMaj7» como alias de mmaj7 (antes solo mmaj7 y mM7); el contrato se copió de research
+
+## 2026-11-04 · Sección Artistas (S24)
+
+- `artists.json` del release (fallback a los datos estáticos), enlaces externos en pestaña nueva, conteo de temas publicados y
+  «Ver sus temas en la Biblioteca» (`?q=`). Pruebas: `tests/test_artists.py` y 4 de navegador. Detalle en `decisions.md` (S24).
+- **Pendiente:** revisar a ojo en celular real; probar con un `artists.json` real cuando el admin lo publique.
+
+## 2026-11-04 · Mockups de pedidos y opinión (S25)
+
+- `pedidos.html`/`pedidos.js`: demo sin envío con pedidos ficticios que cambian de estado; adaptador `createSource()` listo para una fuente real.
+  Pruebas: `tests/test_pedidos_demo.py` y 4 de navegador (reloj simulado, reduced-motion, sin envío, sin desborde). Revisado a 360 px en captura.
+- **Pendiente:** revisar a ojo en celular real y en claro/oscuro; elegir backend (etapa B) antes de conectar nada.
+
+## 2026-11-04 · Orden de formas de guitarra: cejilla y forma por defecto del tema (S27)
+
+- Regla de cejilla (formas estándar desde el traste 3 se ordenan por traste base) y tabla `[formas]` por tema, que vale para los tres
+  niveles; precedencia: forma del nivel (S8) > `[formas]` > cejilla > chords-db. Validador, plantilla simple, contrato compartido
+  (11 casos) y guía de edición actualizados. **Research debe copiar `tests/fixtures/acordes/contract.json` y soportar `[formas]`.**
+- Pruebas: puras (regla, validador, payload) y de navegador (default primero, propia del nivel gana, navegación).
+- **Pendiente:** verificar en producción tras el deploy; ningún tema publicado usa `[formas]` todavía.
+
+
+## 2026-11-04 · Selector de nivel y barra plegable en celular (S26)
+
+- Selector de nivel con borde visible y activa destacada (claro/oscuro, foco accesible); en <= 575 px los controles secundarios
+  de la barra van bajo «Opciones» (plegable, `aria-expanded`); escritorio igual. Detalle en `decisions.md` (S26).
+- Pruebas: 6 de navegador nuevas (borde, contraste en ambos temas, plegado, Escape con el metrónomo andando, sin desborde, capturas
+  con `AC_SHOTS=<carpeta>`); las existentes abren el grupo con `set_options()`. Capturas revisadas en Pixel 7 y iPhone 14.
+- **Pendiente:** revisar a ojo en celular real; el botón «Opciones» no indica si «Sin sonido» está activo mientras está plegado.
+
+## 2026-11-04 · Resumen plegado de posiciones (S28)
+
+- `<details>` cerrado al inicio de cada pestaña con guitarra y piano de sus acordes, con la forma que verá el usuario al tocarlos.
+  Pruebas de navegador: cerrado por defecto, un diagrama por acorde, forma por defecto del tema, sin desborde.
+- **Pendiente:** revisar a ojo en celular real y en claro/oscuro.
+
+
+## 2026-11-04 · Barra en dos filas, sin aviso de guías (S30, reemplaza a S29)
+
+- El usuario rechazó el aviso: se quita por completo (HTML, CSS, JS, pruebas). Niveles arriba y controles abajo; queda una prueba de
+  orden de filas. Se conservan el borde del selector (S26), «Opciones» en celular y «Habla con una guía».
+- **Pendiente:** revisar a ojo en celular real.
+
+
+## 2026-11-04 · Avanzado hereda Intermedio (S31, reemplaza parte de S17)
+
+- Avanzado ya no tiene partitura: muestra la de Intermedio y suma extras por sección en `[avanzado.secciones."Nombre"]` (`tab`, `arreglo`, `tips`).
+  `[avanzado.tabs]`, `[avanzado.arreglos]` y `[avanzado] partitura` dan un error de migración. `[avanzado.formas]` y `tab` general se conservan.
+- Validador, render (`songpages.py`), plantillas, guía de edición (control) y contrato compartido actualizados (24 casos nuevos). Formato exacto y
+  mensajes de error: `docs/decisions.md` S31. Pruebas: pytest, ruff y e2e con un tema sintético con Avanzado.
+- **Para research:** copiar `contract.json`, adaptar validador y editor, y correr `scripts/sync_site_render.py` para la copia del render.
+- Ningún tema publicado usa Avanzado: sin migración.
+

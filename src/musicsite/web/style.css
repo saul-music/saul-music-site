@@ -546,15 +546,45 @@ a.card:hover { border-color: var(--ac-fill); transform: translateY(-2px); }
 
 .ac-met-reset-icon { display: none; }
 
-/* Selector de nivel dentro de la barra de reproducción */
-.ac-levels-bar { gap: .25rem; }
-.ac-levels-bar .nav-link { padding: .3rem .7rem; font-size: .9rem; white-space: nowrap; }
+/* Selector de nivel dentro de la barra de reproducción (S26, parte 1): un control segmentado con borde bien visible,
+   para que se note que es un selector; la opción activa va rellena y las otras con el color de texto pleno. */
+.ac-levels-bar {
+  gap: .15rem; padding: 3px; margin: 0;
+  border: 2px solid var(--ac-accent); border-radius: 999px;
+}
+/* Orden de la barra (S30), de arriba abajo: niveles y controles de reproducción. */
+.ac-sticky-tools .card-body { gap: .5rem .75rem !important; padding-block: .6rem; }
+.ac-met-levels-row { order: -2; flex: 1 1 100%; min-width: 0; display: flex; }
+.ac-levels-bar .nav-link {
+  padding: .3rem .8rem; font-size: .9rem; white-space: nowrap; border-color: transparent;
+  --bs-nav-link-color: var(--ac-fg); --bs-nav-link-hover-color: var(--ac-accent);
+}
+.ac-levels-bar .nav-link:hover:not(.active) { background: rgba(var(--ac-accent-rgb), .15); }
+.ac-levels-bar .nav-link.active { font-weight: 700; box-shadow: 0 0 0 1px var(--ac-bg), 0 0 0 2px var(--ac-fill); }
+.ac-levels-bar .nav-link:focus-visible { outline: 3px solid var(--ac-accent); outline-offset: 2px; box-shadow: none; }
+
+/* Opciones de la barra (S26, parte 2): en escritorio los controles secundarios quedan sueltos en la barra
+   (display: contents) y el botón no existe; en celular se agrupan y se despliegan con «Opciones». */
+.ac-met-extra { display: contents; }
+.ac-met-options { display: none; }
+.ac-met-options-chev { display: inline-block; transition: transform .15s; }
+.ac-met-options[aria-expanded="true"] .ac-met-options-chev { transform: rotate(180deg); }
+.ac-sticky-tools [data-ac-met-reset] { order: 2; }
+.ac-sticky-tools .ac-met-help { order: 3; }
 @media (max-width: 575.98px) {
-  /* En celular comparte fila con «Restablecer» (solo el ícono): la barra fija no puede crecer
-     (< 30 % de la pantalla). La base grande lo manda a su propia fila, bajo el tempo. */
-  .ac-levels-bar { flex: 1 1 14rem; min-width: 0; gap: .15rem; }
+  /* En celular la barra fija no puede crecer (< 30 % de la pantalla): lo esencial va en dos filas
+     (reproducir + Opciones; niveles) y el resto se despliega bajo ellas. */
+  .ac-met-options { display: inline-flex; align-items: center; gap: .35rem; }
+  .ac-met-toggle { min-width: 7rem; }
+  .ac-levels-bar { flex: 1 1 100%; min-width: 0; }
   .ac-levels-bar .nav-item { flex: 1 1 0; min-width: 0; }
-  .ac-levels-bar .nav-link { width: 100%; padding: .2rem .25rem; font-size: .8rem; text-align: center; }
+  .ac-levels-bar .nav-link { width: 100%; padding: .25rem .25rem; font-size: .85rem; text-align: center; }
+  .ac-met-extra {
+    display: none; order: 5; flex: 1 1 100%; flex-wrap: wrap; align-items: center; gap: .5rem;
+  }
+  .ac-met-extra.is-open { display: flex; }
+  .ac-sticky-tools [data-ac-met-reset], .ac-sticky-tools .ac-met-help { order: 6; }
+  .ac-met-extra [data-ac-met-reset] { order: 0; }
 }
 
 /* Cursor de compás */
@@ -734,6 +764,22 @@ a.card:hover { border-color: var(--ac-fill); transform: translateY(-2px); }
 .ac-chord-panel .key.on { fill: var(--ac-fill); }
 .ac-chord-panel .key.black.on { fill: var(--ac-accent); }
 .ac-chord-panel .key.bass { fill: var(--ac-fill-2); }
+/* Resumen plegado de posiciones al inicio de cada pestaña (S28) */
+.ac-summary { scroll-margin-top: 9rem; border: 1px solid rgba(var(--ac-accent-rgb), .3); border-radius: var(--ac-radius); padding: .6rem .9rem; }
+.ac-summary > summary { cursor: pointer; font-weight: 600; }
+.ac-sum-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(7.5rem, 1fr)); gap: 1rem .75rem; margin-top: .9rem; }
+.ac-sum-item { margin: 0; display: grid; justify-items: center; align-content: start; gap: .35rem; min-width: 0; }
+.ac-sum-name { font-family: "Petaluma Script", var(--ac-font-display); font-size: 1.4rem; line-height: 1.1; color: var(--ac-accent); }
+.ac-sum-guitar svg { width: 84px; }
+.ac-sum-none { font-size: .8rem; color: var(--ac-fg-muted); text-align: center; }
+.ac-sum-piano { width: 100%; max-width: 7rem; }
+.ac-sum-piano svg { width: 100%; height: auto; }
+.ac-summary svg .finger { fill: var(--ac-on-fill); font-weight: 700; }
+.ac-summary .key { fill: #f4efe6; stroke: #9b93b0; stroke-width: .6; }
+.ac-summary .key.black { fill: #1c1830; }
+.ac-summary .key.on { fill: var(--ac-fill); }
+.ac-summary .key.black.on { fill: var(--ac-accent); }
+.ac-summary .key.bass { fill: var(--ac-fill-2); }
 @media (max-width: 575.98px) {
   .ac-chord-panel {
     position: fixed; top: auto !important; left: 0 !important; right: 0; bottom: 0; width: auto; max-width: none;
@@ -752,3 +798,38 @@ a.card:hover { border-color: var(--ac-fill); transform: translateY(-2px); }
 .ac-arrangement { color: var(--bs-secondary-color); }
 
 .ac-count strong { color: var(--bs-body-color); }
+
+/* Sección Artistas (S24) */
+.ac-artist-library { justify-self: start; }
+.ac-artist-links a { overflow-wrap: anywhere; }
+
+/* Pide una canción: demo (S25) */
+.ac-demo-badge {
+  display: inline-flex; align-items: center; padding: .2rem .7rem;
+  border: 1px dashed var(--ac-accent); border-radius: 999px;
+  color: var(--ac-accent); font-size: .78rem; font-weight: 600;
+  letter-spacing: .05em; text-transform: uppercase; white-space: nowrap;
+}
+.ac-demo-badge-sm { font-size: .68rem; padding: .1rem .55rem; }
+.ac-req-state {
+  display: inline-flex; padding: .2rem .7rem; border-radius: 999px;
+  border: 1px solid var(--ac-line); font-size: .82rem; font-weight: 600;
+  transition: background-color .4s ease, color .4s ease, border-color .4s ease;
+}
+.ac-req-state[data-status="published"] { border-color: var(--ac-second); color: var(--ac-second); }
+.ac-req-state[data-status="preparing"] { border-color: var(--ac-accent); color: var(--ac-accent); }
+.ac-req-bar { display: grid; grid-template-columns: repeat(4, 1fr); gap: .35rem; }
+.ac-req-seg {
+  height: .4rem; border-radius: 999px; background: var(--ac-line);
+  transition: background-color .5s ease;
+}
+.ac-req-seg.on { background: var(--ac-accent); }
+.ac-req-flash { animation: ac-req-flash 1.4s ease-out; }
+@keyframes ac-req-flash {
+  from { box-shadow: 0 0 0 3px rgba(var(--ac-accent-rgb), .65); }
+  to { box-shadow: 0 0 0 3px rgba(var(--ac-accent-rgb), 0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ac-req-state, .ac-req-seg { transition: none; }
+  .ac-req-flash { animation: none; }
+}

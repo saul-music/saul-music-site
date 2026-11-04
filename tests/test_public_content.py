@@ -5,6 +5,7 @@ import re
 import pytest
 
 from musicsite.app import HEADERS, SONGS_DIR, WEB_DIR
+from musicsite.artists import build_page
 from musicsite.songpages import render_published
 
 # Todo lo que se sirve: los archivos de web/ y las páginas de canción que salen del template.
@@ -13,6 +14,10 @@ FILES = {
     for p in WEB_DIR.iterdir()
     if p.suffix in {".html", ".css", ".js"}
 }
+# artistas.html se arma al servirlo (S24): se revisa ya armado, con los datos de respaldo.
+FILES["artistas.html"] = build_page(
+    (WEB_DIR / "artistas.html").read_text(encoding="utf-8"), None, SONGS_DIR
+).lower()
 SONG_PAGES = {
     f"cancion-{slug}.html": page.lower() for slug, page in render_published(SONGS_DIR).items()
 }

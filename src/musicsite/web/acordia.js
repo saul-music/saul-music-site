@@ -155,13 +155,30 @@
       panel.addEventListener("pointerleave", function (e) { if (e.pointerType === "mouse" && !pinned) schedule(); });
       document.body.appendChild(panel);
     }
-    function forms() {
-      var name = anchor.getAttribute("data-chord");
-      var mode = (anchor.closest(".tab-pane") || {}).id || "";
-      mode = mode.replace(/^p-/, "");
+    /* Formas de guitarra de un acorde en un nivel, en este orden (S27): forma propia del nivel (S8),
+       forma por defecto del tema, y las estándar (ya ordenadas por la regla de cejilla). */
+    function formsFor(name, mode) {
+      var list = [], seen = {};
+      function add(f, kind) {
+        var key = f.frets.join(",");
+        if (seen[key]) return;
+        seen[key] = true;
+        f.kind = kind;
+        list.push(f);
+      }
       var own = (data.own[mode] || {})[name];
-      var list = own ? [{ frets: own.frets, tab: own.tab, own: true }] : [];
-      return list.concat((data.chords[name] || {}).guitar || []);
+      if (own) add({ frets: own.frets, tab: own.tab }, "own");
+      var def = (data.default || {})[name];
+      if (def) add({ frets: def.frets, tab: def.tab }, "default");
+      ((data.chords[name] || {}).guitar || []).forEach(function (g) { add(g, ""); });
+      return list;
+    }
+    function modeOf(el) {
+      el = el.classList.contains("tab-pane") ? el : el.closest(".tab-pane");
+      return ((el || {}).id || "").replace(/^p-/, "");
+    }
+    function forms() {
+      return formsFor(anchor.getAttribute("data-chord"), modeOf(anchor));
     }
     function render() {
       var name = anchor.getAttribute("data-chord");
@@ -189,9 +206,10 @@
         body.appendChild(guitarSVG(f.frets, f.fingers, f.barres, chord.label));
         tabEl.hidden = false; tabEl.textContent = f.tab.join("\n");
         var gn = chord.guitar_note;  // diagrama del acorde base: el bajo no está dibujado (S19)
-        noteEl.hidden = !(gn && !f.own);
+        noteEl.hidden = !(gn && !f.kind);
         if (!noteEl.hidden) noteEl.textContent = "Diagrama de " + gn.base + ". El bajo (" + gn.bass + ") no está dibujado: míralo en el teclado.";
-        badge.hidden = !f.own;
+        badge.hidden = !f.kind;
+        badge.textContent = f.kind === "default" ? "Forma de este tema" : "Forma de esta versión";
         next.hidden = list.length < 2;
         next.textContent = "Otra forma (" + (form + 1) + "/" + list.length + ")";
       }
@@ -230,6 +248,49 @@
       pinned = false;
     }
     function schedule() { clearTimeout(timer); timer = setTimeout(function () { hide(false); }, 250); }
+
+    /* Resumen plegado de posiciones (S28): al inicio de cada pestaña, un <details> cerrado con la guitarra
+       y el piano de todos los acordes de ESA pestaña, con la forma que se vería al tocarlos (formsFor).
+       Se dibuja la primera vez que se abre, así la carga de la página no cambia. */
+    function chordsOfPane(pane) {
+      var seen = {}, names = [];
+      pane.querySelectorAll(".ac-chord-btn").forEach(function (b) {
+        var n = b.getAttribute("data-chord");
+        if (!seen[n] && data.chords[n]) { seen[n] = true; names.push(n); }
+      });
+      return names;
+    }
+    function summaryItem(name, mode) {
+      var chord = data.chords[name];
+      var item = node("figure", "ac-sum-item");
+      item.appendChild(node("figcaption", "ac-sum-name", chord.label));
+      var g = formsFor(name, mode)[0];
+      var guitar = node("div", "ac-chord ac-sum-guitar");
+      if (g) guitar.appendChild(guitarSVG(g.frets, g.fingers, g.barres, chord.label));
+      else guitar.appendChild(node("span", "ac-sum-none", "Sin diagrama de guitarra"));
+      item.appendChild(guitar);
+      var piano = node("div", "ac-sum-piano");
+      piano.appendChild(pianoSVG(chord.keys, chord.bass, chord.label));
+      item.appendChild(piano);
+      return item;
+    }
+    document.querySelectorAll(".tab-pane").forEach(function (pane) {
+      var names = chordsOfPane(pane);
+      var intro = pane.querySelector(":scope > .d-grid > p");
+      if (!names.length || !intro) return;
+      var mode = modeOf(pane);
+      var det = node("details", "ac-summary");
+      var sum = node("summary", "", "Posiciones de los acordes (" + names.length + ")");
+      var grid = node("div", "ac-sum-grid");
+      det.appendChild(sum); det.appendChild(grid);
+      det.addEventListener("toggle", function () {
+        if (!det.open || grid.childNodes.length) return;
+        var frag = document.createDocumentFragment();
+        names.forEach(function (n) { frag.appendChild(summaryItem(n, mode)); });
+        grid.appendChild(frag);
+      });
+      intro.insertAdjacentElement("afterend", det);
+    });
 
     buttons.forEach(function (btn) {
       btn.setAttribute("aria-expanded", "false");
@@ -377,6 +438,16 @@
     inner.addEventListener("input", apply);
     if (hero) hero.addEventListener("input", function () { inner.value = hero.value; apply(); });
     if (clear) clear.addEventListener("click", function () { inner.value = ""; apply(); inner.focus(); });
+    /* Enlace con búsqueda (?q=Artista, p. ej. desde la sección Artistas): llena el buscador de la galería
+       y deja la Biblioteca a la vista. Es solo texto del buscador: se asigna como valor, nunca como HTML. */
+    try {
+      var q = new URLSearchParams(window.location.search).get("q");
+      if (q) {
+        inner.value = q.slice(0, 100);
+        apply();
+        window.addEventListener("load", function () { lib.scrollIntoView({ block: "start" }); });
+      }
+    } catch (e) { /* sin URLSearchParams: la Biblioteca queda sin filtrar */ }
     if (form) form.addEventListener("submit", function (e) {
       e.preventDefault();
       inner.value = hero.value;
@@ -812,6 +883,20 @@
       b.addEventListener("click", function () { setBpm(bpm + +b.getAttribute("data-ac-met-step")); });
     });
     box.querySelector("[data-ac-met-reset]").addEventListener("click", function () { setBpm(home); });
+    /* Opciones (celular): el botón existe siempre pero solo se muestra en ≤ 575 px (CSS). Despliega y
+       repliega los controles secundarios; no toca el estado del metrónomo. Escape lo cierra si el foco está dentro. */
+    var optBtn = box.querySelector("[data-ac-met-options]");
+    var extra = box.querySelector("[data-ac-met-extra]");
+    if (optBtn && extra) {
+      var setOptions = function (open) {
+        extra.classList.toggle("is-open", open);
+        optBtn.setAttribute("aria-expanded", open ? "true" : "false");
+      };
+      optBtn.addEventListener("click", function () { setOptions(optBtn.getAttribute("aria-expanded") !== "true"); });
+      extra.addEventListener("keydown", function (e) {
+        if (e.key === "Escape" && optBtn.getAttribute("aria-expanded") === "true") { setOptions(false); optBtn.focus(); }
+      });
+    }
     document.addEventListener("visibilitychange", function () { if (document.hidden && playing) stop(); });
   });
   /* Nivel en la URL: #basico, #intermedio o #avanzado abre ese nivel y compartirlo lleva a él. */

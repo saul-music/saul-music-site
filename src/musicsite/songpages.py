@@ -26,7 +26,14 @@ from jinja2 import Environment, FileSystemLoader, select_autoescape
 from markupsafe import Markup
 
 from musicsite import chordtheory as theory
-from musicsite.acordes import REPEAT, REPERTOIRE, REST, parse_score, validate_file
+from musicsite.acordes import (
+    REPEAT,
+    REPERTOIRE,
+    REST,
+    advanced_extras,
+    parse_score,
+    validate_file,
+)
 from musicsite.profes import avatar, coverage, price, teachers_for, top_teachers
 
 TEMPLATES_DIR = Path(__file__).parent / "templates"
@@ -45,7 +52,7 @@ WIDE_CHARS = 10  # letras de acordes en una casilla a partir de las cuales ocupa
 MODES = [
     ("basico", "Básico", "Acordes mayores y menores, sin extensiones."),
     ("intermedio", "Intermedio", "Con extensiones y bajos: séptimas, sus, add, G/B."),
-    ("avanzado", "Avanzado", "Extensiones, bajos, tabs y arreglos por sección."),
+    ("avanzado", "Avanzado", "Lo de Intermedio, más tabs, arreglos y tips por sección."),
 ]
 
 
@@ -150,13 +157,13 @@ def tip_html(tip: dict) -> str:
     )
 
 
-def section_extras(song: dict, name: str) -> str:
-    """Arreglo y tab propios de una sección del Avanzado (S17), siempre escapados."""
+def section_extras(extra: dict) -> str:
+    """Arreglo y tab propios de una sección del Avanzado (S17, S31), siempre escapados."""
     html = ""
-    note = song.get("arreglos", {}).get(name)
+    note = extra.get("arreglo")
     if note:
         html += f'\n            <p class="ac-arrangement small m-0">{tip_inline(note)}</p>'
-    tab = song.get("tabs", {}).get(name)
+    tab = extra.get("tab")
     if tab:
         html += (
             f'\n            <pre class="ac-mono ac-tab small m-0">{esc(tab.strip(chr(10)))}</pre>'
@@ -164,9 +171,11 @@ def section_extras(song: dict, name: str) -> str:
     return html
 
 
-def structure(sections: list[dict], song: dict | None = None) -> str:
+def structure(sections: list[dict], extras: dict[str, dict] | None = None) -> str:
+    """Partitura de una pestaña. `extras` (solo Avanzado) trae lo propio de cada sección, que se
+    muestra la primera vez que aparece: arreglo y tab dentro de ella, tips después (S31)."""
     blocks = []
-    pending = set((song or {}).get("tabs", {})) | set((song or {}).get("arreglos", {}))
+    pending = dict(extras or {})
     for section in sections:
         if "consejo" in section:
             blocks.append(tip_html(section["consejo"]))
@@ -186,16 +195,16 @@ def structure(sections: list[dict], song: dict | None = None) -> str:
             previous = shown
         bars = "".join(bars)
         name = section.get("nombre", "")
-        extras = ""
-        if song and name in pending:  # solo en la primera vez que aparece la sección
-            extras = section_extras(song, name)
-            pending.discard(name)
+        extra = pending.pop(name, None)  # solo en la primera vez que aparece la sección
+        extra_html = section_extras(extra) if extra else ""
         blocks.append(
             '          <div class="d-grid gap-2 ac-score">\n'
             f'            <h2 class="h5 m-0">{esc(section.get("nombre", ""))}{label}</h2>\n'
-            f'            <div class="ac-bars" data-reps="{times}">{bars}</div>{extras}\n'
+            f'            <div class="ac-bars" data-reps="{times}">{bars}</div>{extra_html}\n'
             "          </div>"
         )
+        if extra:
+            blocks.extend(tip_html(tip) for tip in extra["tips"])
     return "\n".join(blocks)
 
 
@@ -213,19 +222,32 @@ def own_shapes(data: dict) -> dict[str, dict[str, list[int]]]:
     return shapes
 
 
+def theme_shapes(data: dict) -> dict[str, list[int]]:
+    """Formas por defecto del tema (`[formas]`, S27): valen para los tres niveles."""
+    table = data.get("formas", {})
+    shapes: dict[str, list[int]] = {}
+    for name, text in table.items() if isinstance(table, dict) else []:
+        try:
+            shapes[name] = theory.parse_shape(text)
+        except ValueError:
+            continue
+    return shapes
+
+
 def load_song(path: Path) -> dict:
     data = tomllib.loads(path.read_text(encoding="utf-8"))
     compact, _ = parse_score(data.get("partitura", ""))
     data["secciones"] = list(data.get("secciones", [])) + compact
-    for mode in ("intermedio", "avanzado"):
-        data[mode + "_secciones"], _ = parse_score(
-            data.get(mode, {}).get("partitura", ""), advanced=mode == "avanzado"
-        )
+    data["intermedio_secciones"], _ = parse_score(data.get("intermedio", {}).get("partitura", ""))
     advanced = data.get("avanzado", {})
-    data["tab"] = advanced.get("tab", "").strip("\n")
-    for key in ("tabs", "arreglos"):
-        table = advanced.get(key, {})
-        data[key] = table if isinstance(table, dict) else {}
+    advanced = advanced if isinstance(advanced, dict) else {}
+    # Avanzado no tiene partitura propia: son las secciones de Intermedio más sus extras (S31).
+    data["extras"] = advanced_extras(advanced)
+    tab = advanced.get("tab", "")
+    data["tab"] = tab.strip("\n") if isinstance(tab, str) else ""
+    has_extras = bool(data["extras"] or data["tab"])
+    data["avanzado_secciones"] = data["intermedio_secciones"] if has_extras else []
+    data["formas_tema"] = theme_shapes(data)  # antes de que `formas` pase a ser {modo: ...}
     data["formas"] = own_shapes(data)
     return data
 
@@ -243,7 +265,8 @@ def mode_pane(key: str, song: dict, no_harmony: bool) -> str:
     else:
         sections = song.get(key + "_secciones", [])
         tab = song.get("tab", "") if key == "avanzado" else ""
-        body = structure(sections, song if key == "avanzado" else None) if sections else ""
+        extras = song.get("extras") if key == "avanzado" else None
+        body = structure(sections, extras) if sections else ""
         if tab:
             body += f'\n          <pre class="ac-mono small m-0">{esc(tab)}</pre>'
         if not body:
@@ -291,7 +314,11 @@ def chords_payload(song: dict) -> dict:
         }
         for mode, table in song.get("formas", {}).items()
     }
-    return {"chords": chords, "own": own}
+    default = {
+        name: {"frets": frets, "tab": list(theory.tab_lines(frets))}
+        for name, frets in song.get("formas_tema", {}).items()
+    }
+    return {"chords": chords, "own": own, "default": default}
 
 
 def json_script(data: dict) -> str:

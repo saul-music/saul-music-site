@@ -84,6 +84,8 @@ def test_web_dir_has_only_fixed_site_files():
         "cancion.html",
         "guias.html",
         "artistas.html",
+        "pedidos.html",
+        "pedidos.js",
         "style.css",
         "acordia.js",
         "PetalumaScript.woff2",

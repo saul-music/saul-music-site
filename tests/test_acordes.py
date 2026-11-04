@@ -222,12 +222,14 @@ def test_export_simple_for_one_slug(tmp_path):
 def test_simple_template_optional_levels_are_commented_and_safe_to_enable(tmp_path):
     song = {"slug": "tema", "titulo": "Tema", "artista": "Artista", "tipo": "cancion"}
     text = acordes.simple_template(song)
-    assert "#[intermedio]" in text and "#[avanzado]" in text
-    # Quien los activa (borrando el # de esas líneas) obtiene un archivo válido y sin contenido.
-    on = text
-    for line in ("[intermedio]", "[avanzado]", "partitura = '''", "tab = '''", "'''"):
-        on = on.replace("#" + line, line)
-    assert "\n[intermedio]\n" in on and "\n[avanzado]\n" in on
+    assert "#[intermedio]" in text and "#[avanzado.secciones" in text
+    # Avanzado no repite compases: la plantilla no trae partitura de Avanzado (S31).
+    assert "#[avanzado]" not in text
+    # Quien activa solo Intermedio (borrando el # de esas líneas) obtiene un archivo válido.
+    block = "#[intermedio]\n#partitura = '''\n#'''"
+    assert block in text
+    on = text.replace(block, block.replace("#", ""))
+    assert "\n[intermedio]\n" in on
     report = validate_file(write(tmp_path, "tema", on))
     assert report.errors == []
 
@@ -249,7 +251,7 @@ def test_every_chord_in_a_multi_chord_bar_must_be_declared(tmp_path):
     assert any("«A» no está en la lista de acordes" in error for error in errors)
 
 
-AVANZADO = "\n[avanzado]\npartitura = '''\nA: Cmaj7 G/B\n'''\n"
+AVANZADO = "\n[intermedio]\npartitura = '''\nA: Cmaj7 G/B\n'''\n"
 
 
 def shapes(**forms):
@@ -271,7 +273,7 @@ def test_own_shapes_are_optional_and_valid_ones_pass(tmp_path):
         ("Cmaj7", "x 3 2 0 0 30", "fuera de 0 a 24"),
         ("Cmaj7", "x 3 2 0 0 h", "no es un traste"),
         ("G/B", "3 2 0 0 3 3", "más grave debe ser B"),
-        ("Dm7", "x x 0 2 1 1", "no aparece en la versión avanzado"),
+        ("Dm7", "x x 0 2 1 1", "el acorde no aparece en la versión avanzado"),
         ("Gmaj13", "x x 0 2 1 1", "no sé dibujar"),
     ],
 )
@@ -280,13 +282,42 @@ def test_invalid_own_shapes_are_reported_in_spanish(tmp_path, chord, text, messa
     assert any(message in e and "avanzado.formas" in e for e in errors), errors
 
 
-def test_own_shapes_are_not_allowed_in_the_basic_version(tmp_path):
-    bad = GOOD.replace("[[secciones]]", 'formas = { "G" = "3 2 0 0 0 3" }\n\n[[secciones]]', 1)
+def theme_shapes(**forms):
+    body = "\n".join(f'"{chord}" = "{text}"' for chord, text in forms.items())
+    return GOOD + AVANZADO + "[formas]\n" + body + "\n"
+
+
+def test_theme_default_shapes_accept_chords_of_any_level(tmp_path):
+    # G está en el básico; Cmaj7 y G/B solo en el avanzado: el defecto del tema vale para los tres.
+    ok = theme_shapes(**{"G": "3 2 0 0 0 3", "Cmaj7": "x 3 2 0 0 0", "G/B": "x 2 0 0 3 3"})
+    assert validate_file(write(tmp_path, "tema", ok)).errors == []
+    basic_only = GOOD + '\n[formas]\n"C" = "x 3 2 0 1 0"\n'
+    assert validate_file(write(tmp_path, "tema", basic_only)).errors == []
+
+
+@pytest.mark.parametrize(
+    ("chord", "text", "message"),
+    [
+        ("Cmaj7", "x 3 2 0 0 1", "no es del acorde"),
+        ("Cmaj7", "x 3 2 0 0", "6 valores"),
+        ("G/B", "3 2 0 0 3 3", "más grave debe ser B"),
+        ("Dm7", "x x 0 2 1 1", "no aparece en ningún nivel del tema"),
+        ("Gmaj13", "x x 0 2 1 1", "no sé dibujar"),
+    ],
+)
+def test_invalid_theme_default_shapes_are_reported(tmp_path, chord, text, message):
+    errors = validate_file(write(tmp_path, "tema", theme_shapes(**{chord: text}))).errors
+    assert any(message in e and e.startswith("formas «") for e in errors), errors
+
+
+def test_theme_default_shapes_must_be_a_table(tmp_path):
+    bad = GOOD.replace("[[secciones]]", 'formas = "G"\n\n[[secciones]]', 1)
     errors = validate_file(write(tmp_path, "tema", bad)).errors
-    assert any("formas solo existe en [intermedio] y [avanzado]" in e for e in errors)
+    assert any("formas debe ser una tabla" in e for e in errors), errors
 
 
 def test_the_technical_template_shows_the_optional_block_commented_out():
     text = acordes.TEMPLATE.format(title="T", artist="A", slug="t", kind="cancion")
-    assert "# [avanzado.formas]" in text and "NO se piden" in text
-    assert "formas" not in acordes.simple_template({"slug": "t", "titulo": "T", "artista": "A"})
+    assert "# [avanzado.formas]" in text and "NO lleva partitura" in text and "NO se piden" in text
+    simple = acordes.simple_template({"slug": "t", "titulo": "T", "artista": "A"})
+    assert "#[formas]" in simple and "\n[formas]" not in simple

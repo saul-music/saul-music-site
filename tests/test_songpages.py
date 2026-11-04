@@ -95,8 +95,8 @@ def test_empty_modes_say_proximamente(song):
 
 def test_modes_with_content_show_it(tmp_path):
     body = with_modes(
-        "\n[intermedio]\npartitura = '''\nEstrofa x2: G7 % Dsus4 Em7\n'''\n"
-        "\n[avanzado]\npartitura = '''\nEstrofa: G/B C\n'''\ntab = '''\ne|--0--|\n'''\n"
+        "\n[intermedio]\npartitura = '''\nEstrofa x2: G7 G/B Dsus4 Em7\n'''\n"
+        "\n[avanzado]\ntab = '''\ne|--0--|\n'''\n"
     )
     page = render(load_song(write(tmp_path, "otra-era", body)), "publicable", False)
     assert "Dsus4" in page and "G/B" in page and "<pre" in page and "e|--0--|" in page
@@ -122,13 +122,12 @@ def test_instrumental_without_harmony_says_so(song):
 
 def test_extended_chords_are_valid_only_in_their_modes(tmp_path):
     ok = with_modes(
-        "\n[intermedio]\npartitura = '''\nA: G7 Cmaj7 Dsus4 Am9 F#m7b5 Cadd9\n'''\n"
-        "\n[avanzado]\npartitura = '''\nA: G/B D/F# C\n'''\n"
+        "\n[intermedio]\npartitura = '''\nA: G7 Cmaj7 Dsus4 Am9 F#m7b5 Cadd9 G/B D/F#\n'''\n"
     )
     assert validate_file(write(tmp_path, "otra-era", ok)).errors == []
     bad_bass = with_modes("\n[intermedio]\npartitura = '''\nA: G/H\n'''\n")
     assert validate_file(write(tmp_path, "otra-era", bad_bass)).errors
-    junk = with_modes("\n[avanzado]\npartitura = '''\nA: Hx\n'''\n")
+    junk = with_modes("\n[intermedio]\npartitura = '''\nA: Hx\n'''\n")
     assert validate_file(write(tmp_path, "otra-era", junk)).errors
 
 
@@ -335,7 +334,8 @@ def test_percent_inside_a_bar_still_holds_the_chord():
 
 def test_own_shape_goes_only_to_its_version_and_the_page_embeds_the_data(tmp_path):
     body = with_modes(
-        "\n[avanzado]\npartitura = '''\nA: G Em\n'''\n[avanzado.formas]\n\"G\" = \"3 5 5 4 3 3\"\n"
+        "\n[intermedio]\npartitura = '''\nA: G Em\n'''\n"
+        '[avanzado.formas]\n"G" = "3 5 5 4 3 3"\n'
     )
     loaded = load_song(write(tmp_path, "otra-era", body))
     assert loaded["formas"] == {"avanzado": {"G": [3, 5, 5, 4, 3, 3]}}
@@ -347,11 +347,21 @@ def test_own_shape_goes_only_to_its_version_and_the_page_embeds_the_data(tmp_pat
     assert "<" not in page.split('id="acordes-data">')[1].split("</script>")[0]
 
 
+def test_theme_default_shape_goes_to_the_payload_for_every_level(tmp_path):
+    body = with_modes('\n[formas]\n"G" = "3 5 5 4 3 3"\n')
+    loaded = load_song(write(tmp_path, "otra-era", body))
+    assert loaded["formas_tema"] == {"G": [3, 5, 5, 4, 3, 3]}
+    payload = chords_payload(loaded)
+    assert payload["default"]["G"]["frets"] == [3, 5, 5, 4, 3, 3]
+    assert payload["default"]["G"]["tab"][1].startswith("3 5 5 4 3 3") and payload["own"] == {}
+
+
 def test_chords_data_is_embedded_safely_and_only_for_chords_of_the_song(song):
     assert "<" not in json_script({"x": "</script><b>"})
     payload = chords_payload(song)
     assert set(payload["chords"]) == {"G", "D", "Em", "C"}  # los de sus compases
     assert payload["chords"]["G"]["label"] == "G" and payload["own"] == {}
+    assert payload["default"] == {}
 
 
 def test_title_and_artist_strip_is_in_the_sticky_area_and_starts_hidden(song):
@@ -400,7 +410,7 @@ def test_bad_tips_are_rejected_with_a_clear_message(tmp_path, line):
 def test_tips_validate_in_every_mode_and_do_not_count_as_bars(tmp_path):
     body = TIPS_SAMPLE + (
         "\n[intermedio]\npartitura = '''\n> Tip IM | texto\nEstrofa: G7 Em7\n'''\n"
-        "[avanzado]\npartitura = '''\nEstrofa: Gmaj7 D\n> Tip AV | texto\n'''\n"
+        '[avanzado.secciones."Estrofa"]\ntips = ["Tip AV | texto"]\n'
     )
     assert validate_file(write(tmp_path, "otra-era", body)).errors == []
 
@@ -477,7 +487,10 @@ def test_tip_title_and_text_both_use_the_chord_font():
     assert out.count('class="ac-inline-chord"') == 2 and "`" not in out
 
 
-ADV = "\n[avanzado]\npartitura = '''\n> {t}\nIntro: Em G/B\nEstrofa x2: C D\n'''\n"
+ADV = (
+    "\n[intermedio]\npartitura = '''\n> Tip IM | texto\nIntro: Em G/B\nEstrofa x2: C D\n"
+    "Coro: Em C\n'''\n"
+)
 
 
 def test_intermedio_accepts_bass_chords(tmp_path):
@@ -485,36 +498,87 @@ def test_intermedio_accepts_bass_chords(tmp_path):
     assert validate_file(write(tmp_path, "otra-era", body)).errors == []
 
 
-def test_advanced_tabs_and_arrangements_by_section_render_in_place(tmp_path):
+def test_advanced_inherits_intermedio_and_adds_extras_per_section(tmp_path):
     body = with_modes(
-        ADV.format(t="Técnica | Apaga la 6ª cuerda con el pulgar")
-        + "[avanzado.tabs]\n\"Intro\" = '''\ne|--0--|\n'''\n"
-        + '[avanzado.arreglos]\n"Estrofa" = "Rasgueo <b>abajo</b> y `Em` apagado"\n'
+        ADV
+        + "[avanzado.secciones.Intro]\ntab = '''\ne|--0--|\n'''\n"
+        + '[avanzado.secciones.Estrofa]\narreglo = "Rasgueo <b>abajo</b> y `Em` apagado"\n'
+        + 'tips = ["Técnica | Apaga la 6ª cuerda con el pulgar"]\n'
     )
     path = write(tmp_path, "otra-era", body)
     assert validate_file(path).errors == []
     page = render(load_song(path), "publicable", False)
-    assert page.index("e|--0--|") < page.index("Rasgueo")
-    assert "&lt;b&gt;abajo" in page and "<b>abajo" not in page
+    pane = page.split('id="p-avanzado"')[1]
+    inter = page.split('id="p-intermedio"')[1].split('id="p-avanzado"')[0]
+    assert "e|--0--|" not in inter and "Rasgueo" not in inter  # Intermedio queda igual
+    assert pane.index("Intro") < pane.index("e|--0--|") < pane.index("Estrofa")
+    assert pane.index("Rasgueo") < pane.index("Técnica") < pane.index("Coro")
+    assert "Tip IM" in pane and "&lt;b&gt;abajo" in pane and "<b>abajo" not in pane
+    assert pane.count("Coro") >= 1 and "Próximamente" not in pane
+    song = load_song(path)
+    assert song["avanzado_secciones"] == song["intermedio_secciones"]
+    assert set(chords_payload(song)["chords"]) >= {"Em", "G/B", "C", "D"}
+
+
+def test_advanced_without_extras_is_proximamente_and_does_not_count(tmp_path):
+    from musicsite.songpages import version_count
+
+    path = write(tmp_path, "otra-era", with_modes(ADV))
+    song = load_song(path)
+    assert song["avanzado_secciones"] == []
+    assert version_count(song) == 2
+    assert "p-avanzado" in render(song, "publicable", False)
+
+
+def test_advanced_extras_repeat_only_the_first_time_a_section_appears(tmp_path):
+    body = with_modes(
+        "\n[intermedio]\npartitura = '''\nA: G\nB: C\nA: G\n'''\n"
+        '[avanzado.secciones.A]\narreglo = "unico-arreglo"\n'
+    )
+    page = render(load_song(write(tmp_path, "otra-era", body)), "publicable", False)
+    assert page.split('id="p-avanzado"')[1].count("unico-arreglo") == 1
 
 
 @pytest.mark.parametrize(
-    "extra",
+    ("extra", "message"),
     [
-        '[avanzado.tabs]\n"Puente" = "x"\n',
-        '[avanzado.tabs]\n"Intro" = ""\n',
-        '[avanzado.arreglos]\n"Intro" = "' + "x" * 601 + '"\n',
-        '[avanzado]\ntabs = "no es tabla"\n',
+        ('[avanzado.secciones.Puente]\ntab = "x"\n', "no hay una sección con ese nombre"),
+        ("[avanzado.secciones.Intro]\n", "no tiene extras"),
+        ('[avanzado.secciones.Intro]\ntab = ""\n', "tab debe ser texto, no vacío"),
+        ('[avanzado.secciones.Intro]\narreglo = "' + "x" * 601 + '"\n', "arreglo pasa de 600"),
+        ('[avanzado.secciones.Intro]\ntab = "' + "x" * 2001 + '"\n', "tab pasa de 2000"),
+        ('[avanzado.secciones.Intro]\ncolor = "rojo"\n', "clave desconocida «color»"),
+        ('[avanzado.secciones.Intro]\ntips = "no es lista"\n', "tips debe ser una lista"),
+        ('[avanzado.secciones.Intro]\ntips = ["sin barra"]\n', "un tip se escribe"),
+        (
+            '[avanzado.secciones.Intro]\ntips = ["' + "x" * 81 + ' | t"]\n',
+            "título del tip pasa de 80",
+        ),
+        (
+            '[avanzado.secciones.Intro]\ntips = ["t | ' + "y" * 601 + '"]\n',
+            "texto del tip pasa de 600",
+        ),
+        ('[avanzado]\nsecciones = "no es tabla"\n', "avanzado.secciones debe ser una tabla"),
+        ("[avanzado]\nsecciones = { Intro = 3 }\n", "debe ser una tabla (tab, arreglo, tips)"),
+        ("[avanzado]\npartitura = '''\nA: G\n'''\n", "ya no lleva partitura propia"),
+        ('[avanzado.tabs]\n"Intro" = "x"\n', "avanzado.tabs ya no existe"),
+        ('[avanzado.arreglos]\n"Intro" = "x"\n', "avanzado.arreglos ya no existe"),
     ],
 )
-def test_bad_tabs_and_arrangements_are_rejected(tmp_path, extra):
-    body = with_modes(ADV.format(t="T | t") + extra)
-    assert validate_file(write(tmp_path, "otra-era", body)).errors
+def test_bad_advanced_extras_are_rejected(tmp_path, extra, message):
+    errors = validate_file(write(tmp_path, "otra-era", with_modes(ADV + extra))).errors
+    assert any(message in e for e in errors), errors
 
 
-def test_advanced_tips_allow_longer_text_but_other_modes_do_not(tmp_path):
+def test_advanced_extras_need_the_intermedio_score(tmp_path):
+    body = with_modes('\n[avanzado.secciones.Intro]\ntab = "x"\n')
+    errors = validate_file(write(tmp_path, "otra-era", body)).errors
+    assert errors == ["avanzado: necesita la partitura de Intermedio (Avanzado la hereda)"]
+
+
+def test_long_tips_are_allowed_only_in_advanced_extras(tmp_path):
     long_tip = "x" * 80 + " | " + "y" * 600
-    ok = with_modes(ADV.format(t=long_tip))
+    ok = with_modes(ADV + f'[avanzado.secciones.Intro]\ntips = ["{long_tip}"]\n')
     assert validate_file(write(tmp_path, "otra-era", ok)).errors == []
     inter = with_modes("\n[intermedio]\npartitura = '''\n> t | " + "y" * 281 + "\nA: G\n'''\n")
     assert any("tip" in e for e in validate_file(write(tmp_path, "otra-era", inter)).errors)
