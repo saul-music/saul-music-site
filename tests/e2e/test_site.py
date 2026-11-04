@@ -713,3 +713,42 @@ def test_home_count_matches_the_linked_cards_of_the_library(page: Page, base_url
     shown = page.locator(".ac-count strong").inner_text()
     linked = page.locator("#biblioteca a.card").count()
     assert shown == f"{linked} canciones disponibles"
+
+
+def test_artists_page_links_open_outside_and_the_library_link_filters_by_artist(
+    page: Page, base_url: str
+):
+    page.goto(f"{base_url}/artistas.html")
+    external = page.locator("[data-ac-artist-card] ul a[target=_blank]")
+    assert external.count() > 0
+    for rel in external.evaluate_all("els => els.map(e => e.rel)"):
+        assert "noopener" in rel and "noreferrer" in rel
+    expect(page.locator("#los-bunkers .ac-artist-count")).to_contain_text("temas disponibles")
+    page.locator("#los-bunkers .ac-artist-library").click()
+    expect(page).to_have_url(re.compile(r"/index\.html\?q=Los%20Bunkers#biblioteca"))
+    expect(page.locator("#buscar-biblioteca")).to_have_value("Los Bunkers")
+    heads = page.locator("#biblioteca .ac-artist-head:visible")
+    expect(heads).to_have_count(1)
+    expect(heads).to_contain_text("Los Bunkers")
+    expect(heads).to_be_in_viewport()
+
+
+def test_artist_without_published_songs_says_coming_soon(page: Page, one_song_url: str):
+    page.goto(f"{one_song_url}/artistas.html")
+    expect(page.locator("#los-bunkers .ac-artist-count")).to_contain_text("Próximamente")
+    expect(page.locator("#los-bunkers .ac-artist-library")).to_have_count(0)
+    expect(page.locator("#javiera-mena .ac-artist-count")).to_contain_text("1 tema disponible")
+
+
+def test_library_query_parameter_is_text_only(page: Page, base_url: str):
+    page.goto(f"{base_url}/index.html?q=%3Cimg%20src%3Dx%20onerror%3Dwindow.__x%3D1%3E#biblioteca")
+    expect(page.locator("#sin-resultados")).to_be_visible()
+    assert page.evaluate("window.__x") is None
+
+
+def test_artists_page_has_no_horizontal_scroll(page: Page, base_url: str):
+    page.goto(f"{base_url}/artistas.html")
+    overflow = page.evaluate(
+        "document.documentElement.scrollWidth - document.documentElement.clientWidth"
+    )
+    assert overflow <= 0

@@ -5,6 +5,7 @@ vigente que dejó el admin:
 
     current.txt                      apunta a `releases/<versión>`
     releases/<versión>/<tema>.toml   los temas de esa publicación (inmutable)
+    releases/<versión>/artists.json  los artistas de la sección Artistas (S24; opcional)
 
 Reglas:
 - Al arrancar se usa la publicación vigente; si no hay o no sirve, `songs/` de git (el respaldo).
@@ -23,6 +24,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
 
+from musicsite.artists import build_page as build_artists_page
 from musicsite.songpages import apply_library, published_library_html, render_published
 
 RELEASE = re.compile(r"releases/[0-9]{8}-[0-9]{6}-[0-9a-f]{4}")
@@ -36,6 +38,9 @@ class State:
     release: str  # `releases/<versión>`; vacío si viene de git
     pages: dict[str, bytes]  # "/cancion-<tema>.html" -> HTML
     index: bytes | None  # index.html con la Biblioteca de lo publicado; None = el de web/
+    artists: bytes | None = (
+        None  # artistas.html con artists.json (o el respaldo) y los conteos (S24)
+    )
 
 
 class Catalog:
@@ -46,8 +51,10 @@ class Catalog:
         editorial: Path | None = None,
         refresh_seconds: float = 60,
         clock: Callable[[], float] | None = None,
+        artists_html: str = "",
     ) -> None:
         self._index_html = index_html
+        self._artists_html = artists_html
         self._editorial = editorial
         self._ttl = refresh_seconds
         self._clock = clock or (lambda: time.monotonic())  # noqa: PLW0108 - se resuelve al llamar
@@ -58,7 +65,8 @@ class Catalog:
             pages = {
                 f"/cancion-{s}.html": h.encode() for s, h in render_published(git_songs).items()
             }
-        self._state = State("git", "", pages, None)
+        artists = self._artists_page(None, git_songs)
+        self._state = State("git", "", pages, None, artists)
         self._next_check = self._clock() + self._ttl
         if editorial is not None:
             self._try_load(self._pointer())
@@ -110,4 +118,17 @@ class Catalog:
             raise ValueError(f"nombres de tema no válidos: {bad}")
         pages = {f"/cancion-{s}.html": h.encode() for s, h in render_published(directory).items()}
         index = apply_library(self._index_html, published_library_html(directory)).encode()
-        return State("editorial", release, pages, index)
+        artists = self._artists_page(directory, directory)
+        return State("editorial", release, pages, index, artists)
+
+    def _artists_page(self, directory: Path | None, songs: Path | None) -> bytes | None:
+        """artistas.html con `artists.json` de `directory` (o el respaldo) y los temas de `songs`.
+
+        Nunca impide cargar una publicación: si algo falla, esa página sigue siendo la de web/."""
+        if not self._artists_html:
+            return None
+        try:
+            return build_artists_page(self._artists_html, directory, songs).encode()
+        except Exception as error:  # noqa: BLE001
+            log.warning("catálogo: no se pudo armar artistas.html: %s", error)
+            return None

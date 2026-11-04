@@ -752,3 +752,7 @@ a.card:hover { border-color: var(--ac-fill); transform: translateY(-2px); }
 .ac-arrangement { color: var(--bs-secondary-color); }
 
 .ac-count strong { color: var(--bs-body-color); }
+
+/* Sección Artistas (S24) */
+.ac-artist-library { justify-self: start; }
+.ac-artist-links a { overflow-wrap: anywhere; }

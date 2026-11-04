@@ -65,7 +65,8 @@ def create_app(
 
     files = load_files(root)
     index_html = files["/index.html"][0].decode() if "/index.html" in files else ""
-    catalog = Catalog(index_html, songs, editorial, refresh_seconds)
+    artists_html = files["/artistas.html"][0].decode() if "/artistas.html" in files else ""
+    catalog = Catalog(index_html, songs, editorial, refresh_seconds, artists_html=artists_html)
     app = FastAPI(docs_url=None, redoc_url=None, openapi_url=None, redirect_slashes=False)
 
     @app.middleware("http")
@@ -84,6 +85,8 @@ def create_app(
         state = catalog.current()
         if path in ("/", "/index.html") and state.index is not None:
             return Response(state.index, media_type=TYPES[".html"])
+        if path == "/artistas.html" and state.artists is not None:
+            return Response(state.artists, media_type=TYPES[".html"])
         song = state.pages.get(path)
         if song is not None:
             return Response(song, media_type=TYPES[".html"])
