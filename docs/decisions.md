@@ -426,3 +426,15 @@ lo cierra).
   no cambian. El botón «Habla con una guía» queda fuera del grupo.
 - **Estado inicial plegado, sin recordarlo:** cada visita parte compacta. Descartado: recordarlo en `localStorage`.
 - Las pruebas de navegador abren el grupo en celular con `set_options()`; hay pruebas propias del plegado, del contraste y del desborde.
+
+## S28 · Resumen plegado de posiciones al inicio de cada pestaña (2026-11-04)
+
+Cada pestaña de reproducción (Básico, Intermedio, Avanzado) trae, justo bajo su descripción, un `<details class="ac-summary">`
+**cerrado por defecto** («Posiciones de los acordes (N)») con guitarra y piano de todos los acordes que usa ESA pestaña
+(los de sus botones `.ac-chord-btn`, sin repetir, en orden de aparición).
+- **Misma forma que el panel:** la guitarra dibuja `formsFor(acorde, nivel)[0]` (S27: propia del nivel > `[formas]` del tema >
+  regla de cejilla > chords-db); el piano usa las teclas del acorde. Reutiliza `guitarSVG` y `pianoSVG` del panel.
+- **Carga:** nada se dibuja hasta la primera vez que se abre (evento `toggle`); la carga de la página no cambia.
+- **Celular:** rejilla `auto-fill minmax(7.5rem, 1fr)` (2 columnas a 360 px), sin desborde horizontal; comprobado en la matriz.
+- Un acorde sin guitarra estándar ni forma propia dice «Sin diagrama de guitarra» y conserva el piano. No hay ukelele ni dedos propios.
+

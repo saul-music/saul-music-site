@@ -173,8 +173,9 @@
       ((data.chords[name] || {}).guitar || []).forEach(function (g) { add(g, ""); });
       return list;
     }
-    function modeOf(node) {
-      return ((node.closest(".tab-pane") || {}).id || "").replace(/^p-/, "");
+    function modeOf(el) {
+      el = el.classList.contains("tab-pane") ? el : el.closest(".tab-pane");
+      return ((el || {}).id || "").replace(/^p-/, "");
     }
     function forms() {
       return formsFor(anchor.getAttribute("data-chord"), modeOf(anchor));
@@ -247,6 +248,49 @@
       pinned = false;
     }
     function schedule() { clearTimeout(timer); timer = setTimeout(function () { hide(false); }, 250); }
+
+    /* Resumen plegado de posiciones (S28): al inicio de cada pestaña, un <details> cerrado con la guitarra
+       y el piano de todos los acordes de ESA pestaña, con la forma que se vería al tocarlos (formsFor).
+       Se dibuja la primera vez que se abre, así la carga de la página no cambia. */
+    function chordsOfPane(pane) {
+      var seen = {}, names = [];
+      pane.querySelectorAll(".ac-chord-btn").forEach(function (b) {
+        var n = b.getAttribute("data-chord");
+        if (!seen[n] && data.chords[n]) { seen[n] = true; names.push(n); }
+      });
+      return names;
+    }
+    function summaryItem(name, mode) {
+      var chord = data.chords[name];
+      var item = node("figure", "ac-sum-item");
+      item.appendChild(node("figcaption", "ac-sum-name", chord.label));
+      var g = formsFor(name, mode)[0];
+      var guitar = node("div", "ac-chord ac-sum-guitar");
+      if (g) guitar.appendChild(guitarSVG(g.frets, g.fingers, g.barres, chord.label));
+      else guitar.appendChild(node("span", "ac-sum-none", "Sin diagrama de guitarra"));
+      item.appendChild(guitar);
+      var piano = node("div", "ac-sum-piano");
+      piano.appendChild(pianoSVG(chord.keys, chord.bass, chord.label));
+      item.appendChild(piano);
+      return item;
+    }
+    document.querySelectorAll(".tab-pane").forEach(function (pane) {
+      var names = chordsOfPane(pane);
+      var intro = pane.querySelector(":scope > .d-grid > p");
+      if (!names.length || !intro) return;
+      var mode = modeOf(pane);
+      var det = node("details", "ac-summary");
+      var sum = node("summary", "", "Posiciones de los acordes (" + names.length + ")");
+      var grid = node("div", "ac-sum-grid");
+      det.appendChild(sum); det.appendChild(grid);
+      det.addEventListener("toggle", function () {
+        if (!det.open || grid.childNodes.length) return;
+        var frag = document.createDocumentFragment();
+        names.forEach(function (n) { frag.appendChild(summaryItem(n, mode)); });
+        grid.appendChild(frag);
+      });
+      intro.insertAdjacentElement("afterend", det);
+    });
 
     buttons.forEach(function (btn) {
       btn.setAttribute("aria-expanded", "false");

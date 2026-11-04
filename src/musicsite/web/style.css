@@ -761,6 +761,22 @@ a.card:hover { border-color: var(--ac-fill); transform: translateY(-2px); }
 .ac-chord-panel .key.on { fill: var(--ac-fill); }
 .ac-chord-panel .key.black.on { fill: var(--ac-accent); }
 .ac-chord-panel .key.bass { fill: var(--ac-fill-2); }
+/* Resumen plegado de posiciones al inicio de cada pestaña (S28) */
+.ac-summary { border: 1px solid rgba(var(--ac-accent-rgb), .3); border-radius: var(--ac-radius); padding: .6rem .9rem; }
+.ac-summary > summary { cursor: pointer; font-weight: 600; }
+.ac-sum-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(7.5rem, 1fr)); gap: 1rem .75rem; margin-top: .9rem; }
+.ac-sum-item { margin: 0; display: grid; justify-items: center; align-content: start; gap: .35rem; min-width: 0; }
+.ac-sum-name { font-family: "Petaluma Script", var(--ac-font-display); font-size: 1.4rem; line-height: 1.1; color: var(--ac-accent); }
+.ac-sum-guitar svg { width: 84px; }
+.ac-sum-none { font-size: .8rem; color: var(--ac-fg-muted); text-align: center; }
+.ac-sum-piano { width: 100%; max-width: 7rem; }
+.ac-sum-piano svg { width: 100%; height: auto; }
+.ac-summary svg .finger { fill: var(--ac-on-fill); font-weight: 700; }
+.ac-summary .key { fill: #f4efe6; stroke: #9b93b0; stroke-width: .6; }
+.ac-summary .key.black { fill: #1c1830; }
+.ac-summary .key.on { fill: var(--ac-fill); }
+.ac-summary .key.black.on { fill: var(--ac-accent); }
+.ac-summary .key.bass { fill: var(--ac-fill-2); }
 @media (max-width: 575.98px) {
   .ac-chord-panel {
     position: fixed; top: auto !important; left: 0 !important; right: 0; bottom: 0; width: auto; max-width: none;

@@ -120,3 +120,10 @@ AAAA-MM-DD · paso · qué se hizo · qué quedó pendiente · decisiones nuevas
 - Pruebas: 6 de navegador nuevas (borde, contraste en ambos temas, plegado, Escape con el metrónomo andando, sin desborde, capturas
   con `AC_SHOTS=<carpeta>`); las existentes abren el grupo con `set_options()`. Capturas revisadas en Pixel 7 y iPhone 14.
 - **Pendiente:** revisar a ojo en celular real; el botón «Opciones» no indica si «Sin sonido» está activo mientras está plegado.
+
+## 2026-11-04 · Resumen plegado de posiciones (S28)
+
+- `<details>` cerrado al inicio de cada pestaña con guitarra y piano de sus acordes, con la forma que verá el usuario al tocarlos.
+  Pruebas de navegador: cerrado por defecto, un diagrama por acorde, forma por defecto del tema, sin desborde.
+- **Pendiente:** revisar a ojo en celular real y en claro/oscuro.
+
