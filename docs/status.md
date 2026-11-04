@@ -88,3 +88,4 @@ AAAA-MM-DD · paso · qué se hizo · qué quedó pendiente · decisiones nuevas
 2026-11-03 · Biblioteca por versiones (rama feat/biblioteca-por-versiones) · S20: dentro de cada artista, primero el tema con más versiones (Básico, Intermedio, Avanzado con compases), luego por título; «Próximamente» al final; 390 tests · pendiente: visto bueno a ojo, PR
 2026-11-03 · acordes add#11 y madd#11 (rama feat/acorde-add-sostenido-11) · S21: el sitio sabe sus notas y dibuja el teclado (Dmadd#11 = D F A G#); sin guitarra estándar (forma propia); validadores sin cambios · pendiente: visto bueno, PR
 ```
+2026-11-03 · silencios en producción · site: el punto `.` es un silencio (S22 del site, M36 de research; PR #43 y #42), probado en navegador y desplegado por pipeline · pendiente: probar con login real escribir un silencio, publicar y verlo en el sitio · S22, M36
