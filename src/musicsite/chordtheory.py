@@ -163,7 +163,7 @@ def parse(token: str) -> Chord | None:
     if not match:
         return None
     letter, accidental, rest, bass_letter, bass_accidental = match.groups()
-    suffix = ALIASES.get(rest)
+    suffix = ALIASES.get(re.sub(r"^m?Maj", lambda m: m.group().lower(), rest))  # «Maj» = «maj»
     if suffix is None:
         return None
     bass = _pitch_class(bass_letter, bass_accidental) if bass_letter else None
