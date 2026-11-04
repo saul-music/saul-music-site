@@ -1,6 +1,6 @@
 # Estado del sitio
 
-> Registro vivo. Última actualización: 2026-11-04 (S23: contador de temas en la portada).
+> Registro vivo. Última actualización: 2026-11-04 (respaldo `songs/` al día con producción).
 
 ## Paso actual
 

@@ -94,7 +94,7 @@ def test_web_dir_has_only_fixed_site_files():
 
 def test_song_pages_come_from_published_songs(client):
     slugs = {p.stem for p in SONGS_DIR.glob("*.toml")}
-    assert len(slugs) == 14
+    assert len(slugs) == 13
     assert slugs <= {slug for slug, *_ in REPERTOIRE}
     for slug in slugs:
         response = client.get(f"/cancion-{slug}.html")
