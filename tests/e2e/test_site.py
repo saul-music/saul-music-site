@@ -291,6 +291,36 @@ def test_theme_default_shape_first_and_own_version_shape_beats_it(page: Page, sh
     expect(panel.locator(".ac-chip-ok")).to_have_text("Forma de esta versión")
 
 
+def test_summary_is_folded_and_draws_every_chord_of_its_tab(page: Page, shapes_url: str):
+    page.goto(shapes_url + SONG)
+    for mode in ("basico", "intermedio"):
+        if mode == "intermedio":
+            page.get_by_role("tab", name=re.compile("Intermedio")).click()
+        pane = page.locator(f"#p-{mode}")
+        details = pane.locator("details.ac-summary")
+        expect(details).to_have_count(1)
+        assert details.evaluate("d => !d.open")
+        expect(details.locator(".ac-sum-item")).to_have_count(0)  # no se dibuja hasta abrirlo
+        names = pane.evaluate(
+            "p => [...new Set([...p.querySelectorAll('.ac-chord-btn')].map(b => b.dataset.chord))]"
+        )
+        # Con teclado (Enter sobre el resumen): accesible y sin depender de qué barra fija lo tape
+        details.locator("summary").focus()
+        page.keyboard.press("Enter")
+        items = details.locator(".ac-sum-item")
+        expect(items).to_have_count(len(names))
+        expect(details.locator("svg[aria-label^='Teclas']")).to_have_count(len(names))
+        expect(details.locator(".ac-sum-guitar svg")).to_have_count(len(names))
+        # E: forma por defecto del tema (traste 7), no la estándar (sin número)
+        e_item = items.filter(has=page.locator(".ac-sum-name", has_text=re.compile(r"^E$")))
+        expect(e_item.locator("svg text")).to_have_text("7")
+        assert page.evaluate(
+            "document.documentElement.scrollWidth <= document.documentElement.clientWidth"
+        )
+        box = details.bounding_box()
+        assert box["x"] >= 0 and box["x"] + box["width"] <= page.viewport_size["width"] + 1
+
+
 def test_barre_rule_shows_the_nearest_position_first(page: Page, base_url: str):
     """Regla de cejilla (S27): en el panel, la primera forma de un acorde que empieza desde el
     traste 3 es la de traste base más bajo (los datos de la página ya vienen ordenados)."""
