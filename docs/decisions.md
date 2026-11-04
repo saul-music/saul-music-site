@@ -439,7 +439,7 @@ Cada pestaña de reproducción (Básico, Intermedio, Avanzado) trae, justo bajo 
 - Un acorde sin guitarra estándar ni forma propia dice «Sin diagrama de guitarra» y conserva el piano. No hay ukelele ni dedos propios.
 
 
-## S29 · Barra de reproducción en filas: niveles, controles y aviso de guías (2026-11-04)
+## S29 · Barra de reproducción en filas: niveles, controles y aviso de guías (2026-11-04) — reemplazada por S30 (se quita el aviso; quedan los niveles arriba)
 
 Orden de arriba abajo, en escritorio y celular: **(1)** selector de nivel (con el borde de S26), **(2)** controles de
 reproducción (en celular, Reproducir + «Opciones» plegable de S26), **(3)** aviso de guías.
@@ -453,3 +453,12 @@ reproducción (en celular, Reproducir + «Opciones» plegable de S26), **(3)** a
   del 35 % de la pantalla en escritorio.
 - Los niveles pasan a una fila propia (`.ac-met-levels-row`, `order: -2`); el resto del orden visual se logra con `order` sin mover el DOM
   de los controles.
+
+
+## S30 · La barra de reproducción queda en dos filas, sin aviso de guías (2026-11-04)
+
+Reemplaza a S29. El usuario rechazó el concepto de aviso (banner) en la barra. Se quita por completo: HTML, CSS, JS (el «×», su
+memoria en `sessionStorage` y la regla que lo ocultaba junto a «Habla con una guía») y sus pruebas.
+- **Barra:** **(1)** selector de nivel (borde de S26), **(2)** controles de reproducción (en celular, Reproducir + «Opciones»
+  plegable). Se conserva el botón corto «Habla con una guía» y la franja de guías de arriba.
+- Se conserva de S29 la fila propia de los niveles (`.ac-met-levels-row`) y la barra compacta.
