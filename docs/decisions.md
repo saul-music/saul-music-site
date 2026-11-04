@@ -349,3 +349,21 @@ La portada dice «N canciones disponibles con acordes, gratis» bajo el subtítu
 - **Cómo:** marcas `<!-- temas:inicio -->`/`<!-- temas:fin -->` en `index.html`; `apply_library` actualiza el número a la vez
   que la Biblioteca, así que sigue a lo publicado en el bucket (también al despublicar). Sin marcas, no cambia nada.
 - El `index.html` estático lleva el número de sus propias tarjetas (respaldo de git).
+
+## S24 · Sección Artistas: `artists.json` del release, enlaces externos y conteo de temas (2026-11-04)
+
+- **Datos:** `artistas.html` lleva solo las marcas `<!-- artistas:inicio/fin -->`; `musicsite.artists` arma el bloque. Los artistas
+  salen de `artists.json` en el release vigente del bucket editorial, junto a `index.json`:
+  `{"format":1,"artists":[{"slug","name","description","links":[{"label","url"}]}]}`. Se lee con la misma mecánica que S9
+  (con la publicación, relectura cada 60 s, una publicación nunca rompe la anterior). **Respaldo:** `FALLBACK` en `artists.py`
+  (los 4 artistas de siempre) si el archivo no existe o no sirve; también en el modo `songs/` de git.
+- **Validación:** `format` = 1; 1 a 200 artistas; `slug` en minúsculas con guiones y sin repetir; nombre 1 a 80; descripción
+  ≤ 1500; hasta 10 enlaces por artista, con `label` de 1 a 100 y URL http/https absoluta (≤ 500, sin espacios). Un artista
+  mal formado o un archivo roto invalida todo el archivo (se usa el respaldo); **un enlace inválido solo se descarta**. Todo se escapa
+  (sin HTML en descripciones).
+- **Enlaces externos:** `target="_blank" rel="noopener noreferrer"` más texto oculto «(se abre en otra pestaña)».
+- **Conteo:** cuenta los temas publicados del release (igual que S23); un tema «Artista (versión)» cuenta para «Artista». Sin
+  temas: «Próximamente». Con temas: lista de títulos con enlace y botón «Ver sus temas en la Biblioteca».
+- **`?q=`:** `index.html?q=Nombre#biblioteca` llena el buscador de la galería (S14) y deja la Biblioteca a la vista; el valor se asigna
+  como texto, nunca como HTML, y se recorta a 100 caracteres.
+- **Sin cambio de contrato:** el sitio ignora campos desconocidos de `artists.json`; no lee `index.json` para esto.

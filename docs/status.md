@@ -1,6 +1,6 @@
 # Estado del sitio
 
-> Registro vivo. Última actualización: 2026-11-04 (S23: contador de temas en la portada).
+> Registro vivo. Última actualización: 2026-11-04 (S24: sección Artistas con artists.json).
 
 ## Paso actual
 
@@ -91,3 +91,9 @@ AAAA-MM-DD · paso · qué se hizo · qué quedó pendiente · decisiones nuevas
 2026-11-03 · silencios en producción · site: el punto `.` es un silencio (S22 del site, M36 de research; PR #43 y #42), probado en navegador y desplegado por pipeline · pendiente: probar con login real escribir un silencio, publicar y verlo en el sitio · S22, M36
 2026-11-03 · catálogo sin Los Jaivas, Congreso ni Subhira (rama fix/quitar-jaivas-congreso-subhira, PR #45) · se quitan 5 temas (2 publicados: Corre que te pillo y Takirari del Puerto), sus fichas en artistas.html, la Biblioteca y la regla de guía; REPERTOIRE pasa a 15 temas y los publicados a 14 · pendiente: publicar un release nuevo desde el admin y borrar sus borradores en GCP
 2026-11-03 · acorde mMaj7 (rama fix/acorde-mmaj-y-combos-anchos) · el validador y el teclado aceptan «DmMaj7» como alias de mmaj7 (antes solo mmaj7 y mM7); el contrato se copió de research
+
+## 2026-11-04 · Sección Artistas (S24)
+
+- `artists.json` del release (fallback a los datos estáticos), enlaces externos en pestaña nueva, conteo de temas publicados y
+  «Ver sus temas en la Biblioteca» (`?q=`). Pruebas: `tests/test_artists.py` y 4 de navegador. Detalle en `decisions.md` (S24).
+- **Pendiente:** revisar a ojo en celular real; probar con un `artists.json` real cuando el admin lo publique.

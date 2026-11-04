@@ -377,6 +377,16 @@
     inner.addEventListener("input", apply);
     if (hero) hero.addEventListener("input", function () { inner.value = hero.value; apply(); });
     if (clear) clear.addEventListener("click", function () { inner.value = ""; apply(); inner.focus(); });
+    /* Enlace con búsqueda (?q=Artista, p. ej. desde la sección Artistas): llena el buscador de la galería
+       y deja la Biblioteca a la vista. Es solo texto del buscador: se asigna como valor, nunca como HTML. */
+    try {
+      var q = new URLSearchParams(window.location.search).get("q");
+      if (q) {
+        inner.value = q.slice(0, 100);
+        apply();
+        window.addEventListener("load", function () { lib.scrollIntoView({ block: "start" }); });
+      }
+    } catch (e) { /* sin URLSearchParams: la Biblioteca queda sin filtrar */ }
     if (form) form.addEventListener("submit", function (e) {
       e.preventDefault();
       inner.value = hero.value;
