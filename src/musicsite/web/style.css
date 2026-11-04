@@ -762,7 +762,7 @@ a.card:hover { border-color: var(--ac-fill); transform: translateY(-2px); }
 .ac-chord-panel .key.black.on { fill: var(--ac-accent); }
 .ac-chord-panel .key.bass { fill: var(--ac-fill-2); }
 /* Resumen plegado de posiciones al inicio de cada pestaña (S28) */
-.ac-summary { border: 1px solid rgba(var(--ac-accent-rgb), .3); border-radius: var(--ac-radius); padding: .6rem .9rem; }
+.ac-summary { scroll-margin-top: 9rem; border: 1px solid rgba(var(--ac-accent-rgb), .3); border-radius: var(--ac-radius); padding: .6rem .9rem; }
 .ac-summary > summary { cursor: pointer; font-weight: 600; }
 .ac-sum-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(7.5rem, 1fr)); gap: 1rem .75rem; margin-top: .9rem; }
 .ac-sum-item { margin: 0; display: grid; justify-items: center; align-content: start; gap: .35rem; min-width: 0; }

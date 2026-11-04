@@ -304,6 +304,7 @@ def test_summary_is_folded_and_draws_every_chord_of_its_tab(page: Page, shapes_u
         names = pane.evaluate(
             "p => [...new Set([...p.querySelectorAll('.ac-chord-btn')].map(b => b.dataset.chord))]"
         )
+        details.locator("summary").scroll_into_view_if_needed()
         details.locator("summary").click()
         items = details.locator(".ac-sum-item")
         expect(items).to_have_count(len(names))
