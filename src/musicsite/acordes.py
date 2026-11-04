@@ -38,11 +38,6 @@ REPERTOIRE = [
     ("bailando-solo", "Bailando solo", "Los Bunkers", "cancion"),
     ("ven-aqui", "Ven aquí", "Los Bunkers", "cancion"),
     ("entre-mis-brazos", "Entre mis brazos", "Los Bunkers", "cancion"),
-    ("corre-que-te-pillo", "Corre que te pillo", "Los Jaivas", "instrumental"),
-    ("la-vida-magica-ay-si", "La vida mágica, ay sí", "Los Jaivas", "instrumental"),
-    ("takirari-del-puerto", "Takirari del Puerto", "Los Jaivas", "instrumental"),
-    ("el-errante", "El errante", "Congreso", "instrumental"),
-    ("norte-y-cal", "Norte y cal", "Subhira", "instrumental"),
     ("hablar-de-ti", "Hablar de ti", "Gepe", "cancion"),
 ]
 

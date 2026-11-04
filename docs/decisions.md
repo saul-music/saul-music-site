@@ -316,7 +316,7 @@ Los artistas siguen en orden alfabético (sin artículo ni tildes, S14). Dentro 
 - **Versiones** (`songpages.version_count`): cuántos de Básico, Intermedio y Avanzado tienen al menos un compás
   (0 a 3). Un nivel que solo trae tips no cuenta. Un tema «Próximamente» vale 0 y queda al final de su artista.
 - **Empates:** alfabéticos; Avanzado no pesa más que Intermedio.
-- Un tema publicado sin base armónica (p. ej. «Corre que te pillo») también vale 0: sale tras los que tienen
+- Un tema publicado sin base armónica (p. ej. un tema sin compases) también vale 0: sale tras los que tienen
   acordes y antes de los «Próximamente» solo por orden alfabético entre ceros.
 - No cambia el buscador, los contadores por artista ni el HTML de las tarjetas; no hay indicador visual de versiones.
 ## S21 · Acordes `add#11` y `madd#11` (2026-11-03)
