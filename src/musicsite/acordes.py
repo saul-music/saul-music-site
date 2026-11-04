@@ -46,7 +46,7 @@ BASIC_CHORD = re.compile(r"^[A-G][#b]?m?$")
 # Intermedio y Avanzado: extensiones (7, maj7, sus4, add9, m7b5...) y bajos (G/B). Lo que distingue
 # al Avanzado no son los acordes sino tabs, arreglos y tips por sección (S17).
 SLASH_CHORD = re.compile(
-    r"^[A-G][#b]?(?:mmaj|mM|maj|min|m|dim|aug|\+)?(?:\d{1,2}|(?:sus|add|b|#)\d{0,2})*(?:/[A-G][#b]?)?$"
+    r"^[A-G][#b]?(?:mmaj|mMaj|mM|maj|min|m|dim|aug|\+)?(?:\d{1,2}|(?:sus|add|b|#)\d{0,2})*(?:/[A-G][#b]?)?$"
 )
 BARRIOS = {"", "Rock", "Pop", "Indie"}
 MODES = {"intermedio": SLASH_CHORD, "avanzado": SLASH_CHORD}
