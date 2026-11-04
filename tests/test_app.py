@@ -5,7 +5,7 @@ from pathlib import Path
 import pytest
 from fastapi.testclient import TestClient
 
-from musicsite.acordes import REPERTOIRE, validate_file
+from musicsite.acordes import validate_file
 from musicsite.app import HEADERS, SONGS_DIR, WEB_DIR, create_app, load_files
 
 
@@ -94,8 +94,7 @@ def test_web_dir_has_only_fixed_site_files():
 
 def test_song_pages_come_from_published_songs(client):
     slugs = {p.stem for p in SONGS_DIR.glob("*.toml")}
-    assert len(slugs) == 13
-    assert slugs <= {slug for slug, *_ in REPERTOIRE}
+    assert len(slugs) == 15  # el respaldo es lo último publicado, no solo el repertorio inicial
     for slug in slugs:
         response = client.get(f"/cancion-{slug}.html")
         assert response.status_code == 200

@@ -12,7 +12,7 @@ from fastapi.testclient import TestClient
 
 from musicsite.acordes import REPERTOIRE
 from musicsite.app import HEADERS, SONGS_DIR, WEB_DIR, create_app
-from musicsite.songpages import apply_count, apply_library, library_html, update_library
+from musicsite.songpages import apply_count, apply_library, published_library_html, update_library
 
 FORBIDDEN = ["musicres", "run.app", "dashboard", "saulapp-music", "youtube", "bigquery", "secret"]
 VERSION = iter(range(1, 10_000))
@@ -199,6 +199,6 @@ def test_apply_library_matches_the_generator_the_cli_uses(tmp_path):
     index.write_text((WEB_DIR / "index.html").read_text(encoding="utf-8"), encoding="utf-8")
     update_library(SONGS_DIR, index)
     expected = apply_library(
-        (WEB_DIR / "index.html").read_text(encoding="utf-8"), library_html(SONGS_DIR)
+        (WEB_DIR / "index.html").read_text(encoding="utf-8"), published_library_html(SONGS_DIR)
     )
     assert index.read_text(encoding="utf-8") == expected

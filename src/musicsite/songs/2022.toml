@@ -1,0 +1,68 @@
+slug = "2022"
+titulo = "2022"
+artista = "Fother muckers"
+tipo = "cancion"
+barrio = "Indie"
+tono = "Db mayor"
+cejilla = ""
+compas = "4/4"
+bpm = 78
+nivel = "medio"
+acordes = ["Db", "Bbm", "Gb", "Ab", "Bb", "Dbm", "G"]
+forma = "Intro (Parte A) - Estrofa - Parte B - Silencio - Solo - Parte C - Parte D - Final - Acorde final"
+confianza = ""
+dudas = ""
+sin_base_armonica = false
+partitura = '''
+Intro (Parte A) x2: Db Bbm
+Estrofa x2: Db Bbm
+Parte B: Gb Ab Db Bbm Gb Ab
+Estrofa x2: Db Bbm
+Parte B: Gb Ab Db Bbm Gb Ab
+> Silencio | En la segunda repetición, toca el acorde `Bbm7` una vez y deja el resto del compás en silencio
+Parte A x2: Db Bbm
+Estrofa: Db Bbm Db Bbm
+Parte B: Gb Ab Db Bbm Gb Ab
+Parte A: Db Bbm
+Solo: Gb Ab Bbm Db Gb Ab
+Solo: Db Bb
+Parte B: Gb Ab Db Bbm Gb Ab
+Parte C: Dbm G
+Parte B: Gb Ab Db Bbm Gb Ab
+Parte A: Db Bbm
+Parte D: Gb Ab Db Bb Gb Ab
+Final x4: Db Bbm
+Acorde final: Bbm
+'''
+
+[procedencia]
+metodo = "De oído"
+autor = "Gonzalo Pincheira"
+fecha = "03-10-2026"
+
+[revision]
+revisado = true
+v2_resuelto = true
+
+[intermedio]
+acordes = ["Dbmaj7", "Bbm7", "Gb6", "Ab6", "Gbdim7", "Bb6", "Dbm7", "G7"]
+partitura = '''
+Intro (Parte A) x2: Dbmaj7 Bbm7
+Estrofa x2: Dbmaj7 Bbm7
+Parte B: Gb6 Ab6 Dbmaj7 Bbm7-%-Bbm9-Bbm7 Gb6 Gbdim7
+Estrofa x2: Dbmaj7 Bbm7
+Parte B: Gb6 Ab6 Dbmaj7 Bbm7-%-Bbm9-Bbm7 Gb6 Gbdim7
+Parte A: Dbmaj7 Bbm7 Dbmaj7 Bbm7-.-.-.
+Estrofa: Dbmaj7 Bbm7 Dbmaj7 Bbm7
+Parte B: Gb6 Ab6 Dbmaj7 Bbm7-%-Bbm9-Bbm7 Gb6 Gbdim7
+Parte A: Dbmaj7 Bbm7
+Solo: Gb6 Ab6 Bbm7 Dbmaj7 Gb6 Gbdim7
+Solo: Dbmaj7 Bb7sus4
+Parte B: Gb6 Ab6 Dbmaj7 Bbm7 Gb6 Gbdim7
+Parte C: Dbm7 G7
+Parte B: Gb6 Ab6 Dbmaj7 Bbm7-%-Bbm9-Bbm7 Gb6 Gbdim7
+Parte A: Dbmaj7 Bbm7
+Parte B': Gb6 Ab6 Dbmaj7 Bb7sus4 Gb6 Gbdim7
+Final x4: Dbmaj7 Bbm7
+Acorde final: Bbm7
+'''
