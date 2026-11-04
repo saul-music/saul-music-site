@@ -213,6 +213,18 @@ def own_shapes(data: dict) -> dict[str, dict[str, list[int]]]:
     return shapes
 
 
+def theme_shapes(data: dict) -> dict[str, list[int]]:
+    """Formas por defecto del tema (`[formas]`, S27): valen para los tres niveles."""
+    table = data.get("formas", {})
+    shapes: dict[str, list[int]] = {}
+    for name, text in table.items() if isinstance(table, dict) else []:
+        try:
+            shapes[name] = theory.parse_shape(text)
+        except ValueError:
+            continue
+    return shapes
+
+
 def load_song(path: Path) -> dict:
     data = tomllib.loads(path.read_text(encoding="utf-8"))
     compact, _ = parse_score(data.get("partitura", ""))
@@ -226,6 +238,7 @@ def load_song(path: Path) -> dict:
     for key in ("tabs", "arreglos"):
         table = advanced.get(key, {})
         data[key] = table if isinstance(table, dict) else {}
+    data["formas_tema"] = theme_shapes(data)  # antes de que `formas` pase a ser {modo: ...}
     data["formas"] = own_shapes(data)
     return data
 
@@ -291,7 +304,11 @@ def chords_payload(song: dict) -> dict:
         }
         for mode, table in song.get("formas", {}).items()
     }
-    return {"chords": chords, "own": own}
+    default = {
+        name: {"frets": frets, "tab": list(theory.tab_lines(frets))}
+        for name, frets in song.get("formas_tema", {}).items()
+    }
+    return {"chords": chords, "own": own, "default": default}
 
 
 def json_script(data: dict) -> str:

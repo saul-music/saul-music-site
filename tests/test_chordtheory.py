@@ -260,3 +260,41 @@ def test_sharp_eleven_own_shape_is_accepted_only_with_chord_notes():
     c = chord("Dmadd#11")  # D F A G#
     assert theory.check_shape(c, theory.parse_shape("x x 0 1 3 1")) == []  # D G# D F
     assert theory.check_shape(c, theory.parse_shape("x x 0 2 3 2"))  # suena G, que no es del acorde
+
+
+# --- Regla de cejilla (S27) ---
+def _p(*frets):
+    return {"frets": list(frets), "fingers": [], "barres": []}
+
+
+def test_base_fret_ignores_open_and_muted_strings():
+    assert theory.base_fret([-1, 0, 2, 2, 1, 0]) == 1
+    assert theory.base_fret([3, 5, 5, 4, 3, 3]) == 3
+    assert theory.base_fret([0, 0, 0, 0, 0, 0]) == 0
+
+
+def test_barre_rule_puts_the_nearest_position_first_from_fret_3():
+    far, near, mid = _p(9, 11, 11, 10, 9, 9), _p(-1, 3, 5, 5, 5, 3), _p(5, 7, 7, 6, 5, 5)
+    ordered = theory.nearest_barre_first([far, near, mid])
+    assert [theory.base_fret(p["frets"]) for p in ordered] == [3, 5, 9]
+
+
+def test_barre_rule_keeps_chordsdb_order_on_ties():
+    a, b, c = _p(3, 5, 5, 4, 3, 3), _p(-1, 3, 5, 5, 5, 3), _p(8, 10, 10, 9, 8, 8)
+    assert theory.nearest_barre_first([c, a, b]) == [a, b, c]
+
+
+def test_barre_rule_does_not_touch_chords_that_start_before_fret_3():
+    first, other = _p(2, 4, 4, 3, 2, 2), _p(-1, 4, 4, 6, 7, 6)
+    assert theory.nearest_barre_first([first, other]) == [first, other]
+    assert theory.nearest_barre_first([]) == []
+
+
+def test_barre_rule_is_applied_to_the_real_database():
+    for root in "CDEFGAB":
+        for suffix in ("", "m", "7"):
+            chord = theory.parse(root + suffix)
+            shown = theory.guitar_positions(chord)[0]
+            bases = [theory.base_fret(p["frets"]) for p in shown]
+            if bases[0] >= 3:
+                assert bases == sorted(bases)

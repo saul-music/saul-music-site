@@ -1,6 +1,6 @@
 # Estado del sitio
 
-> Registro vivo. Última actualización: 2026-11-04 (S25: mockups de pedidos y opinión).
+> Registro vivo. Última actualización: 2026-11-04 (S27: orden de formas de guitarra).
 
 ## Paso actual
 
@@ -103,3 +103,12 @@ AAAA-MM-DD · paso · qué se hizo · qué quedó pendiente · decisiones nuevas
 - `pedidos.html`/`pedidos.js`: demo sin envío con pedidos ficticios que cambian de estado; adaptador `createSource()` listo para una fuente real.
   Pruebas: `tests/test_pedidos_demo.py` y 4 de navegador (reloj simulado, reduced-motion, sin envío, sin desborde). Revisado a 360 px en captura.
 - **Pendiente:** revisar a ojo en celular real y en claro/oscuro; elegir backend (etapa B) antes de conectar nada.
+
+## 2026-11-04 · Orden de formas de guitarra: cejilla y forma por defecto del tema (S27)
+
+- Regla de cejilla (formas estándar desde el traste 3 se ordenan por traste base) y tabla `[formas]` por tema, que vale para los tres
+  niveles; precedencia: forma del nivel (S8) > `[formas]` > cejilla > chords-db. Validador, plantilla simple, contrato compartido
+  (11 casos) y guía de edición actualizados. **Research debe copiar `tests/fixtures/acordes/contract.json` y soportar `[formas]`.**
+- Pruebas: puras (regla, validador, payload) y de navegador (default primero, propia del nivel gana, navegación).
+- **Pendiente:** verificar en producción tras el deploy; ningún tema publicado usa `[formas]` todavía.
+

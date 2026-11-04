@@ -347,11 +347,21 @@ def test_own_shape_goes_only_to_its_version_and_the_page_embeds_the_data(tmp_pat
     assert "<" not in page.split('id="acordes-data">')[1].split("</script>")[0]
 
 
+def test_theme_default_shape_goes_to_the_payload_for_every_level(tmp_path):
+    body = with_modes('\n[formas]\n"G" = "3 5 5 4 3 3"\n')
+    loaded = load_song(write(tmp_path, "otra-era", body))
+    assert loaded["formas_tema"] == {"G": [3, 5, 5, 4, 3, 3]}
+    payload = chords_payload(loaded)
+    assert payload["default"]["G"]["frets"] == [3, 5, 5, 4, 3, 3]
+    assert payload["default"]["G"]["tab"][1].startswith("3 5 5 4 3 3") and payload["own"] == {}
+
+
 def test_chords_data_is_embedded_safely_and_only_for_chords_of_the_song(song):
     assert "<" not in json_script({"x": "</script><b>"})
     payload = chords_payload(song)
     assert set(payload["chords"]) == {"G", "D", "Em", "C"}  # los de sus compases
     assert payload["chords"]["G"]["label"] == "G" and payload["own"] == {}
+    assert payload["default"] == {}
 
 
 def test_title_and_artist_strip_is_in_the_sticky_area_and_starts_hidden(song):

@@ -381,3 +381,32 @@ La portada dice «N canciones disponibles con acordes, gratis» bajo el subtítu
   Hoy `DemoSource`; **ahí se conecta Firebase Realtime Database en la etapa B** (decisión aparte, no se agrega ahora). Lo real
   deberá, además, cambiar la CSP (`connect-src`, `form-action`) y el aviso de privacidad; nada de eso se adelanta.
 - No es la etapa B ni se anuncia el sitio (S6 sigue pendiente).
+
+## S27 · Orden de las formas de guitarra: regla de cejilla y forma por defecto del tema (2026-11-04)
+
+Orden en que el panel de acorde ofrece las formas de guitarra (la primera es la que se ve al tocar el acorde; «Otra
+forma» recorre el resto):
+1. **Forma propia del nivel** (`[intermedio.formas]` o `[avanzado.formas]`, S8), etiqueta «Forma de esta versión».
+2. **Forma por defecto del tema** (`[formas]`, abajo), etiqueta «Forma de este tema».
+3. **Regla de cejilla:** formas estándar de chords-db reordenadas.
+4. El resto de chords-db en su orden. Una forma repetida (mismos trastes) se muestra una sola vez.
+
+**Regla de cejilla** (`chordtheory.nearest_barre_first`, constante `BARRE_FROM_FRET = 3`): *traste base* = traste más bajo
+que se pisa (los aires y las cuerdas mudas no cuentan; 0 si no se pisa ninguno). Si la **primera** forma de chords-db tiene
+traste base >= 3, todas se ordenan por traste base ascendente; **empate: se conserva el orden de chords-db**. Si la primera
+empieza antes del traste 3 (abierta o cejilla baja) no se toca nada. Se aplica también a las formas con bajo y a las del
+acorde base (S19). Afecta a 44 acordes de chords-db (p. ej. Cm7: la cejilla del traste 1 sale antes que la del 8).
+
+**Contrato del campo por defecto** (compartido con research, `tests/fixtures/acordes/contract.json`, 11 casos nuevos):
+- **Tabla TOML de primer nivel `[formas]`**, hermana de `[intermedio]`/`[avanzado]` (antes el validador rechazaba una
+  clave `formas` suelta; ahora es esta tabla). Una sola lista para los tres niveles.
+- **Formato:** `"<acorde>" = "<6 valores>"`, igual que S8: trastes de la 6ª a la 1ª cuerda, `x` = no suena, `0` = al aire,
+  enteros 0 a 24. Ejemplo: `[formas]` / `"F#" = "2 4 4 3 2 2"`.
+- **Validaciones** (mismos mensajes que S8, con el prefijo `formas «ACORDE»:`): debe ser una tabla («formas debe ser una
+  tabla»); el acorde se puede dibujar («no sé dibujar este acorde»); **aparece en algún nivel del tema** (lista `acordes`,
+  Básico, Intermedio o Avanzado; «el acorde no aparece en ningún nivel del tema»); 6 valores; cada valor es `x` o un
+  número; traste dentro de 0 a 24; al menos 3 cuerdas suenan; solo suenan notas del acorde («suena X, que no es del acorde
+  …»); con bajo (`G/B`) la nota más grave es el bajo.
+- El prefijo de los errores de nivel sigue siendo `intermedio.formas «…»` / `avanzado.formas «…»` (sin cambios).
+- Payload de la página (`#acordes-data`): nueva clave `default` (`{acorde: {frets, tab}}`) junto a `chords` y `own`.
+

@@ -258,6 +258,42 @@ def test_chord_opens_guitar_diagram_with_tab_then_keyboard_and_closes(song: Page
     expect(panel.locator("svg[aria-label^='Teclas']")).to_be_visible()
 
 
+def test_theme_default_shape_first_and_own_version_shape_beats_it(page: Page, shapes_url: str):
+    page.goto(shapes_url + SONG)
+    panel = page.locator(".ac-chord-panel")
+    page.locator("#p-basico .ac-chord-btn[data-chord='E']").first.click()
+    expect(panel.locator(".ac-cp-tab")).to_contain_text("x 7 9 9 9 7")
+    expect(panel.locator(".ac-chip-ok")).to_have_text("Forma de este tema")
+    panel.locator(".ac-cp-next").click()  # se puede navegar por las demás
+    expect(panel.locator(".ac-cp-tab")).not_to_contain_text("x 7 9 9 9 7")
+    expect(panel.locator(".ac-chip-ok")).to_be_hidden()
+    page.keyboard.press("Escape")
+    page.get_by_role("tab", name=re.compile("Intermedio")).click()
+    page.locator("#p-intermedio .ac-chord-btn[data-chord='E']").first.click()
+    expect(panel.locator(".ac-cp-tab")).to_contain_text("x 7 9 9 9 7")  # el tema vale en todo nivel
+    page.keyboard.press("Escape")
+    page.locator("#p-intermedio .ac-chord-btn[data-chord='Emaj7']").first.click()
+    expect(panel.locator(".ac-cp-tab")).to_contain_text("x 7 9 8 9 7")
+    expect(panel.locator(".ac-chip-ok")).to_have_text("Forma de esta versión")
+
+
+def test_barre_rule_shows_the_nearest_position_first(page: Page, base_url: str):
+    """Regla de cejilla (S27): en el panel, la primera forma de un acorde que empieza desde el
+    traste 3 es la de traste base más bajo (los datos de la página ya vienen ordenados)."""
+    page.goto(base_url + SONG)
+    bad = page.evaluate(
+        """() => {
+          const data = JSON.parse(document.getElementById('acordes-data').textContent);
+          const base = f => Math.min(...f.frets.filter(x => x > 0), 99);
+          return Object.entries(data.chords).filter(([, c]) => c.guitar).filter(([, c]) => {
+            const b = c.guitar.map(g => base(g));
+            return b[0] >= 3 && b[0] !== Math.min(...b);
+          }).map(([n]) => n);
+        }"""
+    )
+    assert bad == []
+
+
 def test_tapping_outside_closes_the_chord_panel(song: Page):
     song.locator("#p-basico .ac-chord-btn").nth(1).click()
     panel = song.locator(".ac-chord-panel")

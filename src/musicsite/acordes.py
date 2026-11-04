@@ -114,9 +114,11 @@ v2_resuelto = false   # true solo cuando los derechos (V2) estén resueltos
 # [avanzado.arreglos]  # indicaciones por sección: rasgueo, arpegio, ritmo
 # "Estrofa" = "Rasgueo abajo-abajo-arriba, apagando en el 3"
 # Formas de guitarra: NO se piden. Cada acorde usa la forma estándar. Solo si quieres una forma
-# específica en esta versión, de la 6ª a la 1ª cuerda (x = no suena, 0 = al aire):
-# [avanzado.formas]
+# específica, de la 6ª a la 1ª cuerda (x = no suena, 0 = al aire):
+# [avanzado.formas]   # solo en esta versión (también [intermedio.formas])
 # "Cmaj7" = "x 3 2 0 0 0"
+# [formas]            # por defecto del tema: vale para los tres niveles
+# "F#" = "2 4 4 3 2 2"
 """
 
 
@@ -185,6 +187,13 @@ v2_resuelto = false
 #'''
 #tab = '''
 #'''
+
+# --- OPCIONAL: cómo se toca un acorde en guitarra (para los tres niveles) ---
+# Si no escribes nada, el sitio muestra la forma estándar. Si un acorde se toca distinto en este
+# tema, borra el # y escribe la forma: seis números de la cuerda más grave (6ª) a la más aguda (1ª),
+# 0 = al aire y x = no suena. Puedes poner varios acordes, uno por línea. Ejemplo:
+#[formas]
+#"F#" = "2 4 4 3 2 2"
 """
 
 
@@ -362,19 +371,24 @@ def check_by_section(kind: str, table: object, limit: int, names: set, errors: l
 
 
 def check_shapes(mode: str, shapes: object, used: set[str], errors: list[str]) -> None:
-    """Formas propias de guitarra (opcionales): solo pueden sonar notas del acorde."""
+    """Formas propias de guitarra (opcionales): solo pueden sonar notas del acorde.
+
+    `mode` es «intermedio» o «avanzado» (tabla `[<modo>.formas]`), o «» para las formas por
+    defecto del tema (tabla `[formas]`, S27), que valen para cualquier nivel."""
     if not shapes:
         return
+    label = f"{mode}.formas" if mode else "formas"
     if not isinstance(shapes, dict):
-        errors.append(f'{mode}: formas debe ser una tabla («F#» = "2 4 4 3 2 2")')
+        errors.append(f'{label} debe ser una tabla («F#» = "2 4 4 3 2 2")')
         return
     for name, text in shapes.items():
-        where = f"{mode}.formas «{name}»"
+        where = f"{label} «{name}»"
         chord = theory.parse(name)
         if chord is None:
             errors.append(f"{where}: no sé dibujar este acorde")
         elif name not in used:
-            errors.append(f"{where}: el acorde no aparece en la versión {mode}")
+            where_used = f"la versión {mode}" if mode else "ningún nivel del tema"
+            errors.append(f"{where}: el acorde no aparece en {where_used}")
         else:
             try:
                 frets = theory.parse_shape(text)
@@ -440,8 +454,10 @@ def validate_file(path: Path) -> Report:
 
     if data.get("barrio", "") not in BARRIOS:
         errors.append("barrio debe ser Rock, Pop o Indie")
-    if "formas" in data:
-        errors.append("formas solo existe en [intermedio] y [avanzado]; el básico usa la estándar")
+    theme_used: set[str] = set(chords)  # acordes de cualquier nivel (para `[formas]`, S27)
+    for section in sections:
+        for token in section.get("compases", []):
+            theme_used.update(c for c in bar_parts(token) if c and c not in (REPEAT, REST))
     for mode, pattern in MODES.items():
         score = data.get(mode, {}).get("partitura", "")
         mode_sections, mode_errors = parse_score(score, advanced=mode == "avanzado")
@@ -451,9 +467,11 @@ def validate_file(path: Path) -> Report:
             for token in section.get("compases", []):
                 for chord in check_bar(token, mode, errors):
                     used.add(chord)
+                    theme_used.add(chord)
                     if not pattern.match(chord):
                         errors.append(f"{mode}: «{chord}» no es un acorde válido para este modo")
         check_shapes(mode, data.get(mode, {}).get("formas", {}), used, errors)
+    check_shapes("", data.get("formas", {}), theme_used, errors)
     advanced = data.get("avanzado", {})
     if not isinstance(advanced.get("tab", ""), str):
         errors.append("avanzado: tab debe ser texto")

@@ -155,13 +155,29 @@
       panel.addEventListener("pointerleave", function (e) { if (e.pointerType === "mouse" && !pinned) schedule(); });
       document.body.appendChild(panel);
     }
-    function forms() {
-      var name = anchor.getAttribute("data-chord");
-      var mode = (anchor.closest(".tab-pane") || {}).id || "";
-      mode = mode.replace(/^p-/, "");
+    /* Formas de guitarra de un acorde en un nivel, en este orden (S27): forma propia del nivel (S8),
+       forma por defecto del tema, y las estándar (ya ordenadas por la regla de cejilla). */
+    function formsFor(name, mode) {
+      var list = [], seen = {};
+      function add(f, kind) {
+        var key = f.frets.join(",");
+        if (seen[key]) return;
+        seen[key] = true;
+        f.kind = kind;
+        list.push(f);
+      }
       var own = (data.own[mode] || {})[name];
-      var list = own ? [{ frets: own.frets, tab: own.tab, own: true }] : [];
-      return list.concat((data.chords[name] || {}).guitar || []);
+      if (own) add({ frets: own.frets, tab: own.tab }, "own");
+      var def = (data.default || {})[name];
+      if (def) add({ frets: def.frets, tab: def.tab }, "default");
+      ((data.chords[name] || {}).guitar || []).forEach(function (g) { add(g, ""); });
+      return list;
+    }
+    function modeOf(node) {
+      return ((node.closest(".tab-pane") || {}).id || "").replace(/^p-/, "");
+    }
+    function forms() {
+      return formsFor(anchor.getAttribute("data-chord"), modeOf(anchor));
     }
     function render() {
       var name = anchor.getAttribute("data-chord");
@@ -189,9 +205,10 @@
         body.appendChild(guitarSVG(f.frets, f.fingers, f.barres, chord.label));
         tabEl.hidden = false; tabEl.textContent = f.tab.join("\n");
         var gn = chord.guitar_note;  // diagrama del acorde base: el bajo no está dibujado (S19)
-        noteEl.hidden = !(gn && !f.own);
+        noteEl.hidden = !(gn && !f.kind);
         if (!noteEl.hidden) noteEl.textContent = "Diagrama de " + gn.base + ". El bajo (" + gn.bass + ") no está dibujado: míralo en el teclado.";
-        badge.hidden = !f.own;
+        badge.hidden = !f.kind;
+        badge.textContent = f.kind === "default" ? "Forma de este tema" : "Forma de esta versión";
         next.hidden = list.length < 2;
         next.textContent = "Otra forma (" + (form + 1) + "/" + list.length + ")";
       }
