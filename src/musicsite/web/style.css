@@ -482,6 +482,8 @@ a.card:hover { border-color: var(--ac-fill); transform: translateY(-2px); }
 .ac-bar.is-wide { grid-column: span 2; }
 .ac-bar.is-wide .ac-part { flex-basis: auto !important; }  /* cada acorde parte de su propio ancho; el sobrante se reparte por duración */
 .ac-part { flex-basis: 0; min-width: 0; padding-inline: .15rem; }
+/* S22: silencio, tenue y sin botón */
+.ac-rest { display: inline-flex; align-items: center; justify-content: center; color: var(--ac-fg-muted); opacity: .8; vertical-align: middle; }
 
 /* Rasgueo: 8 tiempos */
 .ac-strum { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: .35rem; }

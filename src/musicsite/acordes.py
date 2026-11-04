@@ -59,6 +59,7 @@ TIME_SIGNATURE = re.compile(r"^\d{1,2}/\d{1,2}$")
 LEVELS = {"", "inicial", "medio", "avanzado"}
 KINDS = {"cancion", "instrumental"}
 REPEAT = "%"
+REST = "."  # silencio (S22): un compás entero o una parte de un compás partido
 
 TEMPLATE = """\
 # Transcripción propia de «{title}» ({artist}).
@@ -337,7 +338,7 @@ def check_bar(token: str, where: str, errors: list[str]) -> list[str]:
         return []
     if len(parts) > 1 and parts[0] == REPEAT:
         errors.append(f"{where}: «{token}» no puede empezar con «%» (no hay acorde que alargar)")
-    return [part for part in parts if part != REPEAT]
+    return [part for part in parts if part not in (REPEAT, REST)]
 
 
 def check_chord(token: str, where: str, errors: list[str]) -> None:
@@ -423,12 +424,19 @@ def validate_file(path: Path) -> Report:
     for section in sections:
         name = section.get("nombre", "?")
         previous = None
+        last_token = None
         for token in section.get("compases", []):
             bars += 1
             if token == REPEAT:
-                if previous is None:
+                if previous is None and last_token != REST:
                     errors.append(f"sección «{name}»: «%» no puede ser el primer compás")
+                elif last_token == REST:
+                    errors.append(
+                        f"sección «{name}»: «%» no puede repetir un silencio "
+                        "(no hay acorde que repetir)"
+                    )
                 continue
+            last_token = token
             for chord in check_bar(token, f"sección «{name}»", errors):
                 check_chord(chord, f"sección «{name}»", errors)
                 if BASIC_CHORD.match(chord) and chord not in chords:

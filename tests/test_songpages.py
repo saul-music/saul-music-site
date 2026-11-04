@@ -244,6 +244,29 @@ def test_whole_bar_repeat_is_still_a_plain_cell():
     assert bar_html("%") == '<div class="ac-bar">%</div>'
 
 
+def test_rest_is_a_symbol_without_chord_button_in_whole_and_split_bars():
+    from musicsite.songpages import bar_html, is_wide
+
+    whole = bar_html(".")
+    assert 'aria-label="silencio"' in whole and "ac-chord-btn" not in whole
+    split = bar_html("G-.")
+    assert split.count('class="ac-part"') == 2 and split.count("ac-rest") == 1
+    assert split.count("ac-chord-btn") == 1
+    held = bar_html("G-%-.")
+    assert 'style="flex: 2" data-weight="2">' + btn("G") in held
+    rest_held = bar_html(".-%-G")
+    assert 'style="flex: 2" data-weight="2"><span class="ac-rest"' in rest_held
+    # el silencio no cuenta como acorde para ensanchar la casilla
+    assert not is_wide([".", "G", "%", "."])
+
+
+def test_rests_are_not_listed_among_the_chords_of_the_diagrams():
+    from musicsite.songpages import chords_payload
+
+    song = {"secciones": [{"nombre": "A", "compases": [".", "G-.", ".-%-D"]}]}
+    assert set(chords_payload(song)["chords"]) == {"G", "D"}
+
+
 def test_each_section_exposes_its_repetitions_for_the_playhead():
     from musicsite.songpages import structure
 

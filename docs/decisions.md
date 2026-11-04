@@ -329,3 +329,15 @@ research ya los aceptaban (`add` + `#11`); lo que faltaba era que el sitio supie
   escribe una forma propia por tema (`[intermedio.formas]`), que ya valida que solo suenen notas del acorde.
 - **Con paréntesis** (`Dm(add#11)`) sigue sin aceptarse: cambiaría el patrón de acordes en los dos repos y el contrato
   por un solo acorde. **Descartado por ahora:** `add11` natural (`Dmadd11`) y `m7#11`.
+
+## S22 · Silencios en la partitura: el punto `.` (2026-11-03)
+
+Un silencio se escribe `.`, solo o dentro de un compás partido. Se eligió el punto por ser un carácter, fácil de teclear
+(también en celular) y imposible de confundir con un acorde; `~` y `sil` se descartaron.
+- **Compás entero:** `Estrofa: G % . Em`. **Dentro de un compás:** `G-.`, `.-G`, `G-%-.` (G tres partes, silencio una);
+  `%` después de un silencio lo alarga (`.-%-G`).
+- **`%` solo no repite un silencio** (error claro): no hay acorde que repetir. Una sección entera de silencios es válida.
+- Funciona igual en Básico, Intermedio y Avanzado. No es un acorde: no exige estar en la lista de acordes ni lleva diagrama.
+- **En el sitio:** símbolo de silencio de negra (SVG, no depende de la tipografía) tenue y sin botón, con
+  `aria-label="silencio"`. En Cámara lenta y el metrónomo dura lo que dura su parte y el pulso lo ilumina como a un acorde.
+- **Contrato compartido** (`tests/fixtures/acordes/contract.json`): 8 casos nuevos, idénticos en research (M36).
