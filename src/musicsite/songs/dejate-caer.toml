@@ -36,6 +36,9 @@ fecha = "2026-10-30"
 revisado = true
 v2_resuelto = true
 
+[formas]
+"G7b9" = "3 2 3 1 x x"
+
 [intermedio]
 acordes = ["Bmadd1", "A", "Em", "C#m7b5", "C", "Dm7", "Cm", "Fm", "G7b9"]
 partitura = '''
