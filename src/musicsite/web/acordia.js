@@ -206,8 +206,10 @@
         body.appendChild(guitarSVG(f.frets, f.fingers, f.barres, chord.label));
         tabEl.hidden = false; tabEl.textContent = f.tab.join("\n");
         var gn = chord.guitar_note;  // diagrama del acorde base: el bajo no está dibujado (S19)
-        noteEl.hidden = !(gn && !f.kind);
-        if (!noteEl.hidden) noteEl.textContent = "Diagrama de " + gn.base + ". El bajo (" + gn.bass + ") no está dibujado: míralo en el teclado.";
+        var bassNote = chord.bass !== null && chord.bass !== undefined && chord.label.indexOf("/") >= 0 ? chord.label.split("/").pop() : "";
+        noteEl.hidden = !((gn && !f.kind) || bassNote);
+        if (gn && !f.kind) noteEl.textContent = "Diagrama de " + gn.base + ". El bajo (" + gn.bass + ") no está dibujado, pero si activas la guitarra suena como bajo.";
+        else if (bassNote) noteEl.textContent = "El bajo (" + bassNote + ") suena aparte, como bajo, si activas la guitarra.";
         badge.hidden = !f.kind;
         badge.textContent = f.kind === "default" ? "Forma de este tema" : "Forma de esta versión";
         next.hidden = list.length < 2;

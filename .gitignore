@@ -11,3 +11,4 @@ lab/midi/datos-chords-guitar.json
 
 # Muestras de nailon del botón Guitarra del site (S37)
 src/musicsite/web/guitarra-nylon-*.mp3
+src/musicsite/web/bajo-*.mp3

@@ -92,8 +92,9 @@ def test_web_dir_has_only_fixed_site_files():
         "PetalumaScript.woff2",
         "PetalumaScript-OFL.txt",
     }
-    # Las muestras de nailon del botón Guitarra (S37) son locales: las ignora git (no se publican).
-    present = {p.name for p in WEB_DIR.iterdir() if not p.name.startswith("guitarra-nylon-")}
+    # Las muestras de nailon y de bajo del botón Guitarra (S37, S41) son locales: git las ignora.
+    local = ("guitarra-nylon-", "bajo-")
+    present = {p.name for p in WEB_DIR.iterdir() if not p.name.startswith(local)}
     assert present == fixed
 
 

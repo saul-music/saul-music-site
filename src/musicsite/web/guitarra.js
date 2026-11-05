@@ -10,19 +10,32 @@
   var TUNING = [40, 45, 50, 55, 59, 64]; // E2 A2 D3 G3 B3 E4, igual que chords-guitar.json
   var SPREAD = 0.014;
   var enabled = false, data = null, out = null, outCtx = null;
-  var voices = [null, null, null, null, null, null];
+  var voices = [null, null, null, null, null, null, null]; // 0 a 5: cuerdas; 6: el bajo
   /* Guitarra de nailon (FluidR3_GM, una muestra por semitono, E2 a E6): archivos planos
      guitarra-nylon-<nota>.mp3 junto a este script (ignorados por git, licencia por verificar).
      Si faltan o aún no cargan, esa nota no suena (no hay sonido sintetizado de respaldo). */
   var FLAT = ["C", "Db", "D", "Eb", "E", "F", "Gb", "G", "Ab", "A", "Bb", "B"];
-  var samples = null, samplesCtx = null;
+  /* Bajo (contrabajo de FluidR3_GM, E1 a Eb2: una muestra por semitono): bajo-<nota>.mp3. Suena cuando
+     el acorde lleva bajo (G/B) y la guitarra está activa, en la octava más grave (S41). */
+  var BASS_LOW = 28, BASS_HIGH = 39, BASS_VOICE = 6;
+  var samples = null, bassSamples = null, samplesCtx = null;
   var volume = 0.7; // 0 a 1 (S39); se recuerda por dispositivo
 
   function sampleName(m) { return "guitarra-nylon-" + FLAT[m % 12] + (Math.floor(m / 12) - 1) + ".mp3"; }
 
+  function bassName(m) { return "bajo-" + FLAT[m % 12] + (Math.floor(m / 12) - 1) + ".mp3"; }
+
+  function fetchSample(ctx, name, store, note) {
+    fetch(name).then(function (r) { return r.ok ? r.arrayBuffer() : null; })
+      .then(function (data) { return data && ctx.decodeAudioData(data); })
+      .then(function (buf) { if (buf && samplesCtx === ctx) store[note] = buf; })
+      .catch(function () { /* sin esta muestra: esa nota no suena */ });
+  }
+
   function loadSamples(ctx) {
     if (samplesCtx === ctx) return;
-    samplesCtx = ctx; samples = {};
+    samplesCtx = ctx; samples = {}; bassSamples = {};
+    for (var b = BASS_LOW; b <= BASS_HIGH; b++) fetchSample(ctx, bassName(b), bassSamples, b);
     for (var m = 40; m <= 88; m++) (function (note) {
       fetch(sampleName(note)).then(function (r) { return r.ok ? r.arrayBuffer() : null; })
         .then(function (data) { return data && ctx.decodeAudioData(data); })
@@ -69,7 +82,23 @@
     voices[s] = null;
   }
 
-  function muteAll(when) { for (var s = 0; s < 6; s++) stopString(s, when); }
+  function muteAll(when) { for (var s = 0; s <= BASS_VOICE; s++) stopString(s, when); }
+
+  /* La nota de bajo (0 a 11) en la octava más grave de E1 a Eb2; suena junto al primer golpe. */
+  function playBass(ctx, pitchClass, when) {
+    var dest = bus(ctx);
+    stopString(BASS_VOICE, when);
+    if (pitchClass === null || pitchClass === undefined) return;
+    var note = BASS_LOW + ((pitchClass - BASS_LOW) % 12 + 12) % 12;
+    var buffer = bassSamples && bassSamples[note];
+    if (!buffer) return;
+    var src = ctx.createBufferSource(), gain = ctx.createGain();
+    src.buffer = buffer;
+    gain.gain.value = 1;
+    src.connect(gain); gain.connect(dest);
+    src.start(when);
+    voices[BASS_VOICE] = { src: src, gain: gain };
+  }
 
   function strum(ctx, frets, when) {
     var dest = bus(ctx), k = 0;
@@ -128,9 +157,12 @@
     var parts = partsOf(bar);
     if (hits(parts, beats).indexOf(inBar) < 0) return;
     var part = partAt(parts, inBar, beats);
-    var frets = part.chord ? firstForm(part.chord, mode) : null;
-    if (!frets) { muteAll(when); return; }
-    strum(ctx, frets, when);
+    if (!part.chord) { muteAll(when); return; } // silencio o acorde que no sabemos tocar
+    var info = payload().chords[part.chord] || {};
+    var frets = firstForm(part.chord, mode);
+    if (frets) strum(ctx, frets, when); else for (var s = 0; s < BASS_VOICE; s++) stopString(s, when);
+    loadSamples(ctx);
+    playBass(ctx, info.bass, when);
   }
 
   function stop(ctx) { if (ctx && outCtx === ctx) muteAll(ctx.currentTime); }

@@ -630,3 +630,15 @@ volúmenes se veían como un punto sin riel. Se reorganiza en grupos con título
 - Los deslizadores de volumen usan el mismo estilo de riel y control que el de tempo, con foco visible por teclado, en Noche y Marfil.
 - **Ajuste de prueba por S38:** el fixture e2e `parens_url` suma `[formas]` para `D6/9` y `Dm(add#11)`, que ahora exigen forma propia.
 - Comprobado: ruff, 608 tests y e2e de chromium (57 pasan, 2 se saltan) y las pruebas de la barra en Pixel 7. **No probado:** Safari/iPhone real y Firefox.
+
+## S41 · Sonido de bajo cuando el acorde lleva bajo (2026-11-05)
+
+**Rama `feat/investigacion-midi`.** Con la guitarra activa, un acorde con bajo (`F#m7/A`, `Dm/F`, `C#m7b5/F#`…) suena además con una nota de **contrabajo**
+(`acoustic_bass` de FluidR3_GM, elegido por el usuario) en la octava más grave de E1 a Eb2 (12 muestras, ~190 KB, `web/bajo-<nota>.mp3`, ignoradas por git; licencia por
+verificar, L1, igual que las de nailon). Arranca con el primer golpe del acorde y se corta con el siguiente acorde o silencio. Con la guitarra apagada no suena. Sigue el
+volumen de la guitarra (sin control propio); suena aunque el diagrama ya dibuje el bajo. Las muestras se cargan al activar «Guitarra», junto con las de nailon.
+
+**Panel del acorde:** si el diagrama es del acorde base, «… El bajo (X) no está dibujado, pero si activas la guitarra suena como bajo.»; si el bajo sí está dibujado,
+«El bajo (X) suena aparte, como bajo, si activas la guitarra.»
+
+**Pendiente:** oírlo (no probado a oído); volumen propio del bajo si hiciera falta; el contrabajo suena más jazzero que el eléctrico (`electric_bass_finger`), por si se cambia de opinión.
