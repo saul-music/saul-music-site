@@ -1,6 +1,6 @@
 # Estado del sitio
 
-> Registro vivo. Última actualización: 2026-11-05 (S36: acordes con paréntesis).
+> Registro vivo. Última actualización: 2026-11-05 (S38: novenas alteradas 7b9 y 7#9 y forma propia obligatoria en el admin; el sitio la tolera).
 
 ## Paso actual
 

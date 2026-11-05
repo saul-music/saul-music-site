@@ -385,6 +385,7 @@ def test_malformed_parentheses_are_rejected_in_intermedio(chord):
 def test_a_song_with_parenthesized_chords_validates(tmp_path):
     body = (
         GOOD + "\n[intermedio]\npartitura = '''\nA: Dm(add#11) G7(b9/#11/13) D6/9 C(add9)/E\n'''\n"
+        '[formas]\n"Dm(add#11)" = "x 5 3 2 3 4"\n"D6/9" = "x 5 2 2 0 2"\n'
     )
     assert validate_file(write(tmp_path, "tema", body)).errors == []
 
@@ -395,3 +396,37 @@ def test_own_shape_matches_the_chord_written_with_or_without_parentheses(tmp_pat
         body = base + f'[intermedio.formas]\n"{key}" = "x x 0 2 3 1"\n'
         errors = validate_file(write(tmp_path, "tema", body)).errors
         assert not any("no aparece" in e for e in errors), (key, errors)
+
+
+def test_chord_without_standard_shape_requires_an_own_one(tmp_path):
+    body = GOOD + "\n[intermedio]\npartitura = '''\nA: Cm G7b9\n'''\n"
+    errors = validate_file(write(tmp_path, "tema", body)).errors
+    assert any("«G7b9» no tiene posición estándar" in e for e in errors), errors
+
+
+@pytest.mark.parametrize("table", ["[formas]", "[intermedio.formas]"])
+def test_an_own_shape_satisfies_the_requirement(tmp_path, table):
+    body = GOOD + "\n[intermedio]\npartitura = '''\nA: Cm G7(b9)\n'''\n"
+    body += f'{table}\n"G7b9" = "3 2 3 1 x x"\n'
+    assert validate_file(write(tmp_path, "tema", body)).errors == []
+
+
+def test_a_wrong_own_shape_is_still_rejected(tmp_path):
+    body = GOOD + "\n[intermedio]\npartitura = '''\nA: Cm G7b9\n'''\n"
+    body += '[formas]\n"G7b9" = "3 x 3 4 2 x"\n'
+    errors = validate_file(write(tmp_path, "tema", body)).errors
+    assert any("no es del acorde" in e for e in errors), errors
+
+
+def test_the_site_tolerates_a_missing_shape_but_the_admin_does_not(tmp_path):
+    from musicsite.songpages import render_published
+
+    body = GOOD.replace("v2_resuelto = false", "v2_resuelto = true")
+    body += "\n[intermedio]\npartitura = '''\nA: Cm G7b9\n'''\n"
+    path = write(tmp_path, "tema", body)
+    strict = validate_file(path)  # el admin (y la validación por defecto) exige la forma
+    assert any("«G7b9» no tiene posición estándar" in e for e in strict.errors)
+    tolerant = validate_file(path, strict_shapes=False)  # el sitio sigue publicando el tema
+    assert tolerant.errors == [] and tolerant.status == "publicable"
+    assert any("«G7b9»" in w for w in tolerant.warnings)
+    assert "tema" in render_published(tmp_path)  # no se descarta la publicación entera

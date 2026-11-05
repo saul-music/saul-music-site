@@ -244,6 +244,7 @@ class Report:
     path: Path
     status: str = "vacío"
     errors: list[str] = field(default_factory=list)
+    warnings: list[str] = field(default_factory=list)  # lo que el sitio tolera (S38)
 
 
 def publish(directory: Path, out: Path) -> list[Path]:
@@ -482,7 +483,28 @@ def check_shapes(mode: str, shapes: object, used: set[str], errors: list[str]) -
             errors.extend(f"{where}: {error}" for error in theory.check_shape(chord, frets))
 
 
-def validate_file(path: Path) -> Report:
+def check_shapes_required(
+    used: set[str], tables: list, errors: list[str]
+) -> None:  # `errors`: o avisos
+    """Un acorde que sabemos nombrar pero que chords-db no trae (7b9, 7#9, add#11...) no tiene
+    forma estándar: el tema debe traer una forma propia, por defecto en `[formas]` o en la tabla
+    de un nivel (S38). Sin ella no habría diagrama de guitarra ni sonido."""
+    declared = [name for table in tables if isinstance(table, dict) for name in table]
+    missing: dict[str, str] = {}
+    for token in sorted(used):
+        chord = theory.parse(token)
+        if chord is None or theory.guitar_positions(chord)[0]:
+            continue
+        if not any(theory.same_chord(token, name) for name in declared):
+            missing.setdefault(theory.canonical(token), token)
+    for token in missing.values():
+        errors.append(
+            f"«{token}» no tiene posición estándar de guitarra: agrega una forma propia en "
+            f"[formas] («{token}» = seis trastes de la 6ª a la 1ª cuerda, x = muda)"
+        )
+
+
+def validate_file(path: Path, strict_shapes: bool = True) -> Report:
     report = Report(path)
     try:
         data = tomllib.loads(path.read_text(encoding="utf-8"))
@@ -559,6 +581,13 @@ def validate_file(path: Path) -> Report:
         "avanzado", advanced.get("formas", {}) if isinstance(advanced, dict) else {}, used, errors
     )
     check_shapes("", data.get("formas", {}), theme_used, errors)
+    own_tables = [data.get("formas", {})] + [
+        mode_data.get("formas", {})
+        for mode_data in (data.get("intermedio", {}), advanced)
+        if isinstance(mode_data, dict)
+    ]
+    # El admin exige la forma (strict_shapes); el sitio no tumba la publicación por esto (S38).
+    check_shapes_required(theme_used, own_tables, errors if strict_shapes else report.warnings)
     has_score = any(sec.get("compases") for sec in mode_sections)
     names = {sec["nombre"] for sec in mode_sections if "nombre" in sec}
     check_advanced(advanced, names, has_score, errors)

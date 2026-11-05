@@ -555,3 +555,20 @@ Pedido del equipo editorial: poder escribir las extensiones entre paréntesis (`
 - **Contrato compartido:** casos nuevos (válidos y rechazados). Research recibe el cambio con `scripts/sync_site_render.py`. El validador del Básico no cambia (sigue sin extensiones).
 - **Pruebas:** gramática (16 válidos, 17 rechazados), `canonical`, teoría (6/9, equivalencia), página (botón, notas, formas, acentos) y una prueba de navegador del panel con `D6/9` y `Dm(add#11)`.
 
+
+## S38 · Novenas alteradas (7b9, 7#9) y forma propia obligatoria cuando no hay estándar (2026-11-05)
+
+**Integrada a main (2026-11-05).** Hasta hoy `G7b9` (que usa «Déjate caer») se aceptaba como texto en la partitura, pero
+`chordtheory.parse` no lo conocía: sin notas, sin teclado, sin guitarra y sin forma propia posible («no sé dibujar este acorde»).
+
+- **Teoría:** `7b9`, `7#9` y `7b9#9` entran a `INTERVALS` y `ALIASES` (b9 = 13, #9 = 15 semitonos; grado 2). Con la forma
+  normalizada de S35, `G7(b9)`, `G7b9`, `E7(b9,#9)` y `E7(#9/b9)` son el mismo acorde de cada tipo. Otras alteraciones (#11, b13, b5)
+  siguen como texto, igual que antes (el cálculo de combinaciones sigue como decisión aparte).
+- **Regla del validador:** si un acorde se sabe nombrar pero chords-db no trae forma (`guitar_positions` es None: 7b9, 7#9, add#11,
+  madd#11, 6/9 mayor…), el tema debe traer una forma propia en `[formas]` o en la tabla de un nivel; si no, error con el
+  nombre del acorde. Las formas se siguen comprobando con `check_shape`.
+- **El admin exige, el sitio tolera:** `validate_file(path, strict_shapes=True)` (por defecto: admin, CLI y contrato) devuelve la falta de forma como **error**; el sitio
+  (`songpages`) la valida con `strict_shapes=False` y la deja como **aviso** (`Report.warnings`): un tema publicado sin esa forma se muestra igual (ese acorde sin diagrama ni sonido)
+  en vez de descartar la publicación entera. Así ningún despliegue puede tumbar lo publicado (hoy «Déjate caer» usa G7b9 sin forma propia en producción).
+- **Research:** su copia del validador replica la regla (M45 la comprueba).
+- `songs/dejate-caer.toml` (respaldo) suma `[formas] "G7b9" = "3 2 3 1 x x"`. Los casos del contrato que usan estos acordes traen `[formas]`.

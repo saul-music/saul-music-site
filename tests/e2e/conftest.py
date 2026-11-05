@@ -81,7 +81,11 @@ def parens_url(tmp_path_factory) -> str:
         "Intro x2: E F# D6/9 Dm(add#11) G7(b9/#11/13)\n",
         1,
     )
-    (folder / "camara-lenta.toml").write_text(head + "[intermedio]" + tail, encoding="utf-8")
+    # S38: sin forma estándar en chords-db, el tema debe traer su forma propia por defecto.
+    shapes = '\n[formas]\n"D6/9" = "x 5 2 2 0 2"\n"Dm(add#11)" = "x 5 3 2 3 4"\n\n'
+    (folder / "camara-lenta.toml").write_text(
+        head + shapes + "[intermedio]" + tail, encoding="utf-8"
+    )
     yield from serve(create_app(songs=folder))
 
 
