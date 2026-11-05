@@ -9,7 +9,7 @@
   "use strict";
   var TUNING = [40, 45, 50, 55, 59, 64]; // E2 A2 D3 G3 B3 E4, igual que chords-guitar.json
   var SPREAD = 0.014;
-  var enabled = false, data = null, out = null, outCtx = null;
+  var enabled = false, data = null, out = null, bassOut = null, outCtx = null;
   var voices = [null, null, null, null, null, null, null]; // 0 a 5: cuerdas; 6: el bajo
   /* Guitarra de nailon (FluidR3_GM, una muestra por semitono, E2 a E6): archivos planos
      guitarra-nylon-<nota>.mp3 junto a este script (ignorados por git, licencia por verificar).
@@ -19,7 +19,7 @@
      el acorde lleva bajo (G/B) y la guitarra está activa, en la octava más grave (S41). */
   var BASS_LOW = 28, BASS_HIGH = 39, BASS_VOICE = 6;
   var samples = null, bassSamples = null, samplesCtx = null;
-  var volume = 0.7; // 0 a 1 (S39); se recuerda por dispositivo
+  var volume = 0.7, bassVolume = 0.7; // 0 a 1 (S39, S42); se recuerdan por dispositivo
 
   function sampleName(m) { return "guitarra-nylon-" + FLAT[m % 12] + (Math.floor(m / 12) - 1) + ".mp3"; }
 
@@ -69,6 +69,8 @@
     var mid = ctx.createBiquadFilter(); mid.type = "peaking"; mid.frequency.value = 240; mid.Q.value = 1.6; mid.gain.value = 2;
     var air = ctx.createBiquadFilter(); air.type = "lowpass"; air.frequency.value = 6500;
     out = ctx.createGain(); out.gain.value = volume;
+    bassOut = ctx.createGain(); bassOut.gain.value = bassVolume; // el bajo tiene su propio volumen (S42)
+    bassOut.connect(low);
     out.connect(low); low.connect(mid); mid.connect(air); air.connect(ctx.destination);
     return out;
   }
@@ -86,7 +88,8 @@
 
   /* La nota de bajo (0 a 11) en la octava más grave de E1 a Eb2; suena junto al primer golpe. */
   function playBass(ctx, pitchClass, when) {
-    var dest = bus(ctx);
+    bus(ctx);
+    var dest = bassOut;
     stopString(BASS_VOICE, when);
     if (pitchClass === null || pitchClass === undefined) return;
     var note = BASS_LOW + ((pitchClass - BASS_LOW) % 12 + 12) % 12;
@@ -173,6 +176,12 @@
     try { localStorage.setItem("ac-vol-guitar", String(volume)); } catch (e) { /* sin almacenamiento */ }
   }
 
+  function setBassVolume(v) {
+    bassVolume = Math.min(1, Math.max(0, v));
+    if (bassOut) bassOut.gain.value = bassVolume;
+    try { localStorage.setItem("ac-vol-bass", String(bassVolume)); } catch (e) { /* sin almacenamiento */ }
+  }
+
   window.AcordiaGuitar = {
     beat: beat, stop: stop, prepare: loadSamples,
     isOn: function () { return enabled; },
@@ -192,11 +201,21 @@
       showVolume();
       slider.addEventListener("input", function () { setVolume(slider.value / 100); showVolume(); });
     }
+    var bassSlider = document.querySelector("[data-ac-vol-bass]");
+    try { var savedBass = parseFloat(localStorage.getItem("ac-vol-bass")); if (isFinite(savedBass)) bassVolume = Math.min(1, Math.max(0, savedBass)); } catch (e) { /* sin almacenamiento */ }
+    var bassOut100 = bassSlider && bassSlider.parentNode.querySelector("[data-ac-vol-out]");
+    function showBass() { if (bassOut100) bassOut100.textContent = Math.round(bassVolume * 100) + "%"; }
+    if (bassSlider) {
+      bassSlider.value = Math.round(bassVolume * 100);
+      showBass();
+      bassSlider.addEventListener("input", function () { setBassVolume(bassSlider.value / 100); showBass(); });
+    }
     btn.addEventListener("click", function () {
       enabled = !enabled;
       btn.setAttribute("aria-pressed", enabled ? "true" : "false");
       /* Apagada: el volumen se atenúa y no responde (S40). */
       if (slider) slider.disabled = !enabled;
+      if (bassSlider) bassSlider.disabled = !enabled;
       if (card) card.classList.toggle("is-off", !enabled);
       if (!enabled && outCtx) muteAll(outCtx.currentTime);
       if (enabled) document.dispatchEvent(new CustomEvent("acordia-guitar-on"));

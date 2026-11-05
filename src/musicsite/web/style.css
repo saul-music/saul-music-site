@@ -585,6 +585,8 @@ a.card:hover { border-color: var(--ac-fill); transform: translateY(-2px); }
 .ac-snd-vol { display: inline-flex; align-items: center; gap: .4rem; margin: 0; color: var(--ac-fg); transition: opacity .15s; }
 .ac-snd-icon { flex: none; color: var(--ac-accent); }
 .ac-snd-range { width: 4.75rem; }
+.ac-snd-card .ac-snd-range { width: 3rem; } /* S42: caben guitarra y bajo en una fila */
+.ac-snd-card .ac-snd-out { min-width: 2rem; }
 .ac-snd-out { min-width: 2.4rem; text-align: right; font-size: .85rem; color: var(--ac-fg-muted); }
 /* Guitarra apagada: el volumen se ve atenuado y no responde hasta activarla. */
 .ac-snd-card.is-off .ac-snd-vol { opacity: .45; }

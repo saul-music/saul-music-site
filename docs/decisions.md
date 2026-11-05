@@ -642,3 +642,8 @@ volumen de la guitarra (sin control propio); suena aunque el diagrama ya dibuje 
 «El bajo (X) suena aparte, como bajo, si activas la guitarra.»
 
 **Pendiente:** oírlo (no probado a oído); volumen propio del bajo si hiciera falta; el contrabajo suena más jazzero que el eléctrico (`electric_bass_finger`), por si se cambia de opinión.
+
+## S42 · Volumen propio del bajo y sección Sonido en una fila (2026-11-05)
+
+La tarjeta «Guitarra» suma un deslizador **«Bajo»** (70 % por defecto, se recuerda por dispositivo en `localStorage` con try/catch) con su propio nodo de ganancia, independiente del de la guitarra.
+Se desactiva junto con la guitarra cuando está apagada. Los tres deslizadores del grupo Sonido miden 3 rem para que Metrónomo, Guitarra, Bajo y «Sin sonido» quepan en una fila en escritorio (la barra fija sigue bajo el 35 % de la pantalla, guarda e2e).
