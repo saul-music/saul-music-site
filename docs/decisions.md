@@ -327,7 +327,7 @@ research ya los aceptaban (`add` + `#11`); lo que faltaba era que el sitio supie
   aumentada (G♯ en Re). Dan el nombre de las notas y las teclas del piano.
 - **Guitarra:** chords-db no trae ningún sufijo `#11`, así que no hay forma estándar («Sin diagrama de guitarra»); se
   escribe una forma propia por tema (`[intermedio.formas]`), que ya valida que solo suenen notas del acorde.
-- **Con paréntesis** (`Dm(add#11)`) sigue sin aceptarse: cambiaría el patrón de acordes en los dos repos y el contrato
+- **Con paréntesis** (`Dm(add#11)`) sigue sin aceptarse *(reemplazado por S36: ya se acepta)*: cambiaría el patrón de acordes en los dos repos y el contrato
   por un solo acorde. **Descartado por ahora:** `add11` natural (`Dmadd11`) y `m7#11`.
 
 ## S22 · Silencios en la partitura: el punto `.` (2026-11-03)
@@ -571,3 +571,15 @@ con un sonido básico de guitarra acústica. Estudio inicial: `docs/estudio-midi
   copia temporal de la rama, con los temas publicados de `acordes-produccion/`.
 - **Muestras:** FluidR3_GM (guitarra de acero y nailon) se bajan con `lab/midi/bajar-muestras.sh` a una carpeta ignorada
   por git: no se suben al repo público mientras la licencia esté por verificar (L1).
+
+## S36 · Acordes con paréntesis, separadores y 6/9 (2026-11-05)
+
+Pedido del equipo editorial: poder escribir las extensiones entre paréntesis (`Dm(add#11)`). Reemplaza la nota de S21 («con paréntesis sigue sin aceptarse») y retoma los alias con paréntesis que S16 había quitado, esta vez con una gramática general. Se investigó cómo se escriben en la práctica (Dobrian, Open Music Theory, Maricopa, MuseScore, Oolimo, ChordPro): **no hay un estándar**; el paréntesis es de estilo, sirve para ver que la alteración es de la extensión y no de la raíz, y las alteraciones se escriben pegadas, con coma, con barra o con espacio según el autor.
+- **Gramática (solo Intermedio):** un único grupo entre paréntesis, justo antes del bajo, con las extensiones de siempre (`7`, `9`, `13`, `b9`, `#11`, `add9`, `sus4`…) separadas por **coma, barra o pegadas**: `Dm(add#11)`, `G7(b9)`, `Am7(b5)`, `C(add9)/E`, `G7(b9,#11,13)`, `G7(b9/#11/13)`, `G7(b9#11)`. La barra dentro del paréntesis no se confunde con el bajo, que va después del cierre. **Rechazados:** paréntesis anidados, vacíos o sin cerrar, dos grupos (`G7(b9)(b13)`), espacios dentro (separan acordes), comas sobrantes, paréntesis en la raíz o la calidad (`(Dm)`, `D(m)`).
+- **Dentro del paréntesis cada extensión lleva su número** (salvo `sus`): `b`, `#` o `add` sueltos no significan nada. Así se atrapa el error típico `Dm(add11#)` (lo correcto es `Dm(add#11)`), que la gramática heredada habría aceptado como `add11` más un `#` suelto. Fuera del paréntesis la gramática no cambia (sin romper lo existente).
+- **6/9:** `D6/9`, `D(6/9)`, `D69` y `D6add9` son el mismo acorde, y `Dm6/9` el menor. Un bajo es siempre una letra de nota, así que una barra seguida de un número no es un bajo (`D6/A` sigue siendo un 6 con bajo en La y `D6/9/A` un 6/9 con bajo). Solo se acepta `6/9` (no cualquier `/número`). El 6/9 mayor se suma a la teoría: D F♯ A B E, con teclado (la guitarra no tiene forma estándar en chords-db).
+- **Identidad y presentación:** `chordtheory.canonical` quita paréntesis y separadores y pasa `6/9` a `69` (`Dm(add#11)` = `Dmadd#11`, `G7(b9/#11/13)` = `G7b9#1113`). Con esa forma se buscan las notas y se comparan la lista de acordes y las **formas propias**: una forma escrita `Dmadd#11` vale para `Dm(add#11)` en la partitura, y el JavaScript la recibe bajo el nombre de la partitura. **Se muestra como se escribió**; los `b` y `#` dentro del paréntesis también salen como ♭ y ♯ (`G7(♭9/♯11)`).
+- **Límite asumido:** una combinación válida cuyas notas no conocemos (`G7(b9/#11/13)`) pasa el validador pero sale como texto, sin botón ni teclado, igual que cualquier acorde que no sabemos dibujar. Calcular las notas de cualquier combinación sumando extensiones queda como decisión aparte.
+- **Contrato compartido:** casos nuevos (válidos y rechazados). Research recibe el cambio con `scripts/sync_site_render.py`. El validador del Básico no cambia (sigue sin extensiones).
+- **Pruebas:** gramática (16 válidos, 17 rechazados), `canonical`, teoría (6/9, equivalencia), página (botón, notas, formas, acentos) y una prueba de navegador del panel con `D6/9` y `Dm(add#11)`.
+

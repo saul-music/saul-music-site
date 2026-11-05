@@ -72,6 +72,20 @@ def shapes_url(tmp_path_factory) -> str:
 
 
 @pytest.fixture(scope="session")
+def parens_url(tmp_path_factory) -> str:
+    """«Cámara lenta» con acordes escritos con paréntesis y el 6/9 con barra en Intermedio (S35)."""
+    folder = tmp_path_factory.mktemp("songs-with-parens")
+    head, tail = (SONGS_DIR / "camara-lenta.toml").read_text(encoding="utf-8").split("[intermedio]")
+    tail = tail.replace(
+        "Intro x2: E F# Bmaj7 F#\n",
+        "Intro x2: E F# D6/9 Dm(add#11) G7(b9/#11/13)\n",
+        1,
+    )
+    (folder / "camara-lenta.toml").write_text(head + "[intermedio]" + tail, encoding="utf-8")
+    yield from serve(create_app(songs=folder))
+
+
+@pytest.fixture(scope="session")
 def advanced_url(tmp_path_factory) -> str:
     """«Cámara lenta» con Avanzado sintético (S31): hereda Intermedio y suma extras por sección."""
     folder = tmp_path_factory.mktemp("songs-with-advanced")

@@ -47,6 +47,7 @@ INTERVALS: dict[str, tuple[int, ...]] = {
     "maj9": (0, 4, 7, 11, 14),
     "m9": (0, 3, 7, 10, 14),
     "m11": (0, 3, 7, 10, 14, 17),
+    "69": (0, 4, 7, 9, 14),  # 6/9 mayor (S35); el menor es «m69»
     "m69": (0, 3, 7, 9, 14),
     "mmaj7": (0, 3, 7, 11),
     "mmaj7b5": (0, 3, 6, 11),
@@ -82,6 +83,7 @@ ALIASES = {
     "maj9": "maj9",
     "m9": "m9",
     "m11": "m11",
+    "69": "69",
     "m69": "m69",
     "mmaj7": "mmaj7",
     "mM7": "mmaj7",
@@ -94,6 +96,26 @@ ALIASES = {
     "madd#11": "madd#11",
 }
 CHORD = re.compile(r"^([A-G])([#b]?)([^/]*)(?:/([A-G])([#b]?))?$")
+BASS_TAIL = re.compile(r"^(.*)/([A-G][#b]?)$")
+
+
+def canonical(token: str) -> str:
+    """La forma normalizada de un acorde (S35): sin paréntesis ni separadores y «6/9» como «69».
+
+    `Dm(add#11)` y `Dmadd#11` son el mismo acorde; `D6/9`, `D(6/9)` y `D69` también; `G7(b9/#11/13)`
+    es `G7b9#1113`. El bajo se conserva (`C(add9)/E` -> `Cadd9/E`). Es la identidad del acorde:
+    con ella se buscan sus notas y se comparan la lista de acordes y las formas propias; lo que
+    se muestra es lo que se escribió."""
+    bass = ""
+    tail = BASS_TAIL.match(token)
+    if tail:
+        token, bass = tail.group(1), "/" + tail.group(2)
+    token = token.replace("6/9", "69")
+    return re.sub(r"[(),/]", "", token) + bass
+
+
+def same_chord(a: str, b: str) -> bool:
+    return canonical(a) == canonical(b)
 
 
 LETTERS = "CDEFGAB"
@@ -159,7 +181,7 @@ def _prefers_flats(letter: str, accidental: str) -> bool:
 
 def parse(token: str) -> Chord | None:
     """El acorde interpretado, o None si no está entre los que sabemos dibujar."""
-    match = CHORD.match(token)
+    match = CHORD.match(canonical(token))
     if not match:
         return None
     letter, accidental, rest, bass_letter, bass_accidental = match.groups()

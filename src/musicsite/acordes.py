@@ -45,8 +45,19 @@ REPERTOIRE = [
 BASIC_CHORD = re.compile(r"^[A-G][#b]?m?$")
 # Intermedio: extensiones (7, maj7, sus4, add9, m7b5...) y bajos (G/B). El Avanzado no tiene
 # partitura propia: hereda la de Intermedio y solo declara extras por sección (S31).
+# Una extensión: un número (6, 7, 9, 13) o sus/add/b/# con su número (sus4, add9, b9, #11, b5).
+_EXT = r"(?:\d{1,2}|(?:sus|add|b|#)\d{0,2})"
+# Un único grupo entre paréntesis con las extensiones, separadas por coma, por barra o pegadas
+# (G7(b9,#11,13), G7(b9/#11/13), G7(b9#11)); el espacio no sirve (separa acordes). Va antes del
+# bajo.
+# Dentro del paréntesis cada extensión lleva su número (salvo `sus`): `b`, `#` o `add` sueltos no
+# significan nada, y así se atrapa el error típico `Dm(add11#)` (es `Dm(add#11)`).
+_GROUP_EXT = r"(?:\d{1,2}|sus\d{0,2}|add[#b]?\d{1,2}|[#b]\d{1,2})"
+_GROUP = rf"(?:\({_GROUP_EXT}(?:[,/]?{_GROUP_EXT})*\))"
+# El 6/9 con barra (D6/9, Dm6/9) no se confunde con un bajo: un bajo es una letra de nota (S35).
 SLASH_CHORD = re.compile(
-    r"^[A-G][#b]?(?:mmaj|mMaj|mM|maj|Maj|min|m|dim|aug|\+)?(?:\d{1,2}|(?:sus|add|b|#)\d{0,2})*(?:/[A-G][#b]?)?$"
+    r"^[A-G][#b]?(?:mmaj|mMaj|mM|maj|Maj|min|m|dim|aug|\+)?"
+    rf"(?:6/9)?{_EXT}*{_GROUP}?(?:/[A-G][#b]?)?$"
 )
 BARRIOS = {"", "Rock", "Pop", "Indie"}
 TIME_SIGNATURE = re.compile(r"^\d{1,2}/\d{1,2}$")
@@ -459,7 +470,7 @@ def check_shapes(mode: str, shapes: object, used: set[str], errors: list[str]) -
         chord = theory.parse(name)
         if chord is None:
             errors.append(f"{where}: no sé dibujar este acorde")
-        elif name not in used:
+        elif not any(theory.same_chord(name, other) for other in used):
             where_used = f"la versión {mode}" if mode else "ningún nivel del tema"
             errors.append(f"{where}: el acorde no aparece en {where_used}")
         else:

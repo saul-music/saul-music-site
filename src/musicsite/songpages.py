@@ -60,7 +60,11 @@ def esc(value) -> str:
     return html.escape(str(value), quote=True)
 
 
-ACCIDENTALS = ((re.compile(r"(?<=[A-G0-9])#"), "\u266f"), (re.compile(r"(?<=[A-G0-9])b"), "\u266d"))
+# También tras «(», «,» o «/» (G7(b9/#11) -> G7(♭9/♯11)): las extensiones entre paréntesis (S35).
+ACCIDENTALS = (
+    (re.compile(r"(?<=[A-G0-9(,/])#"), "\u266f"),
+    (re.compile(r"(?<=[A-G0-9(,/])b"), "\u266d"),
+)
 
 
 def accidentals(chord: str) -> str:
@@ -302,22 +306,28 @@ def chords_payload(song: dict) -> dict:
             else None,
         }
         if standard and not bass_drawn:  # el diagrama es el del acorde base (S19)
-            base = name.split("/")[0]
+            tail = theory.BASS_TAIL.match(
+                name
+            )  # «D6/9» no tiene bajo: la barra va seguida de un número
+            base, bass_name = tail.groups() if tail else (name, "")
             chords[name]["guitar_note"] = {
                 "base": accidentals(base),
-                "bass": accidentals(name.split("/")[1]),
+                "bass": accidentals(bass_name),
             }
-    own = {
-        mode: {
-            name: {"frets": frets, "tab": list(theory.tab_lines(frets))}
-            for name, frets in table.items()
-        }
-        for mode, table in song.get("formas", {}).items()
-    }
-    default = {
-        name: {"frets": frets, "tab": list(theory.tab_lines(frets))}
-        for name, frets in song.get("formas_tema", {}).items()
-    }
+
+    def by_used(table: dict[str, list[int]]) -> dict[str, dict]:
+        """Las formas, bajo el nombre con que el acorde aparece en la partitura: `Dmadd#11` y
+        `Dm(add#11)` son el mismo acorde (S35) y el JavaScript busca por lo escrito en la partitura."""
+        found = {}
+        for name in used:
+            for key, frets in table.items():
+                if theory.same_chord(key, name):
+                    found[name] = {"frets": frets, "tab": list(theory.tab_lines(frets))}
+                    break
+        return found
+
+    own = {mode: by_used(table) for mode, table in song.get("formas", {}).items()}
+    default = by_used(song.get("formas_tema", {}))
     return {"chords": chords, "own": own, "default": default}
 
 

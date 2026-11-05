@@ -1,6 +1,6 @@
 # Estado del sitio
 
-> Registro vivo. Última actualización: 2026-11-05 (S37 rama de investigación MIDI; antes S33 foto del artista y S34 párrafos).
+> Registro vivo. Última actualización: 2026-11-05 (S37 rama de investigación MIDI, S36 acordes con paréntesis; antes S33 foto del artista y S34 párrafos).
 
 ## Paso actual
 
