@@ -3,7 +3,15 @@
 import pytest
 
 from musicsite import acordes
-from musicsite.acordes import BASIC_CHORD, REPERTOIRE, init, main, validate, validate_file
+from musicsite.acordes import (
+    BASIC_CHORD,
+    REPERTOIRE,
+    SLASH_CHORD,
+    init,
+    main,
+    validate,
+    validate_file,
+)
 
 
 def write(tmp_path, name, body):
@@ -321,3 +329,69 @@ def test_the_technical_template_shows_the_optional_block_commented_out():
     assert "# [avanzado.formas]" in text and "NO lleva partitura" in text and "NO se piden" in text
     simple = acordes.simple_template({"slug": "t", "titulo": "T", "artista": "A"})
     assert "#[formas]" in simple and "\n[formas]" not in simple
+
+
+# --- acordes con paréntesis (S35) -----------------------------------------------------------------
+
+PAREN_OK = [
+    "Dm(add#11)",
+    "C(add9)",
+    "G7(b9)",
+    "Am7(b5)",
+    "C(add9)/E",
+    "G7(b9,#11,13)",
+    "G7(b9/#11/13)",
+    "G7(b9#11)",
+    "D6/9",
+    "D(6/9)",
+    "D69",
+    "D6add9",
+    "Dm6/9",
+    "D6/9/A",
+    "D6/A",
+    "Gmaj7(#11)",
+]
+PAREN_BAD = [
+    "Dm(add#11",
+    "Dm)",
+    "Dm()",
+    "G((b9))",
+    "G7(b9)(b13)",
+    "(Dm)",
+    "D(m)",
+    "D(maj)",
+    "G7(b9,)",
+    "G7(,b9)",
+    "G7(b9,,#11)",
+    "G7(b 9)",
+    "Dm(add#11)/H",
+    "G7(b9)x",
+    "D6/9x",
+    "D/9",
+    "D(6/9",
+]
+
+
+@pytest.mark.parametrize("chord", PAREN_OK)
+def test_parenthesized_and_6_9_chords_are_valid_in_intermedio(chord):
+    assert SLASH_CHORD.match(chord), chord
+
+
+@pytest.mark.parametrize("chord", PAREN_BAD)
+def test_malformed_parentheses_are_rejected_in_intermedio(chord):
+    assert not SLASH_CHORD.match(chord), chord
+
+
+def test_a_song_with_parenthesized_chords_validates(tmp_path):
+    body = (
+        GOOD + "\n[intermedio]\npartitura = '''\nA: Dm(add#11) G7(b9/#11/13) D6/9 C(add9)/E\n'''\n"
+    )
+    assert validate_file(write(tmp_path, "tema", body)).errors == []
+
+
+def test_own_shape_matches_the_chord_written_with_or_without_parentheses(tmp_path):
+    base = GOOD + "\n[intermedio]\npartitura = '''\nA: Dm(add#11) G\n'''\n"
+    for key in ("Dm(add#11)", "Dmadd#11"):
+        body = base + f'[intermedio.formas]\n"{key}" = "x x 0 2 3 1"\n'
+        errors = validate_file(write(tmp_path, "tema", body)).errors
+        assert not any("no aparece" in e for e in errors), (key, errors)
