@@ -126,3 +126,13 @@ def test_unpublishable_song_stops_startup(tmp_path: Path):
     (tmp_path / "otra-era.toml").write_text('slug = "otra-era"\n', encoding="utf-8")
     with pytest.raises(ValueError):
         create_app(songs=tmp_path)
+
+
+def test_guitar_samples_get_a_longer_cache_than_pages(tmp_path):
+    (tmp_path / "index.html").write_text("<html></html>", encoding="utf-8")
+    (tmp_path / "guitarra-nylon-G2.mp3").write_bytes(b"ID3")
+    test_client = TestClient(create_app(root=tmp_path, songs=tmp_path))
+    sample = test_client.get("/guitarra-nylon-G2.mp3")
+    assert sample.headers["content-type"] == "audio/mpeg"
+    assert sample.headers["cache-control"] == "public, max-age=86400"
+    assert test_client.get("/index.html").headers["cache-control"] == HEADERS["Cache-Control"]
