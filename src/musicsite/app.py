@@ -24,6 +24,7 @@ TYPES = {
     ".css": "text/css; charset=utf-8",
     ".js": "text/javascript; charset=utf-8",
 }
+CACHE_SAMPLES = "public, max-age=86400"  # 1 día; un banco nuevo debe llevar otro nombre de archivo
 HEADERS = {
     "Cache-Control": "public, max-age=300",
     "X-Content-Type-Options": "nosniff",
@@ -104,6 +105,8 @@ def create_app(
         if entry is None:
             return Response(status_code=404)
         body, kind = entry
+        if path.endswith(".mp3"):  # muestras de la guitarra (S37): no cambian; un día de caché
+            return Response(body, media_type=kind, headers={"Cache-Control": CACHE_SAMPLES})
         return Response(body, media_type=kind)
 
     return app

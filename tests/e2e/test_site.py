@@ -1089,3 +1089,25 @@ def test_parenthesized_chords_open_their_panel_and_the_unknown_one_is_plain_text
     # válido pero sin notas conocidas: texto plano, sin botón, con los símbolos ♭ y ♯
     expect(pane.locator(".ac-chord-btn[data-chord='G7(b9/#11/13)']")).to_have_count(0)
     expect(pane.get_by_text("G7(♭9/♯11/13)").first).to_be_visible()
+
+
+def test_guitar_loads_its_samples_and_unlocks_the_volumes(song: Page):
+    """S37: las muestras se piden al activar «Guitarra», no al abrir; se habilitan los volúmenes."""
+    samples: list[int] = []
+    song.on(
+        "response",
+        lambda r: ("guitarra-nylon-" in r.url or "/bajo-" in r.url) and samples.append(r.status),
+    )
+    set_options(song)
+    guitar_volume = song.locator("[data-ac-vol-guitar]")
+    bass_volume = song.locator("[data-ac-vol-bass]")
+    expect(guitar_volume).to_be_disabled()
+    assert samples == []  # al abrir la página no se descarga ningún mp3
+    song.locator("[data-ac-met-guitar]").click()
+    expect(guitar_volume).to_be_enabled()
+    expect(bass_volume).to_be_enabled()
+    for _ in range(40):
+        if len(samples) >= 61:
+            break
+        song.wait_for_timeout(250)
+    assert sorted(set(samples)) == [200] and len(samples) == 61

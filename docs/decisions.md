@@ -572,3 +572,59 @@ Pedido del equipo editorial: poder escribir las extensiones entre paréntesis (`
   en vez de descartar la publicación entera. Así ningún despliegue puede tumbar lo publicado (hoy «Déjate caer» usa G7b9 sin forma propia en producción).
 - **Research:** su copia del validador replica la regla (M45 la comprueba).
 - `songs/dejate-caer.toml` (respaldo) suma `[formas] "G7b9" = "3 2 3 1 x x"`. Los casos del contrato que usan estos acordes traen `[formas]`.
+
+## S37 · Guitarra con sonido MIDI en el reproductor: resultado de la investigación (2026-11-05)
+
+Se investigó en la rama `feat/investigacion-midi` (preservada con la etiqueta `investigacion-midi-lab`; el laboratorio vive ahora en el repo de control, `labs/midi/`, decisión C1) si el
+reproductor podía tocar las formas de guitarra. **Resultado:** sí, con una suma por cuerda (afinación + traste = nota MIDI), una **muestra mp3 por nota** y el reloj de Web Audio del metrónomo.
+Quedó integrado en el reproductor (S38 a S42): botón «Guitarra» (apagado al abrir cada página), rasgueo redonda/blancas/negras, **guitarra de nailon** y **contrabajo** cuando el acorde lleva bajo.
+No hay sonido sintetizado (se descartaron Karplus-Strong y el acero).
+- **Muestras:** FluidR3_GM por midi-js-soundfonts, 49 de nailon (E2 a E6) y 12 de contrabajo (E1 a Eb2), ~1 MB, en `src/musicsite/web/` (se cargan solo al activar «Guitarra»; caché de un día). Licencia y atribución en
+  `THIRD_PARTY_NOTICES.md`.
+- **Licencia (L1):** el distribuidor las publica bajo **CC BY 3.0** (el repo, bajo MIT). L1 solo lista MIT, BSD, ISC y Apache-2.0: la inclusión es una **excepción decidida por el usuario el 2026-11-05**, con atribución. El repo del site es
+  **público**, así que las muestras quedan expuestas con su aviso. Si alguna vez hay un reclamo o se quiere cerrar la excepción, basta quitar las muestras y el botón (el resto del reproductor no depende de ellas).
+- **Pendiente:** consulta legal D-C25 (sonido de acordes de temas de terceros); probar en Safari/iPhone reales; R1 sigue por migrar (research mantiene su copia del render, M45).
+
+## S39 · Guitarra de nailon y volúmenes separados al integrar (2026-11-05)
+
+Tras oír el laboratorio y el reproductor local, el usuario elige la **guitarra de nailon** (muestras FluidR3_GM,
+una por semitono, E2 a E6, unos 850 KB) frente a la cuerda sintetizada (Karplus-Strong) y a la de acero. «Más acorde a lo que necesito.» El reproductor las toma de `web/guitarra-nylon-*.mp3` (licencia y atribución: S37).
+
+**Requisito de la integración:** el reproductor debe tener una **sección de volúmenes con un control
+para el metrónomo y otro para la guitarra**, independientes. Falta decidir cuando se integre: dónde va (dentro de «Opciones», S26), si se
+recuerda por dispositivo (`localStorage`, con respaldo si falla) y si «Sin sonido» (S32) sigue siendo un interruptor que silencia ambos.
+**Hecho:** dos deslizadores en «Opciones» (`data-ac-vol-met`, 100 % por defecto, y `data-ac-vol-guitar`, 70 %), que se
+recuerdan por dispositivo en `localStorage` (con try/catch). Al activar «Guitarra» se crea el audio y se bajan las muestras, y mientras una nota
+no ha cargado no suena. **Actualización:** se elimina del reproductor todo el sonido sintetizado (Karplus-Strong) y el de acero: solo queda
+el nailon, sin respaldo (si faltan las muestras, no suena). El laboratorio (`labs/midi/` del control) conserva sus dos motores solo para comparar.
+
+## S40 · Rediseño de la barra de reproducción: Tempo y Sonido en grupos (2026-11-05)
+
+**Rama `feat/investigacion-midi`, sin PR.** Con la guitarra y sus volúmenes (S37, S39), la barra mezclaba botones de encendido y deslizadores en una fila, y los
+volúmenes se veían como un punto sin riel. Se reorganiza en grupos con título; no cambian los `data-*`, los ids ni los comportamientos de S10, S12, S26, S30 y S32.
+
+- **Tempo:** Reproducir, − bpm +, deslizante y Restablecer. **Sonido:** tarjeta *Metrónomo* (volumen con riel y valor en %, más «Cuenta inicial»),
+  tarjeta *Guitarra* (interruptor y volumen, atenuado y deshabilitado mientras está apagada) y «Sin sonido» como interruptor general, con texto.
+- **El metrónomo no tiene interruptor propio:** su volumen en 0 % lo apaga (decisión del usuario). «Sin sonido» sigue silenciando todo.
+- **Escritorio:** tres filas (nivel; Tempo; Sonido). «Habla con una guía» pasa a la derecha de la fila del selector de nivel para que la barra fija siga
+  bajo el 35 % de la pantalla (guarda e2e existente). **Celular (≤ 575 px):** igual que S26: Reproducir + «Opciones»; dentro, las secciones «Tempo» y
+  «Sonido» con título (los textos de «Cuenta inicial» y «Sin sonido» ya no se ocultan: hay lugar).
+- Los deslizadores de volumen usan el mismo estilo de riel y control que el de tempo, con foco visible por teclado, en Noche y Marfil.
+- **Ajuste de prueba por S38:** el fixture e2e `parens_url` suma `[formas]` para `D6/9` y `Dm(add#11)`, que ahora exigen forma propia.
+- Comprobado: ruff, 608 tests y e2e de chromium (57 pasan, 2 se saltan) y las pruebas de la barra en Pixel 7. **No probado:** Safari/iPhone real y Firefox.
+
+## S41 · Sonido de bajo cuando el acorde lleva bajo (2026-11-05)
+
+Con la guitarra activa, un acorde con bajo (`F#m7/A`, `Dm/F`, `C#m7b5/F#`…) suena además con una nota de **contrabajo**
+(`acoustic_bass` de FluidR3_GM, elegido por el usuario) en la octava más grave de E1 a Eb2 (12 muestras, ~190 KB, `web/bajo-<nota>.mp3`; licencia: S37, igual que las de nailon). Arranca con el primer golpe del acorde y se corta con el siguiente acorde o silencio. Con la guitarra apagada no suena. Sigue el
+volumen de la guitarra al inicio (S42 le dio uno propio); suena aunque el diagrama ya dibuje el bajo. Las muestras se cargan al activar «Guitarra», junto con las de nailon.
+
+**Panel del acorde:** si el diagrama es del acorde base, «… El bajo (X) no está dibujado, pero si activas la guitarra suena como bajo.»; si el bajo sí está dibujado,
+«El bajo (X) suena aparte, como bajo, si activas la guitarra.»
+
+**Pendiente:** el contrabajo suena más jazzero que el eléctrico (`electric_bass_finger`), por si se cambia de opinión.
+
+## S42 · Volumen propio del bajo y sección Sonido en una fila (2026-11-05)
+
+La tarjeta «Guitarra» suma un deslizador **«Bajo»** (70 % por defecto, se recuerda por dispositivo en `localStorage` con try/catch) con su propio nodo de ganancia, independiente del de la guitarra.
+Se desactiva junto con la guitarra cuando está apagada. Los tres deslizadores del grupo Sonido miden 3 rem para que Metrónomo, Guitarra, Bajo y «Sin sonido» quepan en una fila en escritorio (la barra fija sigue bajo el 35 % de la pantalla, guarda e2e).
