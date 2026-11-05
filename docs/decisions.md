@@ -540,3 +540,7 @@ La descripción de un artista (texto plano de research M49/M41) se dibuja como p
 bloque porque HTML colapsa los saltos. Cada párrafo va escapado, con interlineado de 1,65 y separación entre párrafos (estilo en línea, por lo mismo que S33: `style.css` está copiado en research). Una descripción vacía
 o solo de espacios no dibuja nada. Sin cambios en el contrato de `artists.json`.
 
+## S35 · Crédito de la foto del artista (2026-11-04)
+
+`artists.json` puede traer `photo_credit` (texto, ≤ 200) y `photo_credit_url` (http/https). La tarjeta los muestra bajo la foto (`<p class="ac-photo-credit">`), con el texto escapado y el enlace externo con `rel="noopener noreferrer"`. Las licencias CC BY y CC BY-SA exigen atribución. Solo se muestra si hay foto; una URL inválida se descarta y queda el texto. Contrato con research M51.
+

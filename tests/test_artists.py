@@ -10,7 +10,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from musicsite.app import create_app
-from musicsite.artists import FALLBACK, parse_artists, safe_url
+from musicsite.artists import FALLBACK, parse_artists, photo_credit_html, safe_url
 from test_catalog import Clock, make_release, song_text
 
 
@@ -244,3 +244,27 @@ def test_description_paragraphs_are_still_escaped(editorial):
 def test_an_empty_or_blank_description_draws_nothing(editorial):
     page = with_json(editorial, doc(artist(description="  \n\n "))).get("/artistas.html").text
     assert "ac-artist-desc" not in page.split("data-ac-artist-card")[1]
+
+
+def test_photo_credit_is_shown_escaped_with_an_external_link(editorial):
+    with_photo(
+        editorial,
+        photo_credit="Foto: <b>Ana</b>, CC BY 2.0",
+        photo_credit_url="https://commons.wikimedia.org/wiki/File:X.jpg",
+    )
+    page = TestClient(create_app(editorial=editorial)).get("/artistas.html").text
+    assert "Foto: &lt;b&gt;Ana&lt;/b&gt;, CC BY 2.0" in page and "<b>Ana</b>" not in page
+    assert (
+        'href="https://commons.wikimedia.org/wiki/File:X.jpg" target="_blank" '
+        'rel="noopener noreferrer"' in page
+    )
+
+
+def test_photo_credit_without_url_is_plain_text_and_bad_url_is_dropped(editorial):
+    with_photo(editorial, photo_credit="Foto: Ana", photo_credit_url="javascript:alert(1)")
+    page = TestClient(create_app(editorial=editorial)).get("/artistas.html").text
+    assert "ac-photo-credit" in page and "Foto: Ana" in page and "javascript:" not in page
+
+
+def test_credit_without_photo_is_not_shown():
+    assert photo_credit_html({"photo_credit": "Foto: Ana"}) == ""

@@ -161,6 +161,12 @@ def parse_artists(text: str) -> list[dict]:
                 artist["photo"] = photo
             else:
                 log.warning("artistas: se descarta la foto de %s (ruta no válida)", slug)
+        credit = item.get("photo_credit")
+        if isinstance(credit, str) and 1 <= len(credit.strip()) <= 200:
+            artist["photo_credit"] = credit.strip()
+            credit_url = safe_url(item.get("photo_credit_url"))
+            if credit_url:
+                artist["photo_credit_url"] = credit_url
         artists.append(artist)
     return artists
 
@@ -249,6 +255,22 @@ def description_html(text: str) -> str:
     return f'<div class="ac-artist-desc d-grid gap-3" style="line-height:1.65">{body}</div>'
 
 
+def photo_credit_html(artist: dict) -> str:
+    """Atribución de la foto (CC BY/BY-SA la exigen): texto escapado y, si hay, enlace externo."""
+    credit = artist.get("photo_credit")
+    if not credit or not artist.get("photo"):
+        return ""
+    url = artist.get("photo_credit_url")
+    if url:
+        credit = (
+            f'<a href="{esc(url)}" target="_blank" rel="noopener noreferrer">{esc(credit)}'
+            '<span class="visually-hidden"> (se abre en otra pestaña)</span></a>'
+        )
+    else:
+        credit = esc(credit)
+    return f'<p class="m-0 small text-body-secondary ac-photo-credit">{credit}</p>'
+
+
 def artist_card(artist: dict, songs: list[tuple[str, str]]) -> str:
     name = artist["name"]
     desc = description_html(artist["description"])
@@ -285,7 +307,7 @@ def artist_card(artist: dict, songs: list[tuple[str, str]]) -> str:
             f'<img class="ac-artist-photo" src="{esc(photo)}" alt="Foto de {esc(name)}" '
             'width="72" height="72" loading="lazy" decoding="async" '
             'style="flex:none;border-radius:50%;object-fit:cover;border:2px solid var(--ac-oro)">'
-            f"{heading}</div>"
+            f"{heading}</div>{photo_credit_html(artist)}"
         )
     return f"""        <div class="col" id="{esc(artist["slug"])}" data-ac-artist-card>
           <div class="card h-100">
