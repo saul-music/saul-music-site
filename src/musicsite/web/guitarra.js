@@ -152,13 +152,20 @@
     if (!btn) return;
     var slider = document.querySelector("[data-ac-vol-guitar]");
     try { var saved = parseFloat(localStorage.getItem("ac-vol-guitar")); if (isFinite(saved)) volume = Math.min(1, Math.max(0, saved)); } catch (e) { /* sin almacenamiento */ }
+    var out100 = slider && slider.parentNode.querySelector("[data-ac-vol-out]");
+    var card = btn.closest(".ac-snd-card");
+    function showVolume() { if (out100) out100.textContent = Math.round(volume * 100) + "%"; }
     if (slider) {
       slider.value = Math.round(volume * 100);
-      slider.addEventListener("input", function () { setVolume(slider.value / 100); });
+      showVolume();
+      slider.addEventListener("input", function () { setVolume(slider.value / 100); showVolume(); });
     }
     btn.addEventListener("click", function () {
       enabled = !enabled;
       btn.setAttribute("aria-pressed", enabled ? "true" : "false");
+      /* Apagada: el volumen se atenúa y no responde (S40). */
+      if (slider) slider.disabled = !enabled;
+      if (card) card.classList.toggle("is-off", !enabled);
       if (!enabled && outCtx) muteAll(outCtx.currentTime);
       if (enabled) document.dispatchEvent(new CustomEvent("acordia-guitar-on"));
     });

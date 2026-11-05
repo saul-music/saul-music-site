@@ -586,9 +586,13 @@
     var volMet = box.querySelector("[data-ac-vol-met]");
     try { var savedVol = parseFloat(localStorage.getItem("ac-vol-met")); if (isFinite(savedVol)) metVol = Math.min(1, Math.max(0, savedVol)); } catch (e) { /* sin almacenamiento */ }
     if (volMet) {
+      var volMetOut = volMet.parentNode.querySelector("[data-ac-vol-out]");
+      var showMetVol = function () { if (volMetOut) volMetOut.textContent = Math.round(metVol * 100) + "%"; };
       volMet.value = Math.round(metVol * 100);
+      showMetVol();
       volMet.addEventListener("input", function () {
         metVol = volMet.value / 100;
+        showMetVol();
         try { localStorage.setItem("ac-vol-met", String(metVol)); } catch (e) { /* sin almacenamiento */ }
       });
     }

@@ -37,37 +37,50 @@
         <span class="visually-hidden" role="status" data-ac-met-status></span>
         <button class="btn btn-outline-primary ac-met-options" type="button" data-ac-met-options aria-expanded="false" aria-controls="met-extra"><span class="ac-met-options-label">Opciones</span><span class="ac-met-options-mute" data-ac-met-options-mute hidden aria-hidden="true" title="Sin sonido activado"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9v6h4l5 4V5L8 9H4z"/><path d="M17 9l5 6M22 9l-5 6"/></svg></span> <span class="ac-met-options-chev" aria-hidden="true">&#9662;</span></button>
         <div class="ac-met-extra" id="met-extra" data-ac-met-extra>
-          <button class="btn btn-outline-primary ac-met-mute" type="button" data-ac-met-mute aria-pressed="false" title="Seguir el tempo sin sonido">
-            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4z"/><path class="ac-on" d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/><path class="ac-off" d="M17 9l5 6M22 9l-5 6"/></svg>
-            <span class="ac-met-mute-text">Sin sonido</span>
-          </button>
-          <button class="btn btn-outline-primary ac-met-countin" type="button" data-ac-met-countin aria-pressed="true" title="Cuatro clics de cuenta antes de empezar">
-            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 5l3 14h8l3-14z"/><path d="M12 15L16 6"/></svg>
-            <span class="ac-met-countin-text">Cuenta inicial</span>
-          </button>
-          <button class="btn btn-outline-primary ac-met-countin ac-met-guitar" type="button" data-ac-met-guitar aria-pressed="false" title="Tocar los acordes con guitarra (laboratorio)">
-            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 4l-6 6"/><path d="M18 2l4 4"/><path d="M13.5 10.5a3.5 3.5 0 0 0-4.9-.4L7 11.6a4 4 0 0 0-4 4 4.4 4.4 0 0 0 5.4 5.4 4 4 0 0 0 4-4l1.5-1.6a3.5 3.5 0 0 0-.4-4.9z"/><circle cx="9" cy="15" r="1.3"/></svg>
-            <span class="ac-met-countin-text">Guitarra</span>
-          </button>
-          <label class="ac-met-vol" title="Volumen del metrónomo">
-            <span>Metrónomo</span>
-            <input class="form-range" type="range" min="0" max="100" step="5" value="100" data-ac-vol-met aria-label="Volumen del metrónomo">
-          </label>
-          <label class="ac-met-vol" title="Volumen de la guitarra">
-            <span>Guitarra</span>
-            <input class="form-range" type="range" min="0" max="100" step="5" value="70" data-ac-vol-guitar aria-label="Volumen de la guitarra">
-          </label>
-          <div class="d-flex align-items-center gap-2">
-            <button class="btn btn-outline-primary" type="button" data-ac-met-step="-1" aria-label="Bajar un bpm">−</button>
-            <label class="visually-hidden" for="met-bpm">Tempo en bpm</label>
-            <input class="form-control ac-mono text-center ac-met-input" id="met-bpm" type="number" inputmode="numeric" min="30" max="240" step="1" value="{{ bpm }}" data-ac-met-bpm>
-            <span class="small text-body-secondary">bpm</span>
-            <button class="btn btn-outline-primary" type="button" data-ac-met-step="1" aria-label="Subir un bpm">+</button>
+          <div class="ac-met-sec ac-met-sec-tempo" role="group" aria-labelledby="met-sec-tempo">
+            <span class="ac-met-sec-title" id="met-sec-tempo">Tempo</span>
+            <div class="d-flex align-items-center gap-2">
+              <button class="btn btn-outline-primary" type="button" data-ac-met-step="-1" aria-label="Bajar un bpm">−</button>
+              <label class="visually-hidden" for="met-bpm">Tempo en bpm</label>
+              <input class="form-control ac-mono text-center ac-met-input" id="met-bpm" type="number" inputmode="numeric" min="30" max="240" step="1" value="{{ bpm }}" data-ac-met-bpm>
+              <span class="small text-body-secondary">bpm</span>
+              <button class="btn btn-outline-primary" type="button" data-ac-met-step="1" aria-label="Subir un bpm">+</button>
+            </div>
+            <label class="visually-hidden" for="met-range">Tempo, control deslizante</label>
+            <input class="form-range flex-grow-1 ac-met-range" id="met-range" type="range" min="30" max="240" step="1" value="{{ bpm }}" data-ac-met-range>
+            <div class="d-flex align-items-center gap-1" aria-hidden="true" data-ac-met-dots></div>
+            <button class="btn btn-ghost" type="button" data-ac-met-reset aria-label="Restablecer a {{ bpm }} bpm" title="Restablecer a {{ bpm }} bpm"><span class="ac-met-reset-icon" aria-hidden="true">&#8634;</span><span class="ac-met-reset-text">Restablecer<span class="ac-met-reset-bpm"> a {{ bpm }}</span></span></button>
           </div>
-          <label class="visually-hidden" for="met-range">Tempo, control deslizante</label>
-          <input class="form-range flex-grow-1 ac-met-range" id="met-range" type="range" min="30" max="240" step="1" value="{{ bpm }}" data-ac-met-range>
-          <div class="d-flex align-items-center gap-1" aria-hidden="true" data-ac-met-dots></div>
-          <button class="btn btn-ghost" type="button" data-ac-met-reset aria-label="Restablecer a {{ bpm }} bpm" title="Restablecer a {{ bpm }} bpm"><span class="ac-met-reset-icon" aria-hidden="true">&#8634;</span><span class="ac-met-reset-text">Restablecer<span class="ac-met-reset-bpm"> a {{ bpm }}</span></span></button>
+          <div class="ac-met-sec ac-met-sec-sound" role="group" aria-labelledby="met-sec-sound">
+            <span class="ac-met-sec-title" id="met-sec-sound">Sonido</span>
+            <div class="ac-snd-card" role="group" aria-label="Metrónomo">
+              <span class="ac-snd-name">Metrónomo</span>
+              <label class="ac-snd-vol" title="Volumen del metrónomo (0 % lo apaga)">
+                <svg class="ac-snd-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4z"/><path d="M16.5 8.5a5 5 0 0 1 0 7"/></svg>
+                <input class="form-range ac-snd-range" type="range" min="0" max="100" step="5" value="100" data-ac-vol-met aria-label="Volumen del metrónomo">
+                <output class="ac-snd-out ac-mono" data-ac-vol-out>100%</output>
+              </label>
+              <button class="btn btn-outline-primary ac-met-countin" type="button" data-ac-met-countin aria-pressed="true" title="Cuatro clics de cuenta antes de empezar">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 5l3 14h8l3-14z"/><path d="M12 15L16 6"/></svg>
+                <span class="ac-met-countin-text">Cuenta inicial</span>
+              </button>
+            </div>
+            <div class="ac-snd-card is-off" data-ac-snd-guitar role="group" aria-label="Guitarra">
+              <button class="btn btn-outline-primary ac-met-countin ac-met-guitar" type="button" data-ac-met-guitar aria-pressed="false" title="Tocar los acordes con guitarra de nailon (laboratorio)">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 4l-6 6"/><path d="M18 2l4 4"/><path d="M13.5 10.5a3.5 3.5 0 0 0-4.9-.4L7 11.6a4 4 0 0 0-4 4 4.4 4.4 0 0 0 5.4 5.4 4 4 0 0 0 4-4l1.5-1.6a3.5 3.5 0 0 0-.4-4.9z"/><circle cx="9" cy="15" r="1.3"/></svg>
+                <span class="ac-met-countin-text">Guitarra</span>
+              </button>
+              <label class="ac-snd-vol" title="Volumen de la guitarra">
+                <svg class="ac-snd-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4z"/><path d="M16.5 8.5a5 5 0 0 1 0 7"/></svg>
+                <input class="form-range ac-snd-range" type="range" min="0" max="100" step="5" value="70" data-ac-vol-guitar aria-label="Volumen de la guitarra" disabled>
+                <output class="ac-snd-out ac-mono" data-ac-vol-out>70%</output>
+              </label>
+            </div>
+            <button class="btn btn-outline-primary ac-met-mute" type="button" data-ac-met-mute aria-pressed="false" title="Seguir el tempo sin sonido">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4z"/><path class="ac-on" d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/><path class="ac-off" d="M17 9l5 6M22 9l-5 6"/></svg>
+              <span class="ac-met-mute-text">Sin sonido</span>
+            </button>
+          </div>
         </div>
         {% if guides_count %}<a class="btn ac-met-help" href="guias.html?tema={{ song.slug }}" data-ac-met-help role="button" data-bs-toggle="collapse" data-bs-target="#guias-panel" aria-controls="guias-panel" aria-expanded="false" hidden>¿Se complica esta parte? <strong>Habla con una guía</strong></a>{% endif %}
       </div>

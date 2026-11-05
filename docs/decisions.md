@@ -615,3 +615,18 @@ recuerda por dispositivo (`localStorage`, con respaldo si falla) y si «Sin soni
 recuerdan por dispositivo en `localStorage` (con try/catch). Al activar «Guitarra» se crea el audio y se bajan las muestras, y mientras una nota
 no ha cargado no suena. **Actualización:** se elimina del reproductor todo el sonido sintetizado (Karplus-Strong) y el de acero: solo queda
 el nailon, sin respaldo (si faltan las muestras, no suena). El laboratorio `lab/midi/` conserva sus dos motores solo para comparar.
+
+## S40 · Rediseño de la barra de reproducción: Tempo y Sonido en grupos (2026-11-05)
+
+**Rama `feat/investigacion-midi`, sin PR.** Con la guitarra y sus volúmenes (S37, S39), la barra mezclaba botones de encendido y deslizadores en una fila, y los
+volúmenes se veían como un punto sin riel. Se reorganiza en grupos con título; no cambian los `data-*`, los ids ni los comportamientos de S10, S12, S26, S30 y S32.
+
+- **Tempo:** Reproducir, − bpm +, deslizante y Restablecer. **Sonido:** tarjeta *Metrónomo* (volumen con riel y valor en %, más «Cuenta inicial»),
+  tarjeta *Guitarra* (interruptor y volumen, atenuado y deshabilitado mientras está apagada) y «Sin sonido» como interruptor general, con texto.
+- **El metrónomo no tiene interruptor propio:** su volumen en 0 % lo apaga (decisión del usuario). «Sin sonido» sigue silenciando todo.
+- **Escritorio:** tres filas (nivel; Tempo; Sonido). «Habla con una guía» pasa a la derecha de la fila del selector de nivel para que la barra fija siga
+  bajo el 35 % de la pantalla (guarda e2e existente). **Celular (≤ 575 px):** igual que S26: Reproducir + «Opciones»; dentro, las secciones «Tempo» y
+  «Sonido» con título (los textos de «Cuenta inicial» y «Sin sonido» ya no se ocultan: hay lugar).
+- Los deslizadores de volumen usan el mismo estilo de riel y control que el de tempo, con foco visible por teclado, en Noche y Marfil.
+- **Ajuste de prueba por S38:** el fixture e2e `parens_url` suma `[formas]` para `D6/9` y `Dm(add#11)`, que ahora exigen forma propia.
+- Comprobado: ruff, 608 tests y e2e de chromium (57 pasan, 2 se saltan) y las pruebas de la barra en Pixel 7. **No probado:** Safari/iPhone real y Firefox.
