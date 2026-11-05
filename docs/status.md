@@ -1,6 +1,6 @@
 # Estado del sitio
 
-> Registro vivo. Última actualización: 2026-11-05 (S38: novenas alteradas 7b9 y 7#9 y forma propia obligatoria en el admin; el sitio la tolera).
+> Registro vivo. Última actualización: 2026-11-05 (S37 a S42: guitarra de nailon y contrabajo en el reproductor, volúmenes y barra rediseñada; S38 novenas alteradas y forma propia obligatoria).
 
 ## Paso actual
 
@@ -150,3 +150,12 @@ AAAA-MM-DD · paso · qué se hizo · qué quedó pendiente · decisiones nuevas
 
 - «Opciones» (celular) muestra un ícono de silencio y `aria-label`/`title` «sin sonido activado» mientras el modo está activo; prueba e2e en Pixel 7 e iPhone 14 con captura revisada.
 - `timeout-minutes` en todos los jobs (e2e 20, resto 10) medido con los últimos 12 runs; pipeline sigue secuencial. Detalle: `docs/decisions.md` S32.
+
+## 2026-11-05 · Guitarra con sonido y barra rediseñada (S37 a S42)
+
+- Botón **«Guitarra»** (apagado al abrir cada página): toca la forma de cada acorde con guitarra de nailon y, si el acorde lleva bajo, con contrabajo.
+  49 + 12 muestras mp3 (~1 MB, FluidR3_GM, CC BY 3.0, `THIRD_PARTY_NOTICES.md`), que se bajan solo al activar el botón; caché de un día.
+- Barra de reproducción en grupos **Tempo** y **Sonido** (Metrónomo con volumen y «Cuenta inicial»; Guitarra con volumen y «Bajo»; «Sin sonido» general).
+  Los volúmenes se recuerdan por dispositivo.
+- Panel del acorde: avisa cuando el bajo no está dibujado pero suena si se activa la guitarra.
+- **Pendiente:** oírlo y revisarlo en Safari/iPhone y celular reales; consulta legal D-C25; R1 (research mantiene su copia del render, M45).

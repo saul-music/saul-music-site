@@ -206,8 +206,10 @@
         body.appendChild(guitarSVG(f.frets, f.fingers, f.barres, chord.label));
         tabEl.hidden = false; tabEl.textContent = f.tab.join("\n");
         var gn = chord.guitar_note;  // diagrama del acorde base: el bajo no está dibujado (S19)
-        noteEl.hidden = !(gn && !f.kind);
-        if (!noteEl.hidden) noteEl.textContent = "Diagrama de " + gn.base + ". El bajo (" + gn.bass + ") no está dibujado: míralo en el teclado.";
+        var bassNote = chord.bass !== null && chord.bass !== undefined && chord.label.indexOf("/") >= 0 ? chord.label.split("/").pop() : "";
+        noteEl.hidden = !((gn && !f.kind) || bassNote);
+        if (gn && !f.kind) noteEl.textContent = "Diagrama de " + gn.base + ". El bajo (" + gn.bass + ") no está dibujado, pero si activas la guitarra suena como bajo.";
+        else if (bassNote) noteEl.textContent = "El bajo (" + bassNote + ") suena aparte, como bajo, si activas la guitarra.";
         badge.hidden = !f.kind;
         badge.textContent = f.kind === "default" ? "Forma de este tema" : "Forma de esta versión";
         next.hidden = list.length < 2;
@@ -581,11 +583,27 @@
       input.value = bpm;
       range.value = bpm;
     }
+    /* Volumen del metrónomo (0 a 1, S39): se recuerda por dispositivo. */
+    var metVol = 1;
+    var volMet = box.querySelector("[data-ac-vol-met]");
+    try { var savedVol = parseFloat(localStorage.getItem("ac-vol-met")); if (isFinite(savedVol)) metVol = Math.min(1, Math.max(0, savedVol)); } catch (e) { /* sin almacenamiento */ }
+    if (volMet) {
+      var volMetOut = volMet.parentNode.querySelector("[data-ac-vol-out]");
+      var showMetVol = function () { if (volMetOut) volMetOut.textContent = Math.round(metVol * 100) + "%"; };
+      volMet.value = Math.round(metVol * 100);
+      showMetVol();
+      volMet.addEventListener("input", function () {
+        metVol = volMet.value / 100;
+        showMetVol();
+        try { localStorage.setItem("ac-vol-met", String(metVol)); } catch (e) { /* sin almacenamiento */ }
+      });
+    }
     function click(time, accent) {
+      if (metVol <= 0) return;
       var osc = ctx.createOscillator(), gain = ctx.createGain();
       osc.frequency.value = accent ? 1568 : 1047;
       gain.gain.setValueAtTime(0.0001, time);
-      gain.gain.exponentialRampToValueAtTime(accent ? 0.9 : 0.55, time + 0.002);
+      gain.gain.exponentialRampToValueAtTime(Math.max(0.0001, (accent ? 0.9 : 0.55) * metVol), time + 0.002);
       gain.gain.exponentialRampToValueAtTime(0.0001, time + 0.06);
       osc.connect(gain);
       gain.connect(ctx.destination);
@@ -605,6 +623,15 @@
         }
       });
       return seq;
+    }
+    /* Guitarra (S37): el compás que suena en el pulso n, en el momento de agendarlo (el cursor va después). */
+    var audioSeq = { pane: null, seq: [] };
+    function barAt(n) {
+      var pane = activePane();
+      if (audioSeq.pane !== pane) { audioSeq.pane = pane; audioSeq.seq = buildSeq(pane); }
+      var seq = audioSeq.seq;
+      if (!seq.length) return null;
+      return seq[(startIndex(seq) + Math.floor(n / beats)) % seq.length].el;
     }
     function clearCounter() {
       if (cur.counter) cur.counter.remove();
@@ -755,6 +782,11 @@
         var isCount = pre > 0;
         if (!muted) click(nextTime, isCount ? pre === COUNT_IN : beat === 0);
         flash(isCount ? COUNT_IN - pre : beat, nextTime, count, isCount);
+        /* Guitarra (S37): la guitarra recibe cada tiempo (no la cuenta) con su compás. */
+        if (!isCount && !muted && window.AcordiaGuitar) {
+          var gp = activePane();
+          window.AcordiaGuitar.beat(ctx, nextTime, barAt(count), count % beats, beats, (gp.id || "").replace(/^p-/, ""));
+        }
         nextTime += 60 / bpm;
         if (isCount) { pre--; continue; }
         count++;
@@ -777,6 +809,12 @@
       var p = ctx.resume ? ctx.resume() : null;
       return p && p.then ? p : { then: function (f) { f(); } };
     }
+    /* Al activar «Guitarra» se crea el audio (hay un toque del usuario) y se bajan las muestras,
+       para que el primer acorde ya suene con nailon. */
+    document.addEventListener("acordia-guitar-on", function () {
+      ensureAudio();
+      if (ctx && window.AcordiaGuitar) window.AcordiaGuitar.prepare(ctx);
+    });
     function begin() {
       if (!playing) return;
       beat = 0;
@@ -800,6 +838,7 @@
     }
     function stop() {
       playing = false;
+      if (window.AcordiaGuitar) window.AcordiaGuitar.stop(ctx);
       clearInterval(timer);
       clearTimeout(endTimer);
       dots.forEach(function (x) { x.classList.remove("is-on"); });
@@ -862,7 +901,7 @@
       syncOptionsMute();
       if (save) { try { localStorage.setItem(MUTE_KEY, muted ? "1" : "0"); } catch (e) {} }
       if (!playing) return;
-      if (muted) { nextTime = clock() + remaining; return; }
+      if (muted) { if (window.AcordiaGuitar) window.AcordiaGuitar.stop(ctx); nextTime = clock() + remaining; return; }
       var audio = ensureAudio();
       if (!audio) { muted = true; syncOptionsMute(); return; }
       audio.then(function () { nextTime = clock() + remaining; });
