@@ -545,7 +545,7 @@ o solo de espacios no dibuja nada. Sin cambios en el contrato de `artists.json`.
 `artists.json` puede traer `photo_credit` (texto, ≤ 200) y `photo_credit_url` (http/https). La tarjeta los muestra bajo la foto (`<p class="ac-photo-credit">`), con el texto escapado y el enlace externo con `rel="noopener noreferrer"`. Las licencias CC BY y CC BY-SA exigen atribución. Solo se muestra si hay foto; una URL inválida se descarta y queda el texto. Contrato con research M51.
 
 
-## S36 · Rama larga `feat/investigacion-midi` para investigar acordes como MIDI con sonido de guitarra (2026-11-05)
+## S37 · Rama larga `feat/investigacion-midi` para investigar acordes como MIDI con sonido de guitarra (2026-11-05)
 
 Se abre la rama `feat/investigacion-midi` para estudiar si el reproductor puede tocar las posiciones de guitarra como notas MIDI
 con un sonido básico de guitarra acústica. Estudio inicial: `docs/estudio-midi-guitarra.md`.
@@ -558,3 +558,16 @@ con un sonido básico de guitarra acústica. Estudio inicial: `docs/estudio-midi
 - **Cómo sale algo a `main`:** cada pieza que se decida implementar va en su propia rama corta (`feat/…`) desde `main`, con plan,
   aprobación y PR, como siempre. Si toca `acordia.js` u otro archivo del render, rige antes el disparador de R1 (control).
 - **Cierre:** al terminar, el estudio final se lleva a `main` por PR (`docs/…`) y esta decisión se reemplaza con el resultado.
+- **Aislamiento (2026-11-05):** el laboratorio vive en `lab/midi/` (fuera de `src/`, nunca entra a la imagen) y no toca
+  `acordia.js` ni el render, así que no dispara R1. **No se abre PR desde esta rama ni nace ninguna rama de ella**; el
+  workflow `lab-no-merge.yml`, que solo existe aquí, pone en rojo cualquier PR que la contenga. `main` se trae
+  (`git merge origin/main`) solo cuando el usuario lo pide. Se trabaja en un `git worktree` propio
+  (`../saul-music-site-midi`), porque otra sesión que compartía la carpeta del site arrastró el laboratorio a su commit.
+- **Prueba en el reproductor (2026-11-05):** botón «Guitarra» junto a «Cuenta inicial», **apagado al cargar cada página**;
+  `web/guitarra.js` toca la primera forma del panel (S27) con la cuerda sintetizada (motor A) y un enganche en
+  `schedule()` de `acordia.js` le pasa cada tiempo. Rasgueo ultra simple, siempre abajo: un acorde en el compás → un golpe
+  (redonda); dos acordes de medio compás → un golpe por acorde (blancas); cualquier otro reparto → un golpe por tiempo
+  con el acorde que suena (negras); el silencio apaga las cuerdas. Con «Sin sonido» no suena nada. Se corre desde una
+  copia temporal de la rama, con los temas publicados de `acordes-produccion/`.
+- **Muestras:** FluidR3_GM (guitarra de acero y nailon) se bajan con `lab/midi/bajar-muestras.sh` a una carpeta ignorada
+  por git: no se suben al repo público mientras la licencia esté por verificar (L1).

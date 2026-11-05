@@ -1,6 +1,6 @@
 # Estudio: posiciones de guitarra como MIDI y sonido de guitarra acústica en el reproductor
 
-> Investigación abierta en la rama `feat/investigacion-midi` (S36). Fecha: 2026-11-05. Sin código todavía:
+> Investigación abierta en la rama `feat/investigacion-midi` (S37). Fecha: 2026-11-05. Sin código todavía:
 > nada de esto se implementa sin plan y aprobación explícita.
 
 ## Pregunta
@@ -98,13 +98,42 @@ autoalojada. D no hace falta: lo que resuelve, el sitio ya lo tiene (agenda, dec
 3. **Licencia de muestras (L1).** Si se usa B, aclarar si rige CC BY 3.0 (gleitz) o MIT (`.sf2` original) y atribuir.
 4. **Calidad percibida.** Un rasgueo mecánico puede sonar a juguete y restar confianza (posicionamiento por confianza,
    D-C17). Mitigación: prueba a oído con 3 a 5 músicos antes de publicar.
-5. **Rama larga.** Se separa de `main` (S36): hay que traer `main` a la rama seguido para que no diverja.
+5. **Rama larga.** Se separa de `main` (S37): hay que traer `main` a la rama seguido para que no diverja.
 
 ## Qué medir en la investigación
 
 - A vs. B a oído, en parlante de celular y con audífonos (Safari/iPhone y Chrome/Android).
 - Latencia del primer golpe en iOS tras tocar «Reproducir».
 - Si los músicos lo usan para practicar (pregunta en el feedback de usuarios) antes de pagar el costo de R1.
+
+## Laboratorio (2026-11-05)
+
+Página local `lab/midi/` (ver `lab/midi/README.md`). Lee `chords-guitar.json` del sitio por un enlace, sin copiarlo, y
+replica el orden de formas del panel (forma del tema primero y después la regla de cejilla, S27). Tiene los motores A y B,
+rasgueo configurable, progresiones con patrón y las mediciones en pantalla.
+
+**Primeras mediciones** (Mac, navegadores automáticos sin parlante; falta el oído y el iPhone real):
+
+| Medición | Chromium | WebKit (Safari) | Firefox |
+| --- | --- | --- | --- |
+| Comprobación MIDI (G, C, F con cejilla) | ✓ | ✓ | ✓ |
+| Muestras acero, conjunto ligero (17 notas) | 297 KB · 36 ms | 297 KB · 160 ms | — |
+| Muestras acero, conjunto completo (49 notas, E2 a E6) | 855 KB · 47 ms | 855 KB · 253 a 285 ms | — |
+| Preparar un rasgueo con A (sintetizar ~6 notas de 3 s) | ~26 ms | ~9 ms | — |
+| Preparar un rasgueo con B | < 1 ms | < 1 ms | — |
+| Latencia que informa el navegador | 5,8 ms | 3,2 ms | — |
+
+Lectura: B cuesta 0,3 a 0,9 MB por banco y unos 0,3 s de decodificación en Safari, una sola vez. A no pesa nada y prepara
+un acorde nuevo en milisegundos. Las dos son viables en lo técnico; la elección es de oído.
+
+**Pendiente:** escucharlo (A vs. B, acero vs. nailon, ligero vs. completo) en el Mac y en el iPhone, y anotar aquí el juicio.
+
+## Prueba en el reproductor (2026-11-05)
+
+Regla de rasgueo y botón descritos en S37. Prueba automática en WebKit, Chromium y Firefox sobre los 17 temas del catálogo
+local (`releases/20261105-005059-94ea`) y todos sus niveles: empieza apagada en todos; apagada, 0 notas; encendida, suena
+en cada nivel con compases (Intermedio y Avanzado vacíos no suenan, como corresponde); sin errores de JavaScript. Ningún
+acorde de los temas publicados queda sin forma de guitarra. **Pendiente:** escucharlo en el Mac y en el iPhone.
 
 ## Fuentes
 

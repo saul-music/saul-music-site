@@ -88,6 +88,7 @@ def test_web_dir_has_only_fixed_site_files():
         "pedidos.js",
         "style.css",
         "acordia.js",
+        "guitarra.js",  # laboratorio S37, solo en feat/investigacion-midi
         "PetalumaScript.woff2",
         "PetalumaScript-OFL.txt",
     }

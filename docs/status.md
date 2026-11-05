@@ -1,6 +1,6 @@
 # Estado del sitio
 
-> Registro vivo. Última actualización: 2026-11-05 (S36 rama de investigación MIDI; antes S33 foto del artista y S34 párrafos).
+> Registro vivo. Última actualización: 2026-11-05 (S37 rama de investigación MIDI; antes S33 foto del artista y S34 párrafos).
 
 ## Paso actual
 
@@ -151,7 +151,9 @@ AAAA-MM-DD · paso · qué se hizo · qué quedó pendiente · decisiones nuevas
 - «Opciones» (celular) muestra un ícono de silencio y `aria-label`/`title` «sin sonido activado» mientras el modo está activo; prueba e2e en Pixel 7 e iPhone 14 con captura revisada.
 - `timeout-minutes` en todos los jobs (e2e 20, resto 10) medido con los últimos 12 runs; pipeline sigue secuencial. Detalle: `docs/decisions.md` S32.
 
-## 2026-11-05 · Investigación MIDI con sonido de guitarra (S36, rama larga)
+## 2026-11-05 · Investigación MIDI con sonido de guitarra (S37, rama larga)
 
 - Rama `feat/investigacion-midi`, que vive mientras dure la investigación (semanas o meses). Estudio inicial en `docs/estudio-midi-guitarra.md`: técnica e infra baratas (el metrónomo ya agenda con Web Audio y `chords-guitar.json` trae la afinación en MIDI); el costo mayor es R1 (tocar `acordia.js` obliga a migrar antes el render). Recomendación: prototipo aislado con síntesis Karplus-Strong y comparar a oído con muestras FluidR3_GM autoalojadas.
 - Pendiente: aprobar el plan del prototipo; licencia exacta de FluidR3_GM (L1); sumar a la consulta legal si el acompañamiento sintético entra en D-C25 (tabs y riffs de Avanzado quedan fuera). Nada sale a producción desde esta rama.
+- 2026-11-05 (tarde): laboratorio `lab/midi/` (motores A y B, rasgueos, mediciones) y botón «Guitarra» en el reproductor, apagado por defecto, con la regla redonda/blancas/negras (S37). Prueba automática en WebKit, Chromium y Firefox sobre 17 temas y sus niveles, sin errores; revisado a oído y a ojo por el usuario, conforme. Sigue experimental: nada sale de esta rama. Pendiente para integrarlo: R1, decisión de cómo se muestra (beta), tests e2e, pregunta legal (D-C25) y quitar o no el guardián `lab-no-merge` (D45).
+

@@ -606,6 +606,15 @@
       });
       return seq;
     }
+    /* Laboratorio S37: el compás que suena en el pulso n, en el momento de agendarlo (el cursor va después). */
+    var audioSeq = { pane: null, seq: [] };
+    function barAt(n) {
+      var pane = activePane();
+      if (audioSeq.pane !== pane) { audioSeq.pane = pane; audioSeq.seq = buildSeq(pane); }
+      var seq = audioSeq.seq;
+      if (!seq.length) return null;
+      return seq[(startIndex(seq) + Math.floor(n / beats)) % seq.length].el;
+    }
     function clearCounter() {
       if (cur.counter) cur.counter.remove();
       cur.counter = null;
@@ -755,6 +764,11 @@
         var isCount = pre > 0;
         if (!muted) click(nextTime, isCount ? pre === COUNT_IN : beat === 0);
         flash(isCount ? COUNT_IN - pre : beat, nextTime, count, isCount);
+        /* Laboratorio S37: la guitarra recibe cada tiempo (no la cuenta) con su compás. */
+        if (!isCount && !muted && window.AcordiaGuitar) {
+          var gp = activePane();
+          window.AcordiaGuitar.beat(ctx, nextTime, barAt(count), count % beats, beats, (gp.id || "").replace(/^p-/, ""));
+        }
         nextTime += 60 / bpm;
         if (isCount) { pre--; continue; }
         count++;
@@ -800,6 +814,7 @@
     }
     function stop() {
       playing = false;
+      if (window.AcordiaGuitar) window.AcordiaGuitar.stop(ctx);
       clearInterval(timer);
       clearTimeout(endTimer);
       dots.forEach(function (x) { x.classList.remove("is-on"); });
@@ -862,7 +877,7 @@
       syncOptionsMute();
       if (save) { try { localStorage.setItem(MUTE_KEY, muted ? "1" : "0"); } catch (e) {} }
       if (!playing) return;
-      if (muted) { nextTime = clock() + remaining; return; }
+      if (muted) { if (window.AcordiaGuitar) window.AcordiaGuitar.stop(ctx); nextTime = clock() + remaining; return; }
       var audio = ensureAudio();
       if (!audio) { muted = true; syncOptionsMute(); return; }
       audio.then(function () { nextTime = clock() + remaining; });
