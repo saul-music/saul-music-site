@@ -1,5 +1,5 @@
 /* Guitarra del reproductor (laboratorio S37, rama feat/investigacion-midi; no va a producción).
-   Toca la primera forma del panel de cada acorde con guitarra de nailon (muestras) o, si no hay, con una cuerda sintetizada (Karplus-Strong).
+   Toca la primera forma del panel de cada acorde con guitarra de nailon (muestras FluidR3_GM).
    Rasgueo ultra simple, siempre hacia abajo:
    - compás de un acorde: un golpe en el tiempo 1 (redonda);
    - dos acordes de medio compás cada uno: un golpe al empezar cada uno (blancas);
@@ -8,31 +8,26 @@
 (function () {
   "use strict";
   var TUNING = [40, 45, 50, 55, 59, 64]; // E2 A2 D3 G3 B3 E4, igual que chords-guitar.json
-  var SPREAD = 0.014, BRIGHT = 0.55, SUSTAIN = 0.9965, SECONDS = 3;
+  var SPREAD = 0.014;
   var enabled = false, data = null, out = null, outCtx = null;
-  var cache = {}, voices = [null, null, null, null, null, null];
+  var voices = [null, null, null, null, null, null];
   /* Guitarra de nailon (FluidR3_GM, una muestra por semitono, E2 a E6): archivos planos
      guitarra-nylon-<nota>.mp3 junto a este script (ignorados por git, licencia por verificar).
-     Si faltan o aún no cargan, suena la cuerda sintetizada. */
+     Si faltan o aún no cargan, esa nota no suena (no hay sonido sintetizado de respaldo). */
   var FLAT = ["C", "Db", "D", "Eb", "E", "F", "Gb", "G", "Ab", "A", "Bb", "B"];
-  var samples = null, samplesCtx = null, samplesState = "none"; // none | loading | ready | failed
+  var samples = null, samplesCtx = null;
   var volume = 0.7; // 0 a 1 (S39); se recuerda por dispositivo
 
   function sampleName(m) { return "guitarra-nylon-" + FLAT[m % 12] + (Math.floor(m / 12) - 1) + ".mp3"; }
 
   function loadSamples(ctx) {
     if (samplesCtx === ctx) return;
-    samplesCtx = ctx; samples = {}; samplesState = "loading";
-    var pending = 49, loaded = 0;
-    function done() {
-      if (--pending === 0 && samplesCtx === ctx) samplesState = loaded ? "ready" : "failed";
-    }
+    samplesCtx = ctx; samples = {};
     for (var m = 40; m <= 88; m++) (function (note) {
       fetch(sampleName(note)).then(function (r) { return r.ok ? r.arrayBuffer() : null; })
         .then(function (data) { return data && ctx.decodeAudioData(data); })
-        .then(function (buf) { if (buf && samplesCtx === ctx) { samples[note] = buf; loaded++; } })
-        .catch(function () { /* sin esta muestra */ })
-        .then(done);
+        .then(function (buf) { if (buf && samplesCtx === ctx) samples[note] = buf; })
+        .catch(function () { /* sin esta muestra: esa nota no suena */ });
     })(m);
   }
 
@@ -56,43 +51,13 @@
 
   function bus(ctx) {
     if (out && outCtx === ctx) return out;
-    outCtx = ctx; cache = {};
+    outCtx = ctx;
     var low = ctx.createBiquadFilter(); low.type = "peaking"; low.frequency.value = 105; low.Q.value = 1.2; low.gain.value = 4;
     var mid = ctx.createBiquadFilter(); mid.type = "peaking"; mid.frequency.value = 240; mid.Q.value = 1.6; mid.gain.value = 2;
     var air = ctx.createBiquadFilter(); air.type = "lowpass"; air.frequency.value = 6500;
     out = ctx.createGain(); out.gain.value = volume;
     out.connect(low); low.connect(mid); mid.connect(air); air.connect(ctx.destination);
     return out;
-  }
-
-  /* Cuerda pulsada: ruido filtrado que recircula por un retardo con promedio y pasa-todo de afinación. */
-  function pluck(ctx, midi) {
-    if (cache[midi]) return cache[midi];
-    var sr = ctx.sampleRate, freq = 440 * Math.pow(2, (midi - 69) / 12);
-    var delay = sr / freq - 0.5, n = Math.floor(delay), frac = delay - n;
-    if (frac < 0.1) { n -= 1; frac += 1; }
-    var c = (1 - frac) / (1 + frac), len = Math.floor(sr * SECONDS);
-    var buf = ctx.createBuffer(1, len, sr), o = buf.getChannelData(0), line = new Float32Array(n);
-    var lp = 0, mean = 0, i;
-    for (i = 0; i < n; i++) { lp = BRIGHT * (Math.random() * 2 - 1) + (1 - BRIGHT) * lp; line[i] = lp; mean += lp; }
-    mean /= n;
-    for (i = 0; i < n; i++) line[i] -= mean;
-    var idx = 0, prev = 0, apX = 0, apY = 0, peak = 0;
-    for (var t = 0; t < len; t++) {
-      var y = line[idx];
-      o[t] = y;
-      var avg = SUSTAIN * 0.5 * (y + prev);
-      prev = y;
-      var ap = c * avg + apX - c * apY;
-      apX = avg; apY = ap;
-      line[idx] = ap;
-      idx = idx + 1 === n ? 0 : idx + 1;
-      if (Math.abs(y) > peak) peak = Math.abs(y);
-    }
-    var g = peak > 0 ? 0.35 / peak : 1;
-    for (t = 0; t < len; t++) o[t] *= g;
-    cache[midi] = buf;
-    return buf;
   }
 
   function stopString(s, when) {
@@ -114,10 +79,8 @@
       var at = when + k * SPREAD;
       k++;
       stopString(s, at); // una cuerda suena una nota a la vez
-      /* Con muestras: nailon; mientras cargan, esa nota no suena (la sintética es metálica).
-         Solo si no hay muestras en absoluto, se usa la cuerda sintetizada. */
-      var note = TUNING[s] + frets[s];
-      var buffer = samplesState === "failed" ? pluck(ctx, note) : samples && samples[note];
+      /* Solo suena nailon: mientras una nota no ha cargado (o si faltan las muestras), no suena. */
+      var buffer = samples && samples[TUNING[s] + frets[s]];
       if (!buffer) continue;
       var src = ctx.createBufferSource(), gain = ctx.createGain();
       src.buffer = buffer;

@@ -605,8 +605,7 @@ Pedido del equipo editorial: poder escribir las extensiones entre paréntesis (`
 ## S39 · Guitarra de nailon y volúmenes separados al integrar (2026-11-05)
 
 **Rama `feat/investigacion-midi`.** Tras oír el laboratorio y el reproductor local, el usuario elige la **guitarra de nailon** (muestras FluidR3_GM,
-una por semitono, E2 a E6, unos 850 KB) frente a la cuerda sintetizada (Karplus-Strong), que queda como respaldo mientras cargan las
-muestras. «Más acorde a lo que necesito.» Hoy el reproductor las toma de `web/guitarra-nylon-*.mp3` (ignoradas por git; la licencia sigue por
+una por semitono, E2 a E6, unos 850 KB) frente a la cuerda sintetizada (Karplus-Strong) y a la de acero. «Más acorde a lo que necesito.» Hoy el reproductor las toma de `web/guitarra-nylon-*.mp3` (ignoradas por git; la licencia sigue por
 verificar, L1).
 
 **Requisito de la integración (no se hace en la rama de laboratorio):** el reproductor debe tener una **sección de volúmenes con un control
@@ -614,4 +613,5 @@ para el metrónomo y otro para la guitarra**, independientes. Falta decidir cuan
 recuerda por dispositivo (`localStorage`, con respaldo si falla) y si «Sin sonido» (S32) sigue siendo un interruptor que silencia ambos.
 **Hecho en la rama (2026-11-05):** dos deslizadores en «Opciones» (`data-ac-vol-met`, 100 % por defecto, y `data-ac-vol-guitar`, 70 %), que se
 recuerdan por dispositivo en `localStorage` (con try/catch). Al activar «Guitarra» se crea el audio y se bajan las muestras, y mientras una nota
-no ha cargado no suena (la sintética es metálica); solo si no hay muestras en absoluto se usa la sintética.
+no ha cargado no suena. **Actualización:** se elimina del reproductor todo el sonido sintetizado (Karplus-Strong) y el de acero: solo queda
+el nailon, sin respaldo (si faltan las muestras, no suena). El laboratorio `lab/midi/` conserva sus dos motores solo para comparar.
