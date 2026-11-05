@@ -50,7 +50,10 @@ _EXT = r"(?:\d{1,2}|(?:sus|add|b|#)\d{0,2})"
 # Un único grupo entre paréntesis con las extensiones, separadas por coma, por barra o pegadas
 # (G7(b9,#11,13), G7(b9/#11/13), G7(b9#11)); el espacio no sirve (separa acordes). Va antes del
 # bajo.
-_GROUP = rf"(?:\({_EXT}(?:[,/]?{_EXT})*\))"
+# Dentro del paréntesis cada extensión lleva su número (salvo `sus`): `b`, `#` o `add` sueltos no
+# significan nada, y así se atrapa el error típico `Dm(add11#)` (es `Dm(add#11)`).
+_GROUP_EXT = r"(?:\d{1,2}|sus\d{0,2}|add[#b]?\d{1,2}|[#b]\d{1,2})"
+_GROUP = rf"(?:\({_GROUP_EXT}(?:[,/]?{_GROUP_EXT})*\))"
 # El 6/9 con barra (D6/9, Dm6/9) no se confunde con un bajo: un bajo es una letra de nota (S35).
 SLASH_CHORD = re.compile(
     r"^[A-G][#b]?(?:mmaj|mMaj|mM|maj|Maj|min|m|dim|aug|\+)?"
