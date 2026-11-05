@@ -323,6 +323,9 @@ def chords_payload(song: dict) -> dict:
             for key, frets in table.items():
                 if theory.same_chord(key, name):
                     found[name] = {"frets": frets, "tab": list(theory.tab_lines(frets))}
+                    chord = theory.parse(name)
+                    if chord is not None and theory.shape_lacks_bass(chord, frets):
+                        found[name]["no_bass"] = True  # S43: otro instrumento toca el bajo
                     break
         return found
 

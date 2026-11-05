@@ -628,3 +628,7 @@ volumen de la guitarra al inicio (S42 le dio uno propio); suena aunque el diagra
 
 La tarjeta «Guitarra» suma un deslizador **«Bajo»** (70 % por defecto, se recuerda por dispositivo en `localStorage` con try/catch) con su propio nodo de ganancia, independiente del de la guitarra.
 Se desactiva junto con la guitarra cuando está apagada. Los tres deslizadores del grupo Sonido miden 3 rem para que Metrónomo, Guitarra, Bajo y «Sin sonido» quepan en una fila en escritorio (la barra fija sigue bajo el 35 % de la pantalla, guarda e2e).
+
+## S43 · Forma propia de un acorde con bajo, con o sin el bajo (2026-11-05)
+
+`[formas]` acepta para `Dmaj7/E` tanto la forma con el bajo como nota más grave (`0 5 7 6 7 5`) como la del acorde base sin él (`x 5 7 6 7 5`), siempre sin notas ajenas. Antes la segunda se rechazaba («la nota más grave debe ser E»). Una sola forma por acorde. En la segunda, el panel dice «Esta forma no incluye el bajo (E): otro instrumento puede tocarlo, y si activas la guitarra suena como bajo.» (`no_bass` en el JSON de la página; `chordtheory.shape_lacks_bass`). Contrato compartido con 2 casos nuevos.

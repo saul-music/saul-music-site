@@ -706,6 +706,17 @@ def test_the_payload_has_the_notes_of_the_parenthesized_form(tmp_path):
     assert "G7(b9/#11/13)" not in chords
 
 
+def test_own_shape_without_the_bass_is_flagged_for_the_panel(tmp_path):
+    """S43: la forma sin el bajo como nota más grave lleva `no_bass`; la que lo tiene, no."""
+    for shape, flagged in (("0 5 7 6 7 5", False), ("x 5 7 6 7 5", True)):
+        body = with_modes(
+            "\n[intermedio]\npartitura = '''\nA: Dmaj7/E\n'''\n[intermedio.formas]\n"
+            f'"Dmaj7/E" = "{shape}"\n'
+        )
+        own = chords_payload(load_song(write(tmp_path, f"b{flagged}", body)))["own"]["intermedio"]
+        assert own["Dmaj7/E"].get("no_bass", False) is flagged
+
+
 def test_own_shapes_are_found_under_the_chord_as_written_in_the_score(tmp_path):
     own = chords_payload(paren_song(tmp_path))["own"]["intermedio"]
     assert list(own) == [

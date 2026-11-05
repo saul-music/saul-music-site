@@ -280,7 +280,6 @@ def test_own_shapes_are_optional_and_valid_ones_pass(tmp_path):
         ("Cmaj7", "x 3 2 0 0", "6 valores"),
         ("Cmaj7", "x 3 2 0 0 30", "fuera de 0 a 24"),
         ("Cmaj7", "x 3 2 0 0 h", "no es un traste"),
-        ("G/B", "3 2 0 0 3 3", "más grave debe ser B"),
         ("Dm7", "x x 0 2 1 1", "el acorde no aparece en la versión avanzado"),
         ("Gmaj13", "x x 0 2 1 1", "no sé dibujar"),
     ],
@@ -308,7 +307,6 @@ def test_theme_default_shapes_accept_chords_of_any_level(tmp_path):
     [
         ("Cmaj7", "x 3 2 0 0 1", "no es del acorde"),
         ("Cmaj7", "x 3 2 0 0", "6 valores"),
-        ("G/B", "3 2 0 0 3 3", "más grave debe ser B"),
         ("Dm7", "x x 0 2 1 1", "no aparece en ningún nivel del tema"),
         ("Gmaj13", "x x 0 2 1 1", "no sé dibujar"),
     ],

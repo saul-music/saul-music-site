@@ -271,9 +271,13 @@ def check_shape(chord: Chord, frets: list[int]) -> list[str]:
     if foreign:
         names = ", ".join(note_name(pc, chord.flats) for pc in foreign)
         return [f"suena {names}, que no es del acorde {chord.token}"]
-    if chord.bass is not None and min(notes) % 12 != chord.bass:
-        return [f"la nota más grave debe ser {note_name(chord.bass, chord.flats)} (el bajo)"]
     return []
+
+
+def shape_lacks_bass(chord: Chord, frets: list[int]) -> bool:
+    """S43: la forma de un acorde con bajo no lo tiene de nota más grave (lo toca otro)."""
+    notes = sounded(frets)
+    return chord.bass is not None and bool(notes) and min(notes) % 12 != chord.bass
 
 
 def position_ok(chord: Chord, frets: list[int]) -> bool:
