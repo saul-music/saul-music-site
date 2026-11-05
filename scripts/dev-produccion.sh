@@ -32,7 +32,8 @@ fi
 echo "Bajando $release …"
 rm -rf "$DEST/releases"            # solo se guarda la publicación vigente
 mkdir -p "$DEST/$release"
-if ! gcloud storage cp -q "$BUCKET/$release/*" "$DEST/$release/"; then
+# -r: baja también las subcarpetas, como `fotos/` de los artistas (S33)
+if ! gcloud storage cp -r -q "$BUCKET/$release/*" "$DEST/$release/"; then
   echo "No se pudo bajar $release de $BUCKET. Si es el espejo, puede que aún no termine de copiarse: reintenta en unos minutos." >&2
   exit 1
 fi
