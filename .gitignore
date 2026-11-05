@@ -5,6 +5,3 @@ __pycache__/
 .pytest_cache/
 .ruff_cache/
 acordes-local/
-# Laboratorio de guitarra (S36, solo en la rama feat/investigacion-midi)
-lab/midi/muestras/
-lab/midi/datos-chords-guitar.json

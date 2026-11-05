@@ -1,6 +1,6 @@
 # Estado del sitio
 
-> Registro vivo. Última actualización: 2026-11-04 (S33 foto del artista y S34 párrafos; antes S32 «Sin sonido»).
+> Registro vivo. Última actualización: 2026-11-05 (S36: acordes con paréntesis).
 
 ## Paso actual
 
