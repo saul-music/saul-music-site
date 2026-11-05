@@ -8,25 +8,31 @@
 (function () {
   "use strict";
   var TUNING = [40, 45, 50, 55, 59, 64]; // E2 A2 D3 G3 B3 E4, igual que chords-guitar.json
-  var SPREAD = 0.014, BRIGHT = 0.55, SUSTAIN = 0.9965, SECONDS = 3, LEVEL = 0.7;
+  var SPREAD = 0.014, BRIGHT = 0.55, SUSTAIN = 0.9965, SECONDS = 3;
   var enabled = false, data = null, out = null, outCtx = null;
   var cache = {}, voices = [null, null, null, null, null, null];
   /* Guitarra de nailon (FluidR3_GM, una muestra por semitono, E2 a E6): archivos planos
      guitarra-nylon-<nota>.mp3 junto a este script (ignorados por git, licencia por verificar).
      Si faltan o aún no cargan, suena la cuerda sintetizada. */
   var FLAT = ["C", "Db", "D", "Eb", "E", "F", "Gb", "G", "Ab", "A", "Bb", "B"];
-  var samples = null, samplesCtx = null;
+  var samples = null, samplesCtx = null, samplesState = "none"; // none | loading | ready | failed
+  var volume = 0.7; // 0 a 1 (S39); se recuerda por dispositivo
 
   function sampleName(m) { return "guitarra-nylon-" + FLAT[m % 12] + (Math.floor(m / 12) - 1) + ".mp3"; }
 
   function loadSamples(ctx) {
     if (samplesCtx === ctx) return;
-    samplesCtx = ctx; samples = {};
+    samplesCtx = ctx; samples = {}; samplesState = "loading";
+    var pending = 49, loaded = 0;
+    function done() {
+      if (--pending === 0 && samplesCtx === ctx) samplesState = loaded ? "ready" : "failed";
+    }
     for (var m = 40; m <= 88; m++) (function (note) {
       fetch(sampleName(note)).then(function (r) { return r.ok ? r.arrayBuffer() : null; })
         .then(function (data) { return data && ctx.decodeAudioData(data); })
-        .then(function (buf) { if (buf && samplesCtx === ctx) samples[note] = buf; })
-        .catch(function () { /* sin esta muestra: suena la sintetizada */ });
+        .then(function (buf) { if (buf && samplesCtx === ctx) { samples[note] = buf; loaded++; } })
+        .catch(function () { /* sin esta muestra */ })
+        .then(done);
     })(m);
   }
 
@@ -54,7 +60,7 @@
     var low = ctx.createBiquadFilter(); low.type = "peaking"; low.frequency.value = 105; low.Q.value = 1.2; low.gain.value = 4;
     var mid = ctx.createBiquadFilter(); mid.type = "peaking"; mid.frequency.value = 240; mid.Q.value = 1.6; mid.gain.value = 2;
     var air = ctx.createBiquadFilter(); air.type = "lowpass"; air.frequency.value = 6500;
-    out = ctx.createGain(); out.gain.value = LEVEL;
+    out = ctx.createGain(); out.gain.value = volume;
     out.connect(low); low.connect(mid); mid.connect(air); air.connect(ctx.destination);
     return out;
   }
@@ -108,9 +114,13 @@
       var at = when + k * SPREAD;
       k++;
       stopString(s, at); // una cuerda suena una nota a la vez
-      var src = ctx.createBufferSource(), gain = ctx.createGain();
+      /* Con muestras: nailon; mientras cargan, esa nota no suena (la sintética es metálica).
+         Solo si no hay muestras en absoluto, se usa la cuerda sintetizada. */
       var note = TUNING[s] + frets[s];
-      src.buffer = (samples && samples[note]) || pluck(ctx, note);
+      var buffer = samplesState === "failed" ? pluck(ctx, note) : samples && samples[note];
+      if (!buffer) continue;
+      var src = ctx.createBufferSource(), gain = ctx.createGain();
+      src.buffer = buffer;
       gain.gain.value = 1;
       src.connect(gain); gain.connect(dest);
       src.start(at);
@@ -162,8 +172,14 @@
 
   function stop(ctx) { if (ctx && outCtx === ctx) muteAll(ctx.currentTime); }
 
+  function setVolume(v) {
+    volume = Math.min(1, Math.max(0, v));
+    if (out) out.gain.value = volume;
+    try { localStorage.setItem("ac-vol-guitar", String(volume)); } catch (e) { /* sin almacenamiento */ }
+  }
+
   window.AcordiaGuitar = {
-    beat: beat, stop: stop,
+    beat: beat, stop: stop, prepare: loadSamples,
     isOn: function () { return enabled; },
     _hits: hits, _partAt: partAt, // para las pruebas del laboratorio
   };
@@ -171,10 +187,17 @@
   document.addEventListener("DOMContentLoaded", function () {
     var btn = document.querySelector("[data-ac-met-guitar]");
     if (!btn) return;
+    var slider = document.querySelector("[data-ac-vol-guitar]");
+    try { var saved = parseFloat(localStorage.getItem("ac-vol-guitar")); if (isFinite(saved)) volume = Math.min(1, Math.max(0, saved)); } catch (e) { /* sin almacenamiento */ }
+    if (slider) {
+      slider.value = Math.round(volume * 100);
+      slider.addEventListener("input", function () { setVolume(slider.value / 100); });
+    }
     btn.addEventListener("click", function () {
       enabled = !enabled;
       btn.setAttribute("aria-pressed", enabled ? "true" : "false");
       if (!enabled && outCtx) muteAll(outCtx.currentTime);
+      if (enabled) document.dispatchEvent(new CustomEvent("acordia-guitar-on"));
     });
   });
 })();

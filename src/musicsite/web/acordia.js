@@ -581,11 +581,23 @@
       input.value = bpm;
       range.value = bpm;
     }
+    /* Volumen del metrónomo (0 a 1, S39): se recuerda por dispositivo. */
+    var metVol = 1;
+    var volMet = box.querySelector("[data-ac-vol-met]");
+    try { var savedVol = parseFloat(localStorage.getItem("ac-vol-met")); if (isFinite(savedVol)) metVol = Math.min(1, Math.max(0, savedVol)); } catch (e) { /* sin almacenamiento */ }
+    if (volMet) {
+      volMet.value = Math.round(metVol * 100);
+      volMet.addEventListener("input", function () {
+        metVol = volMet.value / 100;
+        try { localStorage.setItem("ac-vol-met", String(metVol)); } catch (e) { /* sin almacenamiento */ }
+      });
+    }
     function click(time, accent) {
+      if (metVol <= 0) return;
       var osc = ctx.createOscillator(), gain = ctx.createGain();
       osc.frequency.value = accent ? 1568 : 1047;
       gain.gain.setValueAtTime(0.0001, time);
-      gain.gain.exponentialRampToValueAtTime(accent ? 0.9 : 0.55, time + 0.002);
+      gain.gain.exponentialRampToValueAtTime(Math.max(0.0001, (accent ? 0.9 : 0.55) * metVol), time + 0.002);
       gain.gain.exponentialRampToValueAtTime(0.0001, time + 0.06);
       osc.connect(gain);
       gain.connect(ctx.destination);
@@ -791,6 +803,12 @@
       var p = ctx.resume ? ctx.resume() : null;
       return p && p.then ? p : { then: function (f) { f(); } };
     }
+    /* Al activar «Guitarra» se crea el audio (hay un toque del usuario) y se bajan las muestras,
+       para que el primer acorde ya suene con nailon. */
+    document.addEventListener("acordia-guitar-on", function () {
+      ensureAudio();
+      if (ctx && window.AcordiaGuitar) window.AcordiaGuitar.prepare(ctx);
+    });
     function begin() {
       if (!playing) return;
       beat = 0;

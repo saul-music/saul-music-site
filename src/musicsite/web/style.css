@@ -565,6 +565,8 @@ a.card:hover { border-color: var(--ac-fill); transform: translateY(-2px); }
 
 /* Opciones de la barra (S26, parte 2): en escritorio los controles secundarios quedan sueltos en la barra
    (display: contents) y el botón no existe; en celular se agrupan y se despliegan con «Opciones». */
+.ac-met-vol { display: inline-flex; align-items: center; gap: .4rem; margin: 0; font-size: .85rem; color: var(--ac-fg); }
+.ac-met-vol .form-range { width: 5.5rem; }
 .ac-met-extra { display: contents; }
 .ac-met-options { display: none; }
 .ac-met-options-mute { display: inline-flex; align-items: center; line-height: 1; }

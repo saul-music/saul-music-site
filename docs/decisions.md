@@ -612,4 +612,6 @@ verificar, L1).
 **Requisito de la integración (no se hace en la rama de laboratorio):** el reproductor debe tener una **sección de volúmenes con un control
 para el metrónomo y otro para la guitarra**, independientes. Falta decidir cuando se integre: dónde va (dentro de «Opciones», S26), si se
 recuerda por dispositivo (`localStorage`, con respaldo si falla) y si «Sin sonido» (S32) sigue siendo un interruptor que silencia ambos.
-Hoy la guitarra usa un nivel fijo (0,7) y el metrónomo el suyo, sin controles.
+**Hecho en la rama (2026-11-05):** dos deslizadores en «Opciones» (`data-ac-vol-met`, 100 % por defecto, y `data-ac-vol-guitar`, 70 %), que se
+recuerdan por dispositivo en `localStorage` (con try/catch). Al activar «Guitarra» se crea el audio y se bajan las muestras, y mientras una nota
+no ha cargado no suena (la sintética es metálica); solo si no hay muestras en absoluto se usa la sintética.
