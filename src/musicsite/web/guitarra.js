@@ -1,5 +1,5 @@
 /* Guitarra del reproductor (laboratorio S37, rama feat/investigacion-midi; no va a producción).
-   Toca la primera forma del panel de cada acorde con una cuerda sintetizada (Karplus-Strong).
+   Toca la primera forma del panel de cada acorde con guitarra de nailon (muestras) o, si no hay, con una cuerda sintetizada (Karplus-Strong).
    Rasgueo ultra simple, siempre hacia abajo:
    - compás de un acorde: un golpe en el tiempo 1 (redonda);
    - dos acordes de medio compás cada uno: un golpe al empezar cada uno (blancas);
@@ -11,6 +11,24 @@
   var SPREAD = 0.014, BRIGHT = 0.55, SUSTAIN = 0.9965, SECONDS = 3, LEVEL = 0.7;
   var enabled = false, data = null, out = null, outCtx = null;
   var cache = {}, voices = [null, null, null, null, null, null];
+  /* Guitarra de nailon (FluidR3_GM, una muestra por semitono, E2 a E6): archivos planos
+     guitarra-nylon-<nota>.mp3 junto a este script (ignorados por git, licencia por verificar).
+     Si faltan o aún no cargan, suena la cuerda sintetizada. */
+  var FLAT = ["C", "Db", "D", "Eb", "E", "F", "Gb", "G", "Ab", "A", "Bb", "B"];
+  var samples = null, samplesCtx = null;
+
+  function sampleName(m) { return "guitarra-nylon-" + FLAT[m % 12] + (Math.floor(m / 12) - 1) + ".mp3"; }
+
+  function loadSamples(ctx) {
+    if (samplesCtx === ctx) return;
+    samplesCtx = ctx; samples = {};
+    for (var m = 40; m <= 88; m++) (function (note) {
+      fetch(sampleName(note)).then(function (r) { return r.ok ? r.arrayBuffer() : null; })
+        .then(function (data) { return data && ctx.decodeAudioData(data); })
+        .then(function (buf) { if (buf && samplesCtx === ctx) samples[note] = buf; })
+        .catch(function () { /* sin esta muestra: suena la sintetizada */ });
+    })(m);
+  }
 
   function payload() {
     if (data) return data;
@@ -84,13 +102,15 @@
 
   function strum(ctx, frets, when) {
     var dest = bus(ctx), k = 0;
+    loadSamples(ctx);
     for (var s = 0; s < 6; s++) {
       if (frets[s] < 0) { stopString(s, when); continue; }
       var at = when + k * SPREAD;
       k++;
       stopString(s, at); // una cuerda suena una nota a la vez
       var src = ctx.createBufferSource(), gain = ctx.createGain();
-      src.buffer = pluck(ctx, TUNING[s] + frets[s]);
+      var note = TUNING[s] + frets[s];
+      src.buffer = (samples && samples[note]) || pluck(ctx, note);
       gain.gain.value = 1;
       src.connect(gain); gain.connect(dest);
       src.start(at);

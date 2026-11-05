@@ -92,7 +92,9 @@ def test_web_dir_has_only_fixed_site_files():
         "PetalumaScript.woff2",
         "PetalumaScript-OFL.txt",
     }
-    assert {p.name for p in WEB_DIR.iterdir()} == fixed
+    # Las muestras de nailon del botón Guitarra (S37) son locales: las ignora git (no se publican).
+    present = {p.name for p in WEB_DIR.iterdir() if not p.name.startswith("guitarra-nylon-")}
+    assert present == fixed
 
 
 def test_song_pages_come_from_published_songs(client):

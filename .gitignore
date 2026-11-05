@@ -8,3 +8,6 @@ acordes-local/
 # Laboratorio de guitarra (S37, solo en la rama feat/investigacion-midi)
 lab/midi/muestras/
 lab/midi/datos-chords-guitar.json
+
+# Muestras de nailon del botón Guitarra del site (S37)
+src/musicsite/web/guitarra-nylon-*.mp3
