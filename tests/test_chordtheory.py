@@ -150,7 +150,7 @@ def test_every_chord_in_the_repertoire_has_a_standard_shape():
     for path in sorted(Path(SONGS_DIR).glob("*.toml")):
         payload = chords_payload(load_song(path))
         for name, info in payload["chords"].items():
-            assert info["guitar"], (path.stem, name)
+            assert info["guitar"] or name in payload["default"], (path.stem, name)
             assert info["keys"] and info["notes"], (path.stem, name)
 
 
@@ -349,3 +349,28 @@ def test_major_6_9_has_its_notes():
 
 def test_a_valid_combination_we_do_not_know_stays_without_diagram():
     assert theory.parse("G7(b9/#11/13)") is None  # válido en la partitura, sin notas conocidas
+
+
+@pytest.mark.parametrize(
+    "token, notes",
+    [
+        ("G7b9", ["G", "B", "D", "F", "Ab"]),
+        ("G7(b9)", ["G", "B", "D", "F", "Ab"]),
+        ("G7#9", ["G", "B", "D", "F", "A#"]),
+        ("E7(b9,#9)", ["E", "G#", "B", "D", "F", "F##"]),
+        ("E7(#9/b9)", ["E", "G#", "B", "D", "F", "F##"]),
+    ],
+)
+def test_altered_ninths_are_known_chords(token, notes):
+    chord = theory.parse(token)
+    assert chord is not None
+    assert theory.note_names(chord) == notes
+
+
+def test_altered_ninths_have_no_standard_shape_but_accept_an_own_one():
+    chord = theory.parse("G7b9")
+    assert theory.guitar_positions(chord)[0] is None
+    assert theory.check_shape(chord, theory.parse_shape("3 2 3 1 x x")) == []
+    assert theory.check_shape(
+        chord, theory.parse_shape("3 x 3 4 2 x")
+    )  # suena C#: no es del acorde

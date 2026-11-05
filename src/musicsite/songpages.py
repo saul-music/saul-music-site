@@ -528,7 +528,7 @@ def library_html(directory: Path) -> str:
         path = directory / f"{slug}.toml"
         if not path.exists():
             continue
-        report = validate_file(path)
+        report = validate_file(path, strict_shapes=False)
         status = (
             "publicable" if not report.errors and report.status == "publicable" else report.status
         )
@@ -594,7 +594,7 @@ def build(directory: Path, out: Path, preview: bool = False) -> list[Path]:
     out.mkdir(parents=True, exist_ok=True)
     written = []
     for path in sorted(directory.glob("*.toml")):
-        report = validate_file(path)
+        report = validate_file(path, strict_shapes=False)
         if report.errors or report.status not in allowed:
             continue
         song = load_song(path)
@@ -618,7 +618,7 @@ def render_published(directory: Path) -> dict[str, str]:
     """
     pages = {}
     for path in sorted(directory.glob("*.toml")):
-        report = validate_file(path)
+        report = validate_file(path, strict_shapes=False)
         if report.errors or report.status != "publicable":
             raise ValueError(f"{path.name} no es publicable: {report.status} {report.errors}")
         pages[path.stem] = render(load_song(path), report.status, preview=False)

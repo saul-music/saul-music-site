@@ -54,6 +54,9 @@ INTERVALS: dict[str, tuple[int, ...]] = {
     "mmaj9": (0, 3, 7, 11, 14),
     "mmaj11": (0, 3, 7, 11, 14, 17),
     "sus2sus4": (0, 2, 5, 7),  # = sus4add9
+    "7b9": (0, 4, 7, 10, 13),  # sin guitarra estándar: chords-db no los trae (S38)
+    "7#9": (0, 4, 7, 10, 15),
+    "7b9#9": (0, 4, 7, 10, 13, 15),
     "add#11": (0, 4, 7, 18),  # sin guitarra estándar: chords-db no los trae (S21)
     "madd#11": (0, 3, 7, 18),
 }
@@ -92,6 +95,10 @@ ALIASES = {
     "mmaj11": "mmaj11",
     "sus2sus4": "sus2sus4",
     "sus4add9": "sus2sus4",
+    "7b9": "7b9",
+    "7#9": "7#9",
+    "7b9#9": "7b9#9",
+    "7#9b9": "7b9#9",
     "add#11": "add#11",
     "madd#11": "madd#11",
 }
@@ -133,7 +140,9 @@ DEGREE = {
     9: 6,
     10: 7,
     11: 7,
+    13: 2,
     14: 2,
+    15: 2,
     17: 4,
     18: 4,
 }

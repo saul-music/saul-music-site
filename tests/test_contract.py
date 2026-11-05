@@ -30,7 +30,7 @@ def to_toml(song: dict) -> str:
         f"{key} = {json.dumps(value)}" for key, value in song.items() if not isinstance(value, dict)
     ]
     tables = [
-        f"[{key}]\n" + "\n".join(f"{k} = {toml_value(v)}" for k, v in value.items())
+        f"[{key}]\n" + "\n".join(f"{json.dumps(k)} = {toml_value(v)}" for k, v in value.items())
         for key, value in song.items()
         if isinstance(value, dict)
     ]
