@@ -601,3 +601,15 @@ Pedido del equipo editorial: poder escribir las extensiones entre paréntesis (`
 - `songs/dejate-caer.toml` (respaldo) suma `[formas] "G7b9" = "3 2 3 1 x x"`. El tema publicado en producción no cambia hasta
   integrar.
 - El sonido de «Guitarra» lee `d.default` (S27), así que `G7b9` suena con esa forma; **no oído todavía** en el laboratorio.
+
+## S39 · Guitarra de nailon y volúmenes separados al integrar (2026-11-05)
+
+**Rama `feat/investigacion-midi`.** Tras oír el laboratorio y el reproductor local, el usuario elige la **guitarra de nailon** (muestras FluidR3_GM,
+una por semitono, E2 a E6, unos 850 KB) frente a la cuerda sintetizada (Karplus-Strong), que queda como respaldo mientras cargan las
+muestras. «Más acorde a lo que necesito.» Hoy el reproductor las toma de `web/guitarra-nylon-*.mp3` (ignoradas por git; la licencia sigue por
+verificar, L1).
+
+**Requisito de la integración (no se hace en la rama de laboratorio):** el reproductor debe tener una **sección de volúmenes con un control
+para el metrónomo y otro para la guitarra**, independientes. Falta decidir cuando se integre: dónde va (dentro de «Opciones», S26), si se
+recuerda por dispositivo (`localStorage`, con respaldo si falla) y si «Sin sonido» (S32) sigue siendo un interruptor que silencia ambos.
+Hoy la guitarra usa un nivel fijo (0,7) y el metrónomo el suyo, sin controles.
