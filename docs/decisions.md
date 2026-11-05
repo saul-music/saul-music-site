@@ -544,3 +544,17 @@ o solo de espacios no dibuja nada. Sin cambios en el contrato de `artists.json`.
 
 `artists.json` puede traer `photo_credit` (texto, ≤ 200) y `photo_credit_url` (http/https). La tarjeta los muestra bajo la foto (`<p class="ac-photo-credit">`), con el texto escapado y el enlace externo con `rel="noopener noreferrer"`. Las licencias CC BY y CC BY-SA exigen atribución. Solo se muestra si hay foto; una URL inválida se descarta y queda el texto. Contrato con research M51.
 
+
+## S36 · Rama larga `feat/investigacion-midi` para investigar acordes como MIDI con sonido de guitarra (2026-11-05)
+
+Se abre la rama `feat/investigacion-midi` para estudiar si el reproductor puede tocar las posiciones de guitarra como notas MIDI
+con un sonido básico de guitarra acústica. Estudio inicial: `docs/estudio-midi-guitarra.md`.
+
+- **Vive todo lo que dure la investigación**, que puede tomar semanas o meses. Es la excepción a «una rama por PR corto»: no se
+  borra al terminar un paso ni se mergea a medias.
+- **Qué entra:** el estudio, sus mediciones y prototipos aislados (por ejemplo, una página de laboratorio local que no se publica).
+  Nada de esta rama llega a producción por sí sola.
+- **Cómo se mantiene:** se trae `main` a la rama con regularidad (merge, sin reescribir historia) para que no diverja.
+- **Cómo sale algo a `main`:** cada pieza que se decida implementar va en su propia rama corta (`feat/…`) desde `main`, con plan,
+  aprobación y PR, como siempre. Si toca `acordia.js` u otro archivo del render, rige antes el disparador de R1 (control).
+- **Cierre:** al terminar, el estudio final se lleva a `main` por PR (`docs/…`) y esta decisión se reemplaza con el resultado.
