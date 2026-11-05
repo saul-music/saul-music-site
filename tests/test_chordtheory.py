@@ -106,10 +106,15 @@ def test_basic_shape_rules():
     assert "al menos en 3 cuerdas" in theory.check_shape(c, [-1, 3, -1, -1, -1, 0])[0]
 
 
-def test_slash_chord_needs_the_bass_as_lowest_note():
+def test_slash_chord_shape_with_or_without_the_bass():
+    """S43: se acepta la forma con el bajo como nota más grave y la del acorde base sin él."""
     g_over_b = chord("G/B")
     assert theory.check_shape(g_over_b, [-1, 2, 0, 0, 3, 3]) == []
-    assert "más grave debe ser B" in theory.check_shape(g_over_b, [3, 2, 0, 0, 3, 3])[0]
+    assert not theory.shape_lacks_bass(g_over_b, [-1, 2, 0, 0, 3, 3])
+    assert theory.check_shape(g_over_b, [3, 2, 0, 0, 3, 3]) == []
+    assert theory.shape_lacks_bass(g_over_b, [3, 2, 0, 0, 3, 3])
+    assert theory.check_shape(g_over_b, [3, 2, 0, 0, 3, 1])  # F no es de G/B
+    assert not theory.shape_lacks_bass(chord("G"), [3, 2, 0, 0, 3, 3])
 
 
 def test_vendored_shapes_only_sound_notes_of_their_chord():
