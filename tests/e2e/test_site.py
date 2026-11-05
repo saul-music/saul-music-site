@@ -1092,7 +1092,7 @@ def test_parenthesized_chords_open_their_panel_and_the_unknown_one_is_plain_text
 
 
 def test_guitar_loads_its_samples_and_unlocks_the_volumes(song: Page):
-    """S37 a S42: las muestras se piden al activar «Guitarra», no al abrir la página, y habilita los volúmenes."""
+    """S37: las muestras se piden al activar «Guitarra» (no al abrir) y se habilitan los volúmenes."""
     samples: list[int] = []
     song.on(
         "response",
