@@ -1069,3 +1069,23 @@ def test_options_button_flags_mute_while_the_panel_is_folded(song_audio: Page, t
     set_options(page, False)
     expect(flag).to_be_hidden()
     expect(button).to_have_attribute("aria-label", "Opciones")
+
+
+def test_parenthesized_chords_open_their_panel_and_the_unknown_one_is_plain_text(
+    page: Page, parens_url: str
+):
+    page.goto(parens_url + SONG)
+    page.get_by_role("tab", name=re.compile("Intermedio")).click()
+    pane = page.locator("#p-intermedio")
+    panel = page.locator(".ac-chord-panel")
+    for written, label in (("D6/9", "D6/9"), ("Dm(add#11)", "Dm(add#11)")):
+        button = pane.locator(f".ac-chord-btn[data-chord='{written}']").first
+        expect(button).to_have_text(label)  # se ve como se escribió
+        button.click()
+        expect(panel).to_be_visible()
+        panel.get_by_role("button", name="Teclado").click()  # sin guitarra estándar: el teclado
+        expect(panel.locator("svg[aria-label^='Teclas']")).to_be_visible()
+        page.keyboard.press("Escape")
+    # válido pero sin notas conocidas: texto plano, sin botón, con los símbolos ♭ y ♯
+    expect(pane.locator(".ac-chord-btn[data-chord='G7(b9/#11/13)']")).to_have_count(0)
+    expect(pane.get_by_text("G7(♭9/♯11/13)").first).to_be_visible()

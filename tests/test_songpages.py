@@ -675,3 +675,51 @@ def test_apply_library_updates_the_home_count(song):
     page = f"<!-- temas:inicio -->?<!-- temas:fin -->{LIBRARY_START}\nviejo\n{LIBRARY_END}"
     block = card(song, "a", "publicable") + card(song, "b", "borrador")
     assert "<strong>1 canción disponible</strong>" in apply_library(page, block)
+
+
+# --- acordes con paréntesis y 6/9 (S35) ---------------------------------------------------------
+
+PAREN = (
+    "\n[intermedio]\npartitura = '''\nA: Dm(add#11) D6/9 G7(b9/#11/13) C(add9)/E\n'''\n"
+    '\n[intermedio.formas]\n"Dmadd#11" = "x x 0 2 3 1"\n'
+)
+
+
+def paren_song(tmp_path, extra=PAREN):
+    return load_song(write(tmp_path, "otra-era", SAMPLE + extra))
+
+
+def test_parenthesized_chords_are_shown_as_written_with_their_diagram(tmp_path):
+    page = render(paren_song(tmp_path), "publicable", False)
+    for written in ("Dm(add#11)", "D6/9", "C(add9)/E"):
+        assert f'data-chord="{written}"' in page, written
+    # lo que no sabemos dibujar sigue siendo texto, sin botón
+    assert 'data-chord="G7(b9/#11/13)"' not in page
+    assert "G7(♭9/♯11/13)" in page
+
+
+def test_the_payload_has_the_notes_of_the_parenthesized_form(tmp_path):
+    chords = chords_payload(paren_song(tmp_path))["chords"]
+    assert chords["D6/9"]["notes"] == ["D", "F♯", "A", "B", "E"]
+    assert chords["Dm(add#11)"]["notes"] == ["D", "F", "A", "G♯"]
+    assert chords["C(add9)/E"]["notes"] == ["C", "E", "G", "D"] and chords["C(add9)/E"]["bass"] == 4
+    assert "G7(b9/#11/13)" not in chords
+
+
+def test_own_shapes_are_found_under_the_chord_as_written_in_the_score(tmp_path):
+    own = chords_payload(paren_song(tmp_path))["own"]["intermedio"]
+    assert list(own) == [
+        "Dm(add#11)"
+    ]  # la forma se escribió «Dmadd#11»; la partitura dice «Dm(add#11)»
+    assert own["Dm(add#11)"]["frets"] == [-1, -1, 0, 2, 3, 1]
+
+
+def test_6_9_slash_is_not_taken_as_a_bass_note(tmp_path):
+    chords = chords_payload(paren_song(tmp_path))["chords"]
+    assert chords["D6/9"]["bass"] is None and "guitar_note" not in chords["D6/9"]
+
+
+def test_accidentals_inside_parentheses_use_the_symbols():
+    assert songpages.accidentals("G7(b9/#11)") == "G7(♭9/♯11)"
+    assert songpages.accidentals("Dm(add#11)") == "Dm(add#11)"  # igual que Dmadd#11 hoy
+    assert songpages.accidentals("Bb(add9)") == "B♭(add9)"

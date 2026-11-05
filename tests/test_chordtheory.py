@@ -298,3 +298,54 @@ def test_barre_rule_is_applied_to_the_real_database():
             bases = [theory.base_fret(p["frets"]) for p in shown]
             if bases[0] >= 3:
                 assert bases == sorted(bases)
+
+
+# --- acordes con paréntesis, separadores y 6/9 (S35) ----------------------------------------------
+
+
+@pytest.mark.parametrize(
+    ("written", "canonical"),
+    [
+        ("Dm(add#11)", "Dmadd#11"),
+        ("C(add9)/E", "Cadd9/E"),
+        ("G7(b9)", "G7b9"),
+        ("G7(b9,#11,13)", "G7b9#1113"),
+        ("G7(b9/#11/13)", "G7b9#1113"),
+        ("G7(b9#11)", "G7b9#11"),
+        ("D6/9", "D69"),
+        ("D(6/9)", "D69"),
+        ("Dm6/9", "Dm69"),
+        ("D6/9/A", "D69/A"),
+        ("D6/A", "D6/A"),  # un bajo es una letra: no se toca
+        ("G/B", "G/B"),
+        ("Dm7", "Dm7"),
+    ],
+)
+def test_canonical_form_ignores_parentheses_and_separators(written, canonical):
+    assert theory.canonical(written) == canonical
+
+
+def test_same_chord_compares_the_canonical_forms():
+    assert theory.same_chord("Dm(add#11)", "Dmadd#11")
+    assert theory.same_chord("D6/9", "D(6/9)") and theory.same_chord("D6/9", "D69")
+    assert not theory.same_chord("D6/A", "D69") and not theory.same_chord("Dm", "D")
+
+
+@pytest.mark.parametrize(
+    ("written", "plain"),
+    [("Dm(add#11)", "Dmadd#11"), ("Am7(b5)", "Am7b5"), ("C(add9)/E", "Cadd9/E"), ("D(6/9)", "D69")],
+)
+def test_parse_reads_the_parenthesized_form_like_the_plain_one(written, plain):
+    a, b = chord(written), chord(plain)
+    assert (a.suffix, a.root, a.bass) == (b.suffix, b.root, b.bass)
+    assert a.token == written  # lo escrito se conserva para mostrarlo
+
+
+def test_major_6_9_has_its_notes():
+    assert theory.note_names(chord("D6/9")) == ["D", "F#", "A", "B", "E"]
+    assert chord("D6/9").suffix == "69" and chord("Dm6/9").suffix == "m69"
+    assert theory.piano_keys(chord("D(6/9)"))  # tiene teclado
+
+
+def test_a_valid_combination_we_do_not_know_stays_without_diagram():
+    assert theory.parse("G7(b9/#11/13)") is None  # válido en la partitura, sin notas conocidas

@@ -1,0 +1,13 @@
+# Solo existe en la rama feat/investigacion-midi (S36). Cualquier PR que la contenga (desde ella o desde
+# una rama que nació de ella) queda en rojo: el laboratorio no se mergea ni se mezcla con otras ramas.
+name: lab-no-merge
+on:
+  pull_request:
+jobs:
+  bloquear:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - run: |
+          echo "::error::Rama de laboratorio (S36): no se mergea ni se usa como base de otra rama."
+          exit 1
