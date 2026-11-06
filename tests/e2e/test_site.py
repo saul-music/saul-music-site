@@ -839,6 +839,45 @@ def test_rests_are_drawn_without_chord_button_and_the_playhead_crosses_them(
     assert overflow <= 0
 
 
+def test_ties_show_the_held_chord_dimmed_open_its_diagram_and_the_playhead_crosses_them(
+    page: Page, ties_url: str
+):
+    problems = []
+    page.on("pageerror", lambda e: problems.append(str(e)))
+    page.add_init_script(SAFARI_AUDIO_STUB)
+    page.add_init_script(GUITAR_OFF)
+    page.goto(ties_url + SONG)
+    set_options(page)
+    pane = page.locator("#p-basico")
+    ties = pane.locator("[data-tie='1']")
+    expect(ties).to_have_count(2)
+    # Compás entero: E sigue sonando, atenuado y con su arco.
+    whole = pane.locator(".ac-bar.is-tie").first
+    expect(whole.locator(".ac-tie-arc")).to_have_count(1)
+    expect(whole.locator(".ac-chord-btn")).to_have_attribute("data-chord", "E")
+    # Parte de un compás: F# ligado sobre la barra, luego F#.
+    part = pane.locator(".ac-part.is-tie").first
+    expect(part.locator(".ac-chord-btn")).to_have_attribute("data-chord", "F#")
+    expect(page.locator("text=El arco indica un ligado").first).to_be_visible()
+    # El acorde ligado abre su diagrama como cualquier otro.
+    whole.locator(".ac-chord-btn").click()
+    expect(page.locator(".ac-chord-panel")).to_be_visible()
+    page.keyboard.press("Escape")
+    # El cursor pasa por los ligados.
+    page.locator("[data-ac-met-countin]").click()
+    page.locator("[data-ac-met-range]").fill("240")
+    page.locator("[data-ac-met-toggle]").click()
+    page.wait_for_function(
+        "() => document.querySelector('#p-basico .ac-bar.is-current.is-tie')", timeout=8000
+    )
+    page.locator("[data-ac-met-toggle]").click()
+    assert problems == []
+    overflow = page.evaluate(
+        "document.documentElement.scrollWidth - document.documentElement.clientWidth"
+    )
+    assert overflow <= 0
+
+
 def test_home_count_matches_the_linked_cards_of_the_library(page: Page, base_url: str):
     page.goto(f"{base_url}/")
     shown = page.locator(".ac-count strong").inner_text()
