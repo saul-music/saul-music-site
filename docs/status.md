@@ -1,6 +1,6 @@
 # Estado del sitio
 
-> Registro vivo. Última actualización: 2026-11-06 (S47: ligado `_` con `acordia-render` 0.3.0; S46: «Cargando sonido» antes de la cuenta, así el primer acorde ya no sale mudo, con `acordia-render` 0.2.1; S45: acordes 13 y 7(13) y guitarra activa por defecto con `acordia-render` 0.2.0; S44: el site usa la librería `acordia_render` y borra su copia del render; antes, 2026-11-05, S37 a S42: guitarra de nailon y contrabajo en el reproductor, volúmenes y barra rediseñada; S38 novenas alteradas y forma propia obligatoria).
+> Registro vivo. Última actualización: 2026-11-06 (S48: e2e del CI solo con código propio, `scripts/e2e-produccion.sh` contra producción en local; S47: ligado `_` con `acordia-render` 0.3.0; S46: «Cargando sonido» antes de la cuenta, así el primer acorde ya no sale mudo, con `acordia-render` 0.2.1; S45: acordes 13 y 7(13) y guitarra activa por defecto con `acordia-render` 0.2.0; S44: el site usa la librería `acordia_render` y borra su copia del render; antes, 2026-11-05, S37 a S42: guitarra de nailon y contrabajo en el reproductor, volúmenes y barra rediseñada; S38 novenas alteradas y forma propia obligatoria).
 
 ## Paso actual
 
@@ -161,3 +161,4 @@ AAAA-MM-DD · paso · qué se hizo · qué quedó pendiente · decisiones nuevas
 - **Pendiente:** oírlo y revisarlo en Safari/iPhone y celular reales; consulta legal D-C25; R1 (research mantiene su copia del render, M45).
 - **Cargando sonido (S46, `acordia-render` 0.2.1):** Reproducir espera a que la guitarra tenga las notas del tema (tope de 10 s con aviso visible); si el primer acorde sigue mudo con red rápida, sería el arranque de la salida de audio: pendiente de oírlo en un dispositivo real.
 - **Ligado (S47, `acordia-render` 0.3.0):** `_` deja sonar el acorde anterior sin golpe nuevo (compás entero o parte); se ve atenuado con un arco. Pendiente: oírlo en un dispositivo real.
+- **e2e (S48):** el CI salta los navegadores si el cambio solo sube la librería de render o toca documentación (`scripts/necesita-e2e.sh`); tras desplegar se corre `scripts/e2e-produccion.sh` en local. Pendiente: mover las pruebas del render a la librería.

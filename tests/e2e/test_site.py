@@ -536,6 +536,9 @@ def test_no_horizontal_scroll(song: Page):
 
 
 def test_unpublished_song_is_404(page: Page, base_url: str):
+    # Depende del catálogo local (songs/): en producción ese tema puede estar publicado (S48).
+    if os.environ.get("E2E_BASE_URL"):
+        pytest.skip("solo en local: depende de qué temas trae songs/")
     # Petición directa: Firefox trata un 404 sin cuerpo como error de red al navegar.
     response = page.request.get(base_url + "/cancion-cantar-y-amar.html")
     assert response.status == 404

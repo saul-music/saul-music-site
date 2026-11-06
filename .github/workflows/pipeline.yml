@@ -2,6 +2,8 @@ name: pipeline
 
 # Cada job tiene timeout-minutes (S32) para que un atasco de GitHub no deje colgado el pipeline.
 # Un solo pipeline, secuencial (D45 de saul): ci (lint y tests) -> e2e (navegadores, en matriz)
+# (S48: el e2e se salta si el cambio solo sube la librería de render o toca documentación; ver
+# scripts/necesita-e2e.sh. Las etapas siguientes aceptan un e2e saltado, nunca uno fallido)
 # -> image (build amd64 + smoke)
 # -> publish (imagen a Artifact Registry) -> deploy (sitio en Cloud Run).
 # publish y deploy solo corren en main; los PR terminan en image. Todo lo que necesitan en GCP
@@ -40,8 +42,31 @@ jobs:
     permissions:
       contents: read
       id-token: write
+    outputs:
+      e2e: ${{ steps.cambios.outputs.e2e }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0  # el historial, para comparar con la base del cambio (S48)
+      - name: ¿hace falta el e2e? (S48)
+        id: cambios
+        env:
+          EVENT: ${{ github.event_name }}
+          BASE_REF: ${{ github.base_ref }}
+          BEFORE: ${{ github.event.before }}
+        run: |
+          case "$EVENT" in
+            pull_request) e2e="$(scripts/necesita-e2e.sh "origin/${BASE_REF}...HEAD")" ;;
+            push)
+              if git cat-file -e "${BEFORE}^{commit}" 2>/dev/null; then
+                e2e="$(scripts/necesita-e2e.sh "${BEFORE}..HEAD")"
+              else
+                e2e=true
+              fi ;;
+            *) e2e=true ;;  # a mano (workflow_dispatch): siempre con navegadores
+          esac
+          echo "e2e=${e2e}" >> "$GITHUB_OUTPUT"
+          echo "e2e: ${e2e}"
       - uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093 # v3
         id: render
         with:
@@ -66,6 +91,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     needs: [ci]
+    if: needs.ci.outputs.e2e == 'true'
     strategy:
       fail-fast: false
       matrix:
@@ -125,7 +151,11 @@ jobs:
     name: imagen
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    needs: [e2e]
+    needs: [ci, e2e]
+    # Sigue con el e2e en verde o saltado (S48); nunca con uno fallido o cancelado.
+    if: >-
+      !cancelled() && needs.ci.result == 'success' &&
+      (needs.e2e.result == 'success' || needs.e2e.result == 'skipped')
     permissions:
       contents: read
       id-token: write
@@ -160,7 +190,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     needs: [image]
-    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    if: >-
+      !cancelled() && needs.image.result == 'success' &&
+      github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
     permissions:
       contents: read
       id-token: write
@@ -192,7 +224,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     needs: [publish]
-    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    if: >-
+      !cancelled() && needs.publish.result == 'success' &&
+      github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
     permissions:
       contents: read
       id-token: write
