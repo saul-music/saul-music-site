@@ -1,11 +1,17 @@
 """Experimento: el metrónomo contra un AudioContext REAL, sin simular.
 
-Mide la señal que llega al destino con un AnalyserNode. Necesita una salida de audio: en CI un
-sink nulo de PulseAudio (ver el pipeline). Si no funciona de forma estable, se descarta.
+Mide la señal que llega al destino con un AnalyserNode. Necesita una salida de audio: corre solo en
+local (S49); antes usaba en el CI un sink nulo de PulseAudio, que se colgaba al instalarse.
 """
+
+import os
 
 import pytest
 from playwright.sync_api import Page, expect
+
+# S49: fuera del CI. Necesitaba instalar PulseAudio con apt en el runner, que se colgaba a
+# menudo; en local (Mac) la salida de audio existe y la prueba corre igual.
+pytestmark = pytest.mark.skipif(os.environ.get("CI") == "true", reason="solo en local (S49)")
 
 SONG = "/cancion-camara-lenta.html"
 

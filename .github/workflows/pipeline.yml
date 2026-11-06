@@ -3,7 +3,9 @@ name: pipeline
 # Cada job tiene timeout-minutes (S32) para que un atasco de GitHub no deje colgado el pipeline.
 # Un solo pipeline, secuencial (D45 de saul): ci (lint y tests) -> e2e (navegadores, en matriz)
 # (S48: el e2e se salta si el cambio solo sube la librería de render o toca documentación; ver
-# scripts/necesita-e2e.sh. Las etapas siguientes aceptan un e2e saltado, nunca uno fallido)
+# scripts/necesita-e2e.sh. Las etapas siguientes aceptan un e2e saltado, nunca uno fallido.
+# S49: el e2e corre solo en los PR, con Chromium e iPhone 14; al mezclar a main no se repite.
+# Firefox, WebKit de escritorio y Pixel 7, y todos contra producción: scripts/e2e-produccion.sh, en local)
 # -> image (build amd64 + smoke)
 # -> publish (imagen a Artifact Registry) -> deploy (sitio en Cloud Run).
 # publish y deploy solo corren en main; los PR terminan en image. Todo lo que necesitan en GCP
@@ -53,16 +55,10 @@ jobs:
         env:
           EVENT: ${{ github.event_name }}
           BASE_REF: ${{ github.base_ref }}
-          BEFORE: ${{ github.event.before }}
         run: |
           case "$EVENT" in
             pull_request) e2e="$(scripts/necesita-e2e.sh "origin/${BASE_REF}...HEAD")" ;;
-            push)
-              if git cat-file -e "${BEFORE}^{commit}" 2>/dev/null; then
-                e2e="$(scripts/necesita-e2e.sh "${BEFORE}..HEAD")"
-              else
-                e2e=true
-              fi ;;
+            push) e2e=false ;;  # S49: el PR ya lo corrió sobre este código; tras desplegar, e2e-produccion.sh
             *) e2e=true ;;  # a mano (workflow_dispatch): siempre con navegadores
           esac
           echo "e2e=${e2e}" >> "$GITHUB_OUTPUT"
@@ -96,10 +92,9 @@ jobs:
       fail-fast: false
       matrix:
         include:
+          # S49: dos en el CI (el de escritorio más usado y el iPhone, el más delicado con el audio);
+          # los otros tres, en local con scripts/e2e-produccion.sh.
           - { browser: chromium }
-          - { browser: firefox }
-          - { browser: webkit }
-          - { browser: chromium, device: Pixel 7 }
           - { browser: webkit, device: iPhone 14 }
     # La librería de render (R1) vive en Artifact Registry: se lee con `render-reader` por WIF.
     permissions:
@@ -120,18 +115,19 @@ jobs:
         env:
           UV_INDEX_ACORDIA_USERNAME: oauth2accesstoken
           UV_INDEX_ACORDIA_PASSWORD: ${{ steps.render.outputs.access_token }}
-      - run: uv run playwright install --with-deps ${{ matrix.browser }}
-      - name: audio virtual (experimento)
-        # Sink nulo de PulseAudio para que el AudioContext real llegue a running en el runner.
+      - name: instalar el navegador (S49; apt se cuelga a veces en el runner)
+        # Hasta 3 intentos de 4 minutos: un cuelgue cuesta minutos, no los 20 del tope del job.
+        timeout-minutes: 13
+        env:
+          BROWSER: ${{ matrix.browser }}
         run: |
-          sudo apt-get install -y pulseaudio
-          export XDG_RUNTIME_DIR="$RUNNER_TEMP/xdg"; mkdir -p "$XDG_RUNTIME_DIR"; chmod 700 "$XDG_RUNTIME_DIR"
-          pulseaudio --kill 2>/dev/null || true
-          pulseaudio -D --exit-idle-time=-1 --start
-          pactl load-module module-null-sink sink_name=ci
-          pactl set-default-sink ci
-          pactl list short sinks
-          echo "XDG_RUNTIME_DIR=$XDG_RUNTIME_DIR" >> "$GITHUB_ENV"
+          for i in 1 2 3; do
+            timeout -k 10 240 uv run playwright install --with-deps "$BROWSER" && exit 0
+            echo "::warning::instalación de $BROWSER colgada o fallida (intento $i)"
+            sudo pkill -9 -f 'apt-get|dpkg' || true
+            sudo dpkg --configure -a || true
+          done
+          exit 1
       - name: pruebas de navegador
         env:
           DEVICE: ${{ matrix.device }}
