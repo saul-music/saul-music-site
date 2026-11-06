@@ -655,3 +655,9 @@ Sin código de render aquí (vive en la librería, RD6). **El problema:** al dar
 
 **Pruebas (e2e, `HeldSamples` retiene las descargas):** la cuenta no empieza mientras carga y sí al llegar; detener durante la carga cancela esa partida; con el tope el aviso se ve y el metrónomo sigue. Sin la espera, las dos primeras fallan (comprobado). `song_audio`, que prueba el pulso, deja la guitarra apagada como `song`. **Sin comprobar:** si el primer acorde también falla con red rápida y muestras en caché, sería el arranque de la salida de audio del dispositivo (Bluetooth, macOS), que un navegador sin pantalla no oye.
 
+
+## S47 · Ligado `_` en la partitura: el site sube a `acordia-render` 0.3.0 (2026-11-06)
+
+Sin código de render aquí (vive en la librería, RD7). `_` es un ligado: el acorde que sonaba sigue sonando sin golpe nuevo, como compás entero (`E _`) o como parte de un compás partido (`B-F# _-F#`). Se ve atenuado y con un arco, abre el diagrama de ese acorde, y la guitarra y el bajo no golpean en esa parte. La nota bajo la partitura explica el arco solo si el tema usa ligados. No abre una sección ni liga un silencio. El site sube **antes** que research: debe entender `_` antes de que el admin deje publicarlo. Fija `saul-music-render==0.3.0`.
+
+**Pruebas (e2e, fixture `ties_url` con «Cámara lenta» ligada):** dos ligados dibujados con su acorde y su arco, el diagrama se abre, la nota se ve, el cursor pasa por ellos y no hay errores ni desborde; en Chromium, Firefox y WebKit (iPhone 14). Que la guitarra no golpee lo prueba la librería (`tests/js/ligado_guitarra.js`). **Sin comprobar:** oírlo en un dispositivo real (el usuario lo revisó a ojo y oído en una vista previa local).
