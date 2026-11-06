@@ -671,3 +671,15 @@ Sin código de render aquí (vive en la librería, RD7). `_` es un ligado: el ac
 3. **`scripts/e2e-produccion.sh [navegador]`** corre en local las pruebas de navegador del sitio contra producción (`E2E_BASE_URL`; por defecto la URL de `musicsite`), en Chromium, Firefox, WebKit, Pixel 7 e iPhone 14. Se usa después de desplegar un cambio que saltó el e2e. Las pruebas que arman temas propios (fixtures `*_url` salvo `base_url`) y las que dependen del catálogo de `songs/` se saltan con «solo en local». Primera corrida contra producción en Chromium: 53 pasan, 12 saltadas.
 
 **Pendiente (paso 3 del plan, sin empezar):** mover las pruebas de navegador del render a la librería, solo locales; aquí quedarían las propias del sitio.
+
+## S49 · e2e más liviano en el CI: solo en PR, dos navegadores y sin cuelgues de 20 minutos (2026-11-06)
+
+**Decisión del usuario**, tras analizar las 175 corridas del pipeline (31 de octubre al 6 de noviembre): 744 jobs de e2e, unas 41 horas de runner en 7 días, 38 % en repetir el e2e al mezclar a `main` y 19 % en jobs que no terminaron bien. De 70 jobs no exitosos, 31 fueron pruebas que fallaron (casi todas bugs reales de ramas nuevas: el e2e sí atrapa errores; solo 2 pasaron con un reintento sin cambios) y unos 29 cuelgues del runner en `apt` (instalar el navegador con `--with-deps` o PulseAudio), en aumento (0 el 3 de noviembre, 11 el 6). Un job sano dura ~3 min (1,9 de pruebas).
+
+1. **El e2e no se repite al mezclar a `main`** (`push` → `e2e=false`): el PR ya lo corrió sobre ese código. Tras desplegar, `scripts/e2e-produccion.sh` en local. A mano (`workflow_dispatch`) sigue corriendo.
+2. **Dos navegadores en el CI:** Chromium e iPhone 14 (WebKit). Firefox, WebKit de escritorio y Pixel 7 quedan para `e2e-produccion.sh`, que corre los cinco.
+3. **Sin «audio virtual (experimento)» en el CI:** `test_audio_real.py` se salta con `CI=true` y corre en local.
+4. **Instalar el navegador con hasta 3 intentos de 4 minutos** (`timeout -k 10 240`, luego se matan los `apt`/`dpkg` colgados y se repara `dpkg`), con tope de 13 minutos para el paso. Caché de los navegadores: no, por ahora (sería una acción de terceros más).
+5. **`test_beat_flash_follows_the_chord_inside_a_split_bar`** parte con la bandera desde el primer compás partido en vez de esperar ~30 compases: de 36 s a 1,3 s (era el 27 % del tiempo de pruebas). La del tope de 10 s del sonido (13 s) no se acorta aquí: el tope vive en la librería y esa prueba se mudará a ella (paso 3 de S48).
+
+Efecto esperado: un PR que toca el sitio pasa de ~15 min de runner (5 × 3, más la repetición en `main`) a ~6 (2 × 3), una sola vez.

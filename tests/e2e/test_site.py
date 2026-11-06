@@ -593,14 +593,10 @@ def test_beat_flash_follows_the_chord_inside_a_split_bar(song_audio: Page):
     song.locator("#t-intermedio").click()
     pane = song.locator("#p-intermedio")
     expect(pane).to_be_visible()
-    # Compases que preceden al primero partido, con las repeticiones de cada sección.
-    before = pane.evaluate(
-        """el => { let n = 0; for (const g of el.querySelectorAll('.ac-bars')) {
-          const reps = +g.dataset.reps || 1, bars = [...g.querySelectorAll('.ac-bar')];
-          const i = bars.findIndex(b => b.classList.contains('is-split'));
-          if (i >= 0) return n + i; n += reps * bars.length; } return -1; }"""
-    )
-    assert before >= 0
+    # Parte desde el primer compás partido (bandera, S12): no hay que esperar los compases previos.
+    split = pane.locator(".ac-bar.is-split").first
+    split.locator(".ac-start-flag").click()
+    expect(split).to_have_class(re.compile(r"\bis-start\b"))
     song.locator("[data-ac-met-countin]").click()  # sin cuenta: el compás 1 empieza ya
     song.locator("[data-ac-met-range]").fill("240")  # 0,25 s por pulso, 1 s por compás
     song.evaluate(
@@ -620,7 +616,7 @@ def test_beat_flash_follows_the_chord_inside_a_split_bar(song_audio: Page):
               attributeOldValue: true }); }"""
     )
     song.locator("[data-ac-met-toggle]").click()
-    song.wait_for_function("() => window.__flash.length >= 4", timeout=(before + 4) * 1000 + 8000)
+    song.wait_for_function("() => window.__flash.length >= 4", timeout=8000)
     song.locator("[data-ac-met-toggle]").click()
     flash = song.evaluate("window.__flash")
     # Primer compás partido (4/4): cada pulso ilumina una parte y las partes se recorren en orden,
