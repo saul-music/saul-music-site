@@ -632,3 +632,14 @@ Se desactiva junto con la guitarra cuando está apagada. Los tres deslizadores d
 ## S43 · Forma propia de un acorde con bajo, con o sin el bajo (2026-11-05)
 
 `[formas]` acepta para `Dmaj7/E` tanto la forma con el bajo como nota más grave (`0 5 7 6 7 5`) como la del acorde base sin él (`x 5 7 6 7 5`), siempre sin notas ajenas. Antes la segunda se rechazaba («la nota más grave debe ser E»). Una sola forma por acorde. En la segunda, el panel dice «Esta forma no incluye el bajo (E): otro instrumento puede tocarlo, y si activas la guitarra suena como bajo.» (`no_bass` en el JSON de la página; `chordtheory.shape_lacks_bass`). Contrato compartido con 2 casos nuevos.
+
+## S44 · El site usa la librería `acordia_render` y borra su copia del render (2026-11-06)
+
+Último paso de R1 en el site. El render, el validador, el contrato, los datos de chords-db, las plantillas, `acordia.js`, `guitarra.js`, `style.css`, la tipografía y las 61 muestras viven en `saul-music-render` (`acordia-render==0.1.0`, Artifact Registry); aquí se borran `chordtheory`, `acordes`, `songpages`, `chordsdb`, `data/`, `templates/` y esos archivos de `web/`, junto con sus tests y el contrato (ahora fuente única en la librería, que además lo prueba contra el validador). El site conserva `app.py`, `catalog.py`, `artists.py`, `profes.py` (las guías de ejemplo), `songs/` (respaldo) y las páginas estáticas, más los e2e.
+
+- **Servidor:** `create_app` sirve `{**archivos de la librería, **web/}` (los del site tienen prioridad); el resto es 404 como antes. Las muestras siguen con un día de caché.
+- **Guías:** son del site; `create_app` hace `guides.use(profes)` y los tests lo hacen con un `conftest.py`.
+- **Dependencia y token:** un único índice propio, `explicit`, solo para la librería (excepción registrada en R1). Sin token en el repo: en local `scripts/uv-acordia.sh uv --no-config sync`; en el CI, `lint y tests`, los 5 `e2e`, `imagen` y `publicar imagen` piden el token a `render-reader` por WIF (`vars.GCP_WIF_RENDER_READER`); en el `Dockerfile` entra como secreto de build, sin quedar en ninguna capa. El repo del site es público: quien lo clone puede leer el código, pero no instalar la librería sin acceso a GCP.
+- **Avisos de terceros** (chords-db, Petaluma, FluidR3_GM con su excepción a L1): se mudaron a `THIRD_PARTY_NOTICES.md` de la librería; el site publica los mismos archivos, así que aquí queda un puntero.
+- **Para cambiar el render:** se cambia en la librería, se sube `version` y se publica; después el site y research suben su versión fijada. Ya no se toca nada de eso aquí.
+

@@ -1,11 +1,12 @@
 """Servidor del sitio: FastAPI entrega los archivos de `web/` y las páginas de canción; lo demás
 es 404 sin cuerpo.
 
-Las páginas de canción se renderizan con Jinja2 (`templates/`) desde los TOML publicados: los de
-la publicación vigente del bucket editorial si `EDITORIAL_DIR` está (S9, ver `catalog.py`) o, si no,
-los de `songs/` (el respaldo). Solo se sirve lo que existe en `web/` o en el catálogo, buscado por
-nombre exacto en un diccionario: no hay sistema de archivos por ruta, así que no hay recorrido de
-directorios.
+Las páginas de canción las renderiza la librería `acordia_render` (R1: plantillas, validador,
+estilos, scripts y muestras de la guitarra) desde los TOML publicados: los de la publicación
+vigente del bucket editorial si `EDITORIAL_DIR` está (S9, ver `catalog.py`) o, si no, los de
+`songs/` (el respaldo). Solo se sirve lo que existe en `web/`, en los archivos de la librería o en
+el catálogo, buscado por nombre exacto en un diccionario: no hay sistema de archivos por ruta, así
+que no hay recorrido de directorios.
 Sin /docs, /redoc ni /openapi.json.
 """
 
@@ -14,6 +15,8 @@ import os
 from pathlib import Path
 
 import uvicorn
+from acordia_render import guides
+from acordia_render.songpages import WEB_DIR as LIB_WEB_DIR
 from fastapi import FastAPI, Request, Response
 from starlette.exceptions import HTTPException
 
@@ -62,9 +65,13 @@ def create_app(
     editorial: Path | None = None,
     refresh_seconds: float = 60,
 ) -> FastAPI:
-    from musicsite.catalog import Catalog  # aquí y no arriba: songpages importa este módulo
+    from musicsite import profes
+    from musicsite.catalog import Catalog  # aquí y no arriba: profes importa este módulo
 
-    files = load_files(root)
+    guides.use(profes)  # las guías de ejemplo son del sitio; la librería las pide a este módulo
+    # Los archivos de la página de canción (style.css, acordia.js, guitarra.js, la tipografía y las
+    # muestras) vienen de la librería; los del sitio (portada, guías, artistas…) tienen prioridad.
+    files = {**load_files(LIB_WEB_DIR), **load_files(root)}
     index_html = files["/index.html"][0].decode() if "/index.html" in files else ""
     artists_html = files["/artistas.html"][0].decode() if "/artistas.html" in files else ""
     catalog = Catalog(index_html, songs, editorial, refresh_seconds, artists_html=artists_html)

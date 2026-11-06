@@ -1,6 +1,7 @@
 """Perfiles de enseñanza: reglas por artista o por tema, datos sintéticos."""
 
 import pytest
+from acordia_render.songpages import render
 
 from musicsite.profes import (
     GUIDES_END,
@@ -14,7 +15,6 @@ from musicsite.profes import (
     top_teachers,
     update_guides,
 )
-from musicsite.songpages import render
 
 BY_ARTIST = {"ensena": [{"artista": "Los Tres"}]}
 BY_SONG = {"ensena": [{"artista": "Los Bunkers", "tema": "ven-aqui"}]}
@@ -65,7 +65,7 @@ def test_invalid_file_reports_all_errors(tmp_path):
 
 
 def test_every_repertoire_song_has_at_least_two_teachers():
-    from musicsite.acordes import REPERTOIRE
+    from acordia_render.acordes import REPERTOIRE
 
     assert all(len(teachers_for(slug)) >= 2 for slug, *_ in REPERTOIRE)
 
@@ -145,7 +145,7 @@ def test_coverage_says_how_much_of_the_song_a_guide_teaches():
 
 
 def test_guides_panel_lists_at_most_five_with_price_and_links_to_the_filtered_page():
-    from musicsite.songpages import guides_panel
+    from acordia_render.songpages import guides_panel
 
     html = guides_panel("ven-aqui", "Ven aquí")
     assert html.count('class="ac-guide-row"') <= 5
@@ -154,7 +154,7 @@ def test_guides_panel_lists_at_most_five_with_price_and_links_to_the_filtered_pa
 
 
 def test_each_guide_row_links_to_that_guides_card_on_the_guides_page():
-    from musicsite.songpages import guides_panel
+    from acordia_render.songpages import guides_panel
 
     html = guides_panel("camara-lenta", "Cámara lenta")
     for profile in top_teachers("camara-lenta"):

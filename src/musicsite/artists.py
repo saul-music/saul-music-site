@@ -17,7 +17,7 @@ import tomllib
 from pathlib import Path
 from urllib.parse import quote, urlsplit
 
-from musicsite.songpages import artist_key, esc, sort_key
+from acordia_render.songpages import artist_key, esc, sort_key
 
 ARTISTS_START = "<!-- artistas:inicio -->"
 ARTISTS_END = "<!-- artistas:fin -->"

@@ -1,4 +1,6 @@
-# Servicio del sitio de SAÚL música. uv fijado, solo PyPI, usuario no root.
+# Servicio del sitio de SAÚL música. uv fijado, PyPI más el índice propio de la librería de render
+# (R1), usuario no root. El token del índice entra como secreto de build (`--secret id=acordia_token`)
+# y no queda en ninguna capa de la imagen.
 FROM python:3.14-slim AS builder
 
 COPY --from=ghcr.io/astral-sh/uv:0.10.11 /uv /usr/local/bin/uv
@@ -10,9 +12,15 @@ ENV UV_PYTHON_PREFERENCE=only-system \
 
 WORKDIR /app
 COPY pyproject.toml uv.lock README.md ./
-RUN uv sync --frozen --no-dev --no-install-project
+RUN --mount=type=secret,id=acordia_token \
+    UV_INDEX_ACORDIA_USERNAME=oauth2accesstoken \
+    UV_INDEX_ACORDIA_PASSWORD="$(cat /run/secrets/acordia_token)" \
+    uv sync --frozen --no-dev --no-install-project
 COPY src ./src
-RUN uv sync --frozen --no-dev --no-editable
+RUN --mount=type=secret,id=acordia_token \
+    UV_INDEX_ACORDIA_USERNAME=oauth2accesstoken \
+    UV_INDEX_ACORDIA_PASSWORD="$(cat /run/secrets/acordia_token)" \
+    uv sync --frozen --no-dev --no-editable
 
 FROM python:3.14-slim
 

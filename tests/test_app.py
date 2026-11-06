@@ -3,9 +3,9 @@
 from pathlib import Path
 
 import pytest
+from acordia_render.acordes import validate_file
 from fastapi.testclient import TestClient
 
-from musicsite.acordes import validate_file
 from musicsite.app import HEADERS, SONGS_DIR, WEB_DIR, create_app, load_files
 
 
@@ -78,12 +78,8 @@ def test_load_files_skips_hidden_unknown_and_subdirectories(tmp_path: Path):
 
 def test_web_dir_has_only_fixed_site_files():
     # Lo que está en web/ se publica entero: un archivo nuevo ahí debe ser contenido del sitio.
-    # Las páginas de canción ya no son archivos: salen del template y de songs/.
-    flats = ("C", "Db", "D", "Eb", "E", "F", "Gb", "G", "Ab", "A", "Bb", "B")
-
-    def sample(prefix: str, midi: int) -> str:  # una muestra por semitono, nombre = nota + octava
-        return f"{prefix}{flats[midi % 12]}{midi // 12 - 1}.mp3"
-
+    # Las páginas de canción salen de la librería y de songs/; sus estilos, scripts, tipografía y
+    # muestras también son de la librería (R1) y no se copian aquí.
     fixed = {
         "index.html",
         "cancion.html",
@@ -91,16 +87,25 @@ def test_web_dir_has_only_fixed_site_files():
         "artistas.html",
         "pedidos.html",
         "pedidos.js",
-        "style.css",
-        "acordia.js",
-        "guitarra.js",
-        "PetalumaScript.woff2",
-        "PetalumaScript-OFL.txt",
     }
-    # Muestras del botón Guitarra (S37): nailon E2 a E6 (40 a 88) y contrabajo E1 a Eb2 (28 a 39).
-    fixed |= {sample("guitarra-nylon-", m) for m in range(40, 89)}
-    fixed |= {sample("bajo-", m) for m in range(28, 40)}
     assert {p.name for p in WEB_DIR.iterdir()} == fixed
+
+
+def test_the_library_files_are_served_by_the_site(client):
+    """R1: estilos, scripts, tipografía y muestras vienen de la librería."""
+    for name, kind in (
+        ("style.css", "text/css"),
+        ("acordia.js", "text/javascript"),
+        ("guitarra.js", "text/javascript"),
+        ("PetalumaScript.woff2", "font/woff2"),
+        ("guitarra-nylon-E2.mp3", "audio/mpeg"),
+        ("bajo-E1.mp3", "audio/mpeg"),
+    ):
+        response = client.get(f"/{name}")
+        assert response.status_code == 200, name
+        assert response.headers["content-type"].startswith(kind), name
+    assert client.get("/guitarra-nylon-E2.mp3").headers["cache-control"] == "public, max-age=86400"
+    assert client.get("/nope.mp3").status_code == 404
 
 
 def test_song_pages_come_from_published_songs(client):

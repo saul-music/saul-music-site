@@ -14,7 +14,8 @@ Sitio público de SAÚL música (Acordia). Servicio FastAPI en Cloud Run (`south
 
 ```bash
 export PYENV_VERSION=3.14.3 UV_PYTHON_PREFERENCE=only-managed
-uv --no-config sync
+# El render vive en la librería `acordia-render` (R1, Artifact Registry): hace falta acceso a GCP.
+scripts/uv-acordia.sh uv --no-config sync
 uv --no-config run pytest
 uv --no-config run ruff check && uv --no-config run ruff format --check
 PORT=8080 uv --no-config run python -m musicsite.app    # http://localhost:8080
@@ -46,8 +47,8 @@ publicación válida y lo que usan los tests y el desarrollo local. Para ver en 
 verdad, ver la guía «Desarrollo» de las guías del equipo (`gcloud storage rsync` + `EDITORIAL_DIR`). Un tema que no es `publicable` rompe el arranque. Cada página con `bpm`
 trae un metrónomo (Web Audio) que parte en ese tempo. Flujo del equipo editorial: validar en
 `acordes-local/` y copiar los publicables con
-`python -m musicsite.acordes publish --dir ../acordes-local --out src/musicsite/songs`; las
-tarjetas de la Biblioteca siguen con `python -m musicsite.acordes library`.
+`python -m acordia_render.acordes publish --dir ../acordes-local --out src/musicsite/songs`; las
+tarjetas de la Biblioteca siguen con `python -m acordia_render.acordes library`.
 
 **Todo archivo en `src/musicsite/web/` se publica.** El servidor entrega solo los archivos de esa
 carpeta, por nombre exacto; un archivo nuevo ahí debe ser contenido del sitio (un test lo exige).
