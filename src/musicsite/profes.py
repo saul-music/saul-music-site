@@ -14,7 +14,8 @@ import re
 import tomllib
 from pathlib import Path
 
-from musicsite.acordes import REPERTOIRE
+from acordia_render.acordes import REPERTOIRE
+
 from musicsite.app import WEB_DIR
 
 PROFES_FILE = Path(__file__).with_name("profes.toml")
@@ -168,7 +169,7 @@ def price(profile: dict) -> str:
 
 
 def guide_card(profile: dict, index: int) -> str:
-    from musicsite.songpages import esc
+    from acordia_render.songpages import esc
 
     songs = songs_of(profile)
     modes = ",".join(profile["modo"])

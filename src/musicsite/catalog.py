@@ -24,8 +24,9 @@ from collections.abc import Callable
 from dataclasses import dataclass, field
 from pathlib import Path
 
+from acordia_render.songpages import apply_library, published_library_html, render_published
+
 from musicsite.artists import build_page_and_photos
-from musicsite.songpages import apply_library, published_library_html, render_published
 
 RELEASE = re.compile(r"releases/[0-9]{8}-[0-9]{6}-[0-9a-f]{4}")
 SLUG = re.compile(r"[a-z0-9]+(?:-[a-z0-9]+)*")

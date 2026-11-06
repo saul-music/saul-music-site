@@ -3,15 +3,17 @@
 import re
 
 import pytest
+from acordia_render.songpages import render_published
 
-from musicsite.app import HEADERS, SONGS_DIR, WEB_DIR
+from musicsite.app import HEADERS, LIB_WEB_DIR, SONGS_DIR, WEB_DIR
 from musicsite.artists import build_page
-from musicsite.songpages import render_published
 
-# Todo lo que se sirve: los archivos de web/ y las páginas de canción que salen del template.
+# Todo lo que se sirve: los archivos de web/, los de la librería (estilos y scripts, R1) y las
+# páginas de canción que salen de su plantilla.
 FILES = {
     p.name: p.read_text(encoding="utf-8").lower()
-    for p in WEB_DIR.iterdir()
+    for directory in (LIB_WEB_DIR, WEB_DIR)
+    for p in directory.iterdir()
     if p.suffix in {".html", ".css", ".js"}
 }
 # artistas.html se arma al servirlo (S24): se revisa ya armado, con los datos de respaldo.

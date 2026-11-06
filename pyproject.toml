@@ -6,7 +6,7 @@ readme = "README.md"
 requires-python = ">=3.14"
 dependencies = [
     "fastapi>=0.162.0",
-    "jinja2>=3.1.6",
+    "saul-music-render==0.1.0",
     "uvicorn>=0.54.0",
 ]
 
@@ -25,11 +25,21 @@ build-backend = "uv_build"
 [tool.uv.build-backend]
 module-name = "musicsite"
 
-# Solo el índice público: ningún índice privado ni configuración de la máquina.
+# Solo el índice público, más UN índice propio y explícito solo para la librería de render (R1):
+# `acordia` en Artifact Registry. El token no va en el repo: UV_INDEX_ACORDIA_USERNAME y
+# UV_INDEX_ACORDIA_PASSWORD (ver scripts/uv-acordia.sh y el CI).
 [[tool.uv.index]]
 name = "pypi"
 url = "https://pypi.org/simple"
 default = true
+
+[[tool.uv.index]]
+name = "acordia"
+url = "https://southamerica-west1-python.pkg.dev/saulapp-music/acordia/simple/"
+explicit = true
+
+[tool.uv.sources]
+saul-music-render = { index = "acordia" }
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
@@ -46,6 +56,4 @@ src = ["src", "tests"]
 select = ["E", "F", "I", "UP", "B"]
 
 [tool.ruff.lint.per-file-ignores]
-# Plantilla HTML: las líneas largas son atributos que no conviene partir.
-"src/musicsite/songpages.py" = ["E501"]
 "src/musicsite/profes.py" = ["E501"]

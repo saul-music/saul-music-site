@@ -8,11 +8,16 @@ import tomllib
 from pathlib import Path
 
 import pytest
+from acordia_render.acordes import REPERTOIRE
+from acordia_render.songpages import (
+    apply_count,
+    apply_library,
+    published_library_html,
+    update_library,
+)
 from fastapi.testclient import TestClient
 
-from musicsite.acordes import REPERTOIRE
 from musicsite.app import HEADERS, SONGS_DIR, WEB_DIR, create_app
-from musicsite.songpages import apply_count, apply_library, published_library_html, update_library
 
 FORBIDDEN = ["musicres", "run.app", "dashboard", "saulapp-music", "youtube", "bigquery", "secret"]
 VERSION = iter(range(1, 10_000))

@@ -25,6 +25,7 @@ env:
   DEPLOYER: musicsite-deployer@saulapp-music.iam.gserviceaccount.com
   RUNTIME: musicsite-runtime@saulapp-music.iam.gserviceaccount.com
   EDITORIAL_BUCKET: saulapp-music-editorial
+  RENDER_READER: render-reader@saulapp-music.iam.gserviceaccount.com
 
 concurrency:
   group: pipeline-${{ github.ref }}
@@ -35,12 +36,25 @@ jobs:
     name: lint y tests
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    # La librería de render (R1) vive en Artifact Registry: se lee con `render-reader` por WIF.
+    permissions:
+      contents: read
+      id-token: write
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093 # v3
+        id: render
+        with:
+          workload_identity_provider: ${{ vars.GCP_WIF_RENDER_READER }}
+          service_account: ${{ env.RENDER_READER }}
+          token_format: access_token
       - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
         with:
           enable-cache: true
       - run: uv sync --locked
+        env:
+          UV_INDEX_ACORDIA_USERNAME: oauth2accesstoken
+          UV_INDEX_ACORDIA_PASSWORD: ${{ steps.render.outputs.access_token }}
       - run: uv run ruff check
       - run: uv run ruff format --check
       - run: uv run pytest
@@ -61,12 +75,25 @@ jobs:
           - { browser: webkit }
           - { browser: chromium, device: Pixel 7 }
           - { browser: webkit, device: iPhone 14 }
+    # La librería de render (R1) vive en Artifact Registry: se lee con `render-reader` por WIF.
+    permissions:
+      contents: read
+      id-token: write
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093 # v3
+        id: render
+        with:
+          workload_identity_provider: ${{ vars.GCP_WIF_RENDER_READER }}
+          service_account: ${{ env.RENDER_READER }}
+          token_format: access_token
       - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
         with:
           enable-cache: true
       - run: uv sync --locked
+        env:
+          UV_INDEX_ACORDIA_USERNAME: oauth2accesstoken
+          UV_INDEX_ACORDIA_PASSWORD: ${{ steps.render.outputs.access_token }}
       - run: uv run playwright install --with-deps ${{ matrix.browser }}
       - name: audio virtual (experimento)
         # Sink nulo de PulseAudio para que el AudioContext real llegue a running en el runner.
@@ -99,10 +126,21 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     needs: [e2e]
+    permissions:
+      contents: read
+      id-token: write
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093 # v3
+        id: render
+        with:
+          workload_identity_provider: ${{ vars.GCP_WIF_RENDER_READER }}
+          service_account: ${{ env.RENDER_READER }}
+          token_format: access_token
       - name: construir
-        run: docker build --platform linux/amd64 -t saul-music-site:ci .
+        env:
+          ACORDIA_TOKEN: ${{ steps.render.outputs.access_token }}
+        run: docker build --platform linux/amd64 --secret id=acordia_token,env=ACORDIA_TOKEN -t saul-music-site:ci .
       - name: smoke (la imagen sirve el sitio y /docs es 404)
         run: |
           docker run -d --rm --name site -p 8080:8080 saul-music-site:ci
@@ -128,6 +166,13 @@ jobs:
       id-token: write
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      # Primero el token de lectura de la librería; después el deployer, que es el que usa gcloud.
+      - uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093 # v3
+        id: render
+        with:
+          workload_identity_provider: ${{ vars.GCP_WIF_RENDER_READER }}
+          service_account: ${{ env.RENDER_READER }}
+          token_format: access_token
       - uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093 # v3
         with:
           workload_identity_provider: ${{ vars.GCP_WIF_PROVIDER }}
@@ -135,8 +180,11 @@ jobs:
       - uses: google-github-actions/setup-gcloud@aa5489c8933f4cc7a4f7d45035b3b1440c9c10db # v3.0.1
       - run: gcloud auth configure-docker "${REGION}-docker.pkg.dev" --quiet
       - name: construir y subir (tag = git sha, nunca latest)
+        env:
+          ACORDIA_TOKEN: ${{ steps.render.outputs.access_token }}
         run: |
-          docker build --platform linux/amd64 -t "${IMAGE}:${GITHUB_SHA}" .
+          docker build --platform linux/amd64 --secret id=acordia_token,env=ACORDIA_TOKEN \
+            -t "${IMAGE}:${GITHUB_SHA}" .
           docker push "${IMAGE}:${GITHUB_SHA}"
 
   deploy:
