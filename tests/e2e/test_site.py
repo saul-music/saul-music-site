@@ -49,6 +49,14 @@ SAFARI_AUDIO_STUB = """
 """
 
 
+# Además del contexto simulado, decodificar «funciona»: así la guitarra puede declararse lista.
+DECODE_STUB = """
+(() => {
+  window.AudioContext.prototype.decodeAudioData = () => Promise.resolve({ duration: 1 });
+})();
+"""
+
+
 def set_options(page: Page, open_: bool = True) -> None:
     """En celular (<= 575 px) los controles secundarios están plegados bajo «Opciones» (S26): abre o
     cierra el grupo. En escritorio el botón no se ve y no hace nada."""
@@ -59,8 +67,10 @@ def set_options(page: Page, open_: bool = True) -> None:
 
 @pytest.fixture
 def song_audio(page: Page, base_url: str) -> Page:
-    """Canción con un AudioContext simulado: el pulso no depende de que el runner tenga audio."""
+    """Canción con un AudioContext simulado: el pulso no depende de que el runner tenga audio.
+    La guitarra va apagada: estas pruebas son del pulso, no de la carga de muestras."""
     page.add_init_script(SAFARI_AUDIO_STUB)
+    page.add_init_script(GUITAR_OFF)
     page.goto(base_url + SONG)
     set_options(page)
     return page
@@ -1170,3 +1180,76 @@ def test_turning_the_guitar_back_on_loads_its_samples(page: Page, base_url: str)
     expect(song.locator("[data-ac-vol-guitar]")).to_be_enabled()
     wait_for_samples(song, samples)
     assert sorted(set(samples)) == [200] and len(samples) == 61
+
+
+# --- RD6: la cuenta espera a que la guitarra tenga sus muestras ---------------------------
+
+
+class HeldSamples:
+    """Retiene las descargas de muestras (red lenta); `release()` las deja pasar todas."""
+
+    def __init__(self, page: Page):
+        self.holding = True
+        self.routes: list = []
+        page.route("**/*.mp3", self._handle)
+
+    def _handle(self, route) -> None:
+        self.routes.append(route) if self.holding else route.continue_()
+
+    def release(self) -> None:
+        self.holding = False
+        for route in self.routes:
+            route.continue_()
+        self.routes.clear()
+
+
+@pytest.fixture
+def slow_song(page: Page, base_url: str):
+    page.add_init_script(SAFARI_AUDIO_STUB)
+    page.add_init_script(DECODE_STUB)
+    held = HeldSamples(page)
+    page.goto(base_url + SONG)
+    set_options(page)
+    yield page, held
+    held.release()
+
+
+def test_play_waits_for_the_guitar_samples_before_the_count_in(slow_song):
+    """RD6: con la guitarra activa y las muestras sin llegar, Reproducir dice «Cargando sonido» y la
+    cuenta no empieza; al llegar, empieza y el primer acorde ya tiene sus notas."""
+    song, held = slow_song
+    toggle = song.locator("[data-ac-met-toggle]")
+    toggle.click()
+    expect(toggle).to_have_attribute("aria-busy", "true")
+    expect(song.locator("[data-ac-met-label]")).to_contain_text("Cargando sonido")
+    song.wait_for_timeout(1500)  # más que un pulso: sin la espera ya habría clics
+    assert song.evaluate("window.__clicks") == 0
+    assert song.locator(".ac-bar.is-current").count() == 0
+    held.release()
+    expect(toggle).not_to_have_attribute("aria-busy", "true", timeout=8000)
+    expect(song.locator(".ac-bar.is-current")).to_have_count(1, timeout=8000)
+    assert song.evaluate("window.__clicks") >= 5  # 4 de cuenta + el primer pulso
+
+
+def test_stopping_while_the_sound_loads_cancels_the_start(slow_song):
+    song, held = slow_song
+    toggle = song.locator("[data-ac-met-toggle]")
+    toggle.click()
+    expect(toggle).to_have_attribute("aria-busy", "true")
+    toggle.click()  # Detener
+    expect(song.locator("[data-ac-met-label]")).to_have_text("Reproducir")
+    expect(toggle).not_to_have_attribute("aria-busy", "true")
+    held.release()
+    song.wait_for_timeout(1500)
+    assert song.evaluate("window.__clicks") == 0  # no arrancó la partida cancelada
+
+
+def test_play_starts_anyway_with_a_visible_notice_when_the_sound_never_arrives(slow_song):
+    """RD6: tope de 10 s. Si la red no alcanza, la cuenta empieza y el aviso se ve."""
+    song, held = slow_song
+    song.locator("[data-ac-met-toggle]").click()
+    status = song.locator("[data-ac-met-status]")
+    expect(status).to_have_text("Sin guitarra: el sonido no terminó de cargar", timeout=15000)
+    expect(status).to_be_visible()
+    expect(song.locator(".ac-bar.is-current")).to_have_count(1, timeout=8000)  # el metrónomo siguió
+    assert song.evaluate("window.__clicks") >= 5
