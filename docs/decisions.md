@@ -649,3 +649,9 @@ Sin código de render aquí (vive en la librería, RD5): el site fija `saul-musi
 
 **Ajuste de las pruebas tras el primer CI de S45:** con la guitarra activa, en el emulador de celular del CI las 61 muestras tardaron decenas de segundos y competían con pruebas ajenas al sonido (el cambio de tema falló). La fixture `song` ahora deja la guitarra apagada (`ac-guitar = off` por script de inicio) para todo lo que no es sonido; `song_sound` y las pruebas de sonido la ven como una persona, con esperas de hasta 40 s. Sin cambios en la librería ni en el comportamiento.
 
+## S46 · El primer acorde ya no sale mudo: el site sube a `acordia-render` 0.2.1 (2026-11-06)
+
+Sin código de render aquí (vive en la librería, RD6). **El problema:** al dar Reproducir como primer gesto, las muestras de la guitarra tenían solo la cuenta inicial (≈ 2 s) para llegar; con red lenta o caché fría el compás 1 sonaba mudo, sin aviso. Medido en producción con Playwright: red rápida suena; con 1,5 Mbps los dos primeros compases quedaban mudos y con 0,4 Mbps ninguno. **Ahora** Reproducir dice «Cargando sonido N%» y la cuenta espera a que estén las notas del tema (menos de la mitad del banco); con un tope de 10 s arranca igual y muestra 8 s «Sin guitarra: el sonido no terminó de cargar». El site fija `saul-music-render==0.2.1`.
+
+**Pruebas (e2e, `HeldSamples` retiene las descargas):** la cuenta no empieza mientras carga y sí al llegar; detener durante la carga cancela esa partida; con el tope el aviso se ve y el metrónomo sigue. Sin la espera, las dos primeras fallan (comprobado). `song_audio`, que prueba el pulso, deja la guitarra apagada como `song`. **Sin comprobar:** si el primer acorde también falla con red rápida y muestras en caché, sería el arranque de la salida de audio del dispositivo (Bluetooth, macOS), que un navegador sin pantalla no oye.
+
