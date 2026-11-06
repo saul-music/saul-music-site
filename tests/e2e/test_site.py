@@ -66,8 +66,23 @@ def song_audio(page: Page, base_url: str) -> Page:
     return page
 
 
+GUITAR_OFF = 'try { localStorage.setItem("ac-guitar", "off"); } catch (e) {}'
+
+
 @pytest.fixture
 def song(page: Page, base_url: str) -> Page:
+    """La canción con la guitarra apagada: desde S45 parte activa y, en el primer gesto, baja 61
+    muestras; las pruebas que no son de sonido no deben competir con esa descarga (en el emulador
+    de celular del CI tarda decenas de segundos)."""
+    page.add_init_script(GUITAR_OFF)
+    page.goto(base_url + SONG)
+    set_options(page)
+    return page
+
+
+@pytest.fixture
+def song_sound(page: Page, base_url: str) -> Page:
+    """La canción tal como la ve una persona: con la guitarra activa por defecto."""
     page.goto(base_url + SONG)
     set_options(page)
     return page
@@ -1091,23 +1106,67 @@ def test_parenthesized_chords_open_their_panel_and_the_unknown_one_is_plain_text
     expect(pane.get_by_text("G7(♭9/♯11/13)").first).to_be_visible()
 
 
-def test_guitar_loads_its_samples_and_unlocks_the_volumes(song: Page):
-    """S37: las muestras se piden al activar «Guitarra», no al abrir; se habilitan los volúmenes."""
+def watch_samples(page: Page) -> list[int]:
     samples: list[int] = []
-    song.on(
+    page.on(
         "response",
         lambda r: ("guitarra-nylon-" in r.url or "/bajo-" in r.url) and samples.append(r.status),
     )
-    set_options(song)
-    guitar_volume = song.locator("[data-ac-vol-guitar]")
-    bass_volume = song.locator("[data-ac-vol-bass]")
-    expect(guitar_volume).to_be_disabled()
-    assert samples == []  # al abrir la página no se descarga ningún mp3
-    song.locator("[data-ac-met-guitar]").click()
-    expect(guitar_volume).to_be_enabled()
-    expect(bass_volume).to_be_enabled()
-    for _ in range(40):
-        if len(samples) >= 61:
+    return samples
+
+
+def wait_for_samples(page: Page, samples: list[int], count: int = 61) -> None:
+    for _ in range(160):  # hasta 40 s: el emulador de celular del CI es lento
+        if len(samples) >= count:
             break
-        song.wait_for_timeout(250)
+        page.wait_for_timeout(250)
+
+
+def test_guitar_starts_active_and_loads_its_samples_on_the_first_gesture(page: Page, base_url: str):
+    """S45: la guitarra parte activa y con los volúmenes habilitados, pero no descarga nada al
+    abrir: las 61 muestras bajan en el primer gesto (toque, clic o tecla) de la persona."""
+    song = page  # sin la fixture `song`: en celular su set_options ya sería un gesto
+    samples = watch_samples(song)
+    song.goto(base_url + SONG)
+    expect(song.locator("[data-ac-met-guitar]")).to_have_attribute("aria-pressed", "true")
+    expect(song.locator("[data-ac-vol-guitar]")).to_be_enabled()
+    expect(song.locator("[data-ac-vol-bass]")).to_be_enabled()
+    song.wait_for_timeout(500)
+    assert samples == []  # quien solo lee no gasta datos
+    song.locator("h1").click()  # el primer gesto
+    wait_for_samples(song, samples)
+    assert sorted(set(samples)) == [200] and len(samples) == 61
+
+
+def test_guitar_can_be_turned_off_and_the_choice_is_remembered(song_sound: Page):
+    """S45: apagarla atenúa los volúmenes, se recuerda al recargar y no baja más."""
+    song = song_sound
+    samples = watch_samples(song)
+    set_options(song)  # en celular es un gesto: puede bajar las muestras antes de apagarla
+    song.locator("[data-ac-met-guitar]").click()
+    expect(song.locator("[data-ac-met-guitar]")).to_have_attribute("aria-pressed", "false")
+    expect(song.locator("[data-ac-vol-guitar]")).to_be_disabled()
+    expect(song.locator("[data-ac-vol-bass]")).to_be_disabled()
+    song.wait_for_timeout(1500)
+    loaded = len(samples)
+    song.reload()
+    expect(song.locator("[data-ac-met-guitar]")).to_have_attribute("aria-pressed", "false")
+    expect(song.locator("[data-ac-vol-guitar]")).to_be_disabled()
+    set_options(song)
+    song.locator("h1").click()
+    song.wait_for_timeout(1500)
+    assert len(samples) == loaded  # apagada: ni siquiera con gestos se descarga más
+
+
+def test_turning_the_guitar_back_on_loads_its_samples(page: Page, base_url: str):
+    """S37 y S45: apagada y activada otra vez, la guitarra queda con sus 61 muestras (en celular
+    abrir «Opciones» ya las pidió: se cuentan todas, por eso se observa desde antes de abrir)."""
+    song = page
+    samples = watch_samples(song)
+    song.goto(base_url + SONG)
+    set_options(song)
+    song.locator("[data-ac-met-guitar]").click()  # apagada
+    song.locator("[data-ac-met-guitar]").click()  # activa otra vez
+    expect(song.locator("[data-ac-vol-guitar]")).to_be_enabled()
+    wait_for_samples(song, samples)
     assert sorted(set(samples)) == [200] and len(samples) == 61

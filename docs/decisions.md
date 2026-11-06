@@ -643,3 +643,9 @@ Se desactiva junto con la guitarra cuando está apagada. Los tres deslizadores d
 - **Avisos de terceros** (chords-db, Petaluma, FluidR3_GM con su excepción a L1): se mudaron a `THIRD_PARTY_NOTICES.md` de la librería; el site publica los mismos archivos, así que aquí queda un puntero.
 - **Para cambiar el render:** se cambia en la librería, se sube `version` y se publica; después el site y research suben su versión fijada. Ya no se toca nada de eso aquí.
 
+## S45 · Acordes 13 y 7(13) y guitarra activa por defecto: el site sube a `acordia-render` 0.2.0 (2026-11-06)
+
+Sin código de render aquí (vive en la librería, RD5): el site fija `saul-music-render==0.2.0` y cambia sus pruebas de navegador. **La guitarra parte activa** (y se recuerda por dispositivo si se apaga); las muestras bajan en el primer gesto, no al abrir. Antes los e2e asumían la guitarra apagada y `test_guitar_loads_its_samples_and_unlocks_the_volumes` se reemplazó por tres: parte activa y no descarga nada hasta el primer gesto, apagarla se recuerda al recargar y no baja más, y volver a activarla baja las 61. En celular, abrir «Opciones» ya es un gesto, así que esas pruebas leen el estado sin tocar la página antes de medir. Los acordes `13` y `7(13)` (= `7add13`, `713`) ya se validan y se dibujan con las formas de chords-db; ver RD5 en la librería para su definición y fuentes. Matriz e2e de 5 navegadores en local (60 a 61 tests cada una) antes de publicar la librería.
+
+**Ajuste de las pruebas tras el primer CI de S45:** con la guitarra activa, en el emulador de celular del CI las 61 muestras tardaron decenas de segundos y competían con pruebas ajenas al sonido (el cambio de tema falló). La fixture `song` ahora deja la guitarra apagada (`ac-guitar = off` por script de inicio) para todo lo que no es sonido; `song_sound` y las pruebas de sonido la ven como una persona, con esperas de hasta 40 s. Sin cambios en la librería ni en el comportamiento.
+

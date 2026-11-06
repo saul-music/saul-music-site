@@ -1,6 +1,6 @@
 # Estado del sitio
 
-> Registro vivo. Última actualización: 2026-11-06 (S44: el site usa la librería `acordia_render` y borra su copia del render; antes, 2026-11-05, S37 a S42: guitarra de nailon y contrabajo en el reproductor, volúmenes y barra rediseñada; S38 novenas alteradas y forma propia obligatoria).
+> Registro vivo. Última actualización: 2026-11-06 (S45: acordes 13 y 7(13) y guitarra activa por defecto con `acordia-render` 0.2.0; S44: el site usa la librería `acordia_render` y borra su copia del render; antes, 2026-11-05, S37 a S42: guitarra de nailon y contrabajo en el reproductor, volúmenes y barra rediseñada; S38 novenas alteradas y forma propia obligatoria).
 
 ## Paso actual
 
