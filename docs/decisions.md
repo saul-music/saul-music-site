@@ -698,3 +698,9 @@ teclado, guitarra y sonido: `5` (también en dos cuerdas), `add11`, `madd11`, `m
 **Pruebas:** las de la librería (567 y su contrato). Aquí, los 239 tests del sitio en verde; el CI salta el e2e porque
 solo sube la librería (S48). Se publica antes que research.
 
+
+## S52 · Landing: «Donde se respiran acordes» y el problema de encontrar un acorde (2026-11-06)
+
+El lema pasa de «Donde se respira música» a **«Donde se respiran acordes»** (título, hero, descripción y pie de `index.html`, `artistas.html`, `guias.html`, `pedidos.html` y `cancion.html`), con la línea «Encontrar el acorde no debería ser la parte difícil». La portada gana: (1) una animación de chips «¿Am? ¿F? ¿C? ¿G?» que se ordenan en «Am F C G», solo CSS y sin movimiento con `prefers-reduced-motion`; (2) la sección **«Ya lo viviste»** con tres tarjetas del dolor (tono arriba, no coincidía con el disco, para quien ya sabe tocar); (3) **«El mismo tema, a tu medida»** con Básico, Intermedio y Avanzado, con progresiones genéricas (ningún acorde de un tema ajeno).
+
+Los estilos nuevos van en un `<style>` de `index.html` (la CSP ya permite estilos en línea) para no tocar `style.css`, que vive en la librería. **Queda fuera:** el pie de las páginas de cada canción, que sale de la plantilla de la librería y sigue con el lema anterior hasta su próxima versión (RD). **Pruebas:** `test_landing_leads_with_chords`; 240 tests en verde y revisión en Chromium (escritorio, 390 px y tema claro); Safari, iPhone y Firefox sin ejecutar.
