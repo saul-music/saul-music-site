@@ -164,3 +164,4 @@ AAAA-MM-DD · paso · qué se hizo · qué quedó pendiente · decisiones nuevas
 - **e2e (S48):** el CI salta los navegadores si el cambio solo sube la librería de render o toca documentación (`scripts/necesita-e2e.sh`); tras desplegar se corre `scripts/e2e-produccion.sh` en local. Hecho en S50: las pruebas del render están en la librería.
 - **e2e liviano (S49):** solo en PR (no se repite en `main`), Chromium e iPhone 14, instalación con 3 intentos de 4 min, sin el audio experimental en el CI; la prueba más lenta bajó de 36 s a 1,3 s. Tras cada despliegue, `scripts/e2e-produccion.sh` en local con los cinco navegadores.
 - **e2e propio (S50):** 18 pruebas de navegador del sitio (portada, Biblioteca, artistas, pedidos, guías, cabeceras); la página de canción se prueba en la librería (RD8).
+- **Acordes extendidos (S51):** el site sube a `acordia-render` 0.4.0 (RD10): 14 acordes nuevos con notas, teclado y sonido, y formas estándar de `7b9`, `7#9` y `69`.

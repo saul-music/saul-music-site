@@ -687,3 +687,14 @@ Efecto esperado: un PR que toca el sitio pasa de ~15 min de runner (5 × 3, más
 ## S50 · Las pruebas de navegador de la página de canción se mudan a la librería (2026-11-06)
 
 Paso 3 del plan (C2 en el control; RD8 en `saul-music-render`). 46 pruebas de la página de canción y `test_audio_real.py` pasan a la librería, donde corren solo en local. Aquí quedan **18**, las propias del sitio: cabeceras de seguridad de la página de canción, guías (4), portada y Biblioteca con su buscador, artistas (4), pedidos (4) y el 404 de un tema sin publicar. Las fixtures que armaban variantes de «Cámara lenta» (tips, formas, paréntesis, Avanzado, silencios, ligados) se fueron con sus pruebas; queda `one_song_url`. En Chromium local el e2e del sitio pasa de 66 pruebas en 136 s a 18 en 15 s. `scripts/e2e-produccion.sh` corre ahora solo estas; el render contra producción se prueba con `E2E_BASE_URL=… scripts/e2e.sh` en la librería.
+
+## S51 · Acordes extendidos, tanda 1: el site sube a `acordia-render` 0.4.0 (2026-11-06)
+
+Sin código de render aquí (vive en la librería, RD10). Los acordes que antes salían como texto ahora tienen notas,
+teclado, guitarra y sonido: `5` (también en dos cuerdas), `add11`, `madd11`, `m7add11`, `7sus2`, `9sus4`, `11`, `7#5`
+(`7+`), `7b5`, `maj7#11`, `maj13`, `m13`, `13sus4` (`Bsus413`, `Bsus4(9,13)`) y `7b9#11` (`7(b9,#11)`). `7b9`, `7#9` y
+`69` ganan formas estándar de chords-db; la forma propia de un acorde vale para todas sus escrituras.
+
+**Pruebas:** las de la librería (567 y su contrato). Aquí, los 239 tests del sitio en verde; el CI salta el e2e porque
+solo sube la librería (S48). Se publica antes que research.
+
