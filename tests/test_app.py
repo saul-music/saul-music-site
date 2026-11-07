@@ -147,3 +147,14 @@ def test_guitar_samples_get_a_longer_cache_than_pages(tmp_path):
     assert sample.headers["content-type"] == "audio/mpeg"
     assert sample.headers["cache-control"] == "public, max-age=86400"
     assert test_client.get("/index.html").headers["cache-control"] == HEADERS["Cache-Control"]
+
+
+def test_landing_leads_with_chords(client):
+    html = client.get("/").text
+    assert "Donde se respiran acordes" in html
+    assert "Donde se respira música" not in html
+    assert 'id="problema"' in html  # sección «Ya lo viviste»
+    assert 'id="niveles"' in html
+    assert html.count('class="card h-100 ac-dolor-card"') == 3
+    # La animación respeta a quien pide menos movimiento.
+    assert "prefers-reduced-motion" in html
