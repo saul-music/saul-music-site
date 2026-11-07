@@ -683,3 +683,7 @@ Sin código de render aquí (vive en la librería, RD7). `_` es un ligado: el ac
 5. **`test_beat_flash_follows_the_chord_inside_a_split_bar`** parte con la bandera desde el primer compás partido en vez de esperar ~30 compases: de 36 s a 1,3 s (era el 27 % del tiempo de pruebas). La del tope de 10 s del sonido (13 s) no se acorta aquí: el tope vive en la librería y esa prueba se mudará a ella (paso 3 de S48).
 
 Efecto esperado: un PR que toca el sitio pasa de ~15 min de runner (5 × 3, más la repetición en `main`) a ~6 (2 × 3), una sola vez.
+
+## S50 · Las pruebas de navegador de la página de canción se mudan a la librería (2026-11-06)
+
+Paso 3 del plan (C2 en el control; RD8 en `saul-music-render`). 46 pruebas de la página de canción y `test_audio_real.py` pasan a la librería, donde corren solo en local. Aquí quedan **18**, las propias del sitio: cabeceras de seguridad de la página de canción, guías (4), portada y Biblioteca con su buscador, artistas (4), pedidos (4) y el 404 de un tema sin publicar. Las fixtures que armaban variantes de «Cámara lenta» (tips, formas, paréntesis, Avanzado, silencios, ligados) se fueron con sus pruebas; queda `one_song_url`. En Chromium local el e2e del sitio pasa de 66 pruebas en 136 s a 18 en 15 s. `scripts/e2e-produccion.sh` corre ahora solo estas; el render contra producción se prueba con `E2E_BASE_URL=… scripts/e2e.sh` en la librería.
