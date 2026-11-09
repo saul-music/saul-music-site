@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="es-CL" data-bs-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Ser guía · Acordia</title>
+  <meta name="description" content="Enseña canciones en Acordia: qué te pedimos, qué recibes y cómo postular.">
+  <meta name="theme-color" content="#191430">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 56'%3E%3Crect width='48' height='56' fill='%23191430'/%3E%3Cpath d='M6 54V24a18 18 0 0 1 36 0v30' fill='none' stroke='%23D4A64A' stroke-width='5'/%3E%3Ccircle cx='24' cy='16' r='4' fill='%235FB39B'/%3E%3C/svg%3E">
+  <script>(function(){var t="dark";try{t=localStorage.getItem("acordia-tema")||"dark"}catch(e){}document.documentElement.setAttribute("data-bs-theme",t)})();</script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Marcellus&family=Work+Sans:wght@400;500;600&display=swap">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .ac-gs-num { font-family: var(--ac-font-display); font-size: 2.2rem; line-height: 1; color: var(--ac-accent); }
+    .ac-gs-paso { display: grid; grid-template-columns: auto 1fr; gap: .25rem 1rem; align-items: start; }
+    .ac-gs-compromiso h3 { font-size: 1.15rem; }
+  </style>
+</head>
+<body>
+
+  <div class="ac-proto">Prototipo en investigación · los temas y guías que ves son de ejemplo</div>
+
+  <nav class="navbar navbar-expand-md sticky-top" aria-label="Principal">
+    <div class="container">
+      <a class="ac-brand navbar-brand" href="index.html" aria-label="Acordia, inicio">
+        <svg viewBox="0 0 48 56" aria-hidden="true">
+          <path class="ac-logo-arch" d="M6 54V24a18 18 0 0 1 36 0v30" fill="none" stroke-width="4"/>
+          <g class="ac-logo-string" stroke-width="1.6">
+            <line x1="14" y1="26" x2="14" y2="54"/><line x1="19" y1="26" x2="19" y2="54"/>
+            <line x1="24" y1="26" x2="24" y2="54"/><line x1="29" y1="26" x2="29" y2="54"/>
+            <line x1="34" y1="26" x2="34" y2="54"/>
+          </g>
+          <circle class="ac-logo-dot" cx="24" cy="16" r="3"/>
+        </svg>
+        <span class="ac-brand-name">ACORDIA</span>
+      </a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#nav" aria-controls="nav" aria-expanded="false" aria-label="Abrir menú">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="nav">
+        <ul class="navbar-nav ms-md-4 me-auto gap-md-2">
+          <li class="nav-item"><a class="nav-link" href="index.html#biblioteca">Biblioteca</a></li>
+          <li class="nav-item"><a class="nav-link active" aria-current="page" href="guias.html">Guías</a></li>
+          <li class="nav-item"><a class="nav-link" href="artistas.html">Artistas</a></li>
+          <li class="nav-item"><a class="nav-link" href="pedidos.html">Pide una canción</a></li>
+          <li class="nav-item"><a class="nav-link" href="index.html#planes">Planes</a></li>
+        </ul>
+        <div class="d-flex align-items-center gap-2 pb-3 pb-md-0">
+          <button class="btn btn-ghost ac-theme-toggle" type="button" data-ac-theme-toggle aria-label="Cambiar tema">
+            <svg class="ac-icon-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="5" fill="currentColor"/><g stroke="currentColor" stroke-width="2"><path d="M12 1v3M12 20v3M1 12h3M20 12h3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/></g></svg>
+            <svg class="ac-icon-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 15A9 9 0 0 1 9 4a9 9 0 1 0 11 11z" fill="currentColor"/></svg>
+          </button>
+          <a class="btn btn-outline-primary" href="index.html#planes">Entrar a Acordia</a>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <main>
+    <section class="ac-hero">
+      <div class="container"><div class="d-grid gap-4" style="max-width: 46rem">
+        <span class="ac-eyebrow">Ser guía · programa cerrado</span>
+        <h1>Enseña canciones, no planes.</h1>
+        <p class="lead m-0">Acordia conecta a quien quiere aprender un tema con quien ya sabe tocarlo. Si enseñas guitarra, bajo o teclado, aquí te encuentran por las canciones que transcribes, y tu trabajo queda como un aporte a toda la comunidad.</p>
+        <div class="d-flex flex-wrap gap-2 align-items-center">
+          <a class="btn btn-jade" href="mailto:contacto@saulapp.com?subject=Quiero%20ser%20gu%C3%ADa%20en%20Acordia&body=Hola%2C%20quiero%20postular%20como%20gu%C3%ADa%20de%20Acordia.%0A%0ANombre%3A%0AInstrumento%20%28guitarra%2C%20bajo%20o%20teclado%29%3A%0ACiudad%20o%20comuna%3A%0ATemas%20que%20ense%C3%B1o%3A%0AUn%20enlace%20a%20algo%20m%C3%ADo%20%28video%2C%20redes%20o%20sitio%29%3A%0APrimer%20tema%20que%20transcribir%C3%ADa%3A%0A%0AEntiendo%20los%20compromisos%3A%20al%20menos%204%20contactos%20al%20mes%20y%20una%20transcripci%C3%B3n%20p%C3%BAblica.">Postula por correo</a>
+          <span class="small text-body-secondary">contacto@saulapp.com</span>
+        </div>
+      </div></div>
+    </section>
+
+    <div class="ac-frieze" aria-hidden="true"></div>
+
+    <section class="ac-section" id="como-funciona">
+      <div class="container">
+        <div class="ac-section-head">
+          <span class="ac-eyebrow">Cómo funciona</span>
+          <h2>Primero la canción, después la clase</h2>
+          <p>Los acordes de Acordia son gratis en sus tres niveles. Quien se atasca en una canción pide un guía: tú. Acordia no cobra comisión sobre tus clases; el alumno paga una conexión ($3.990 la primera vez con cada guía) y la clase se la paga a ti, a tu precio.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="ac-section pt-0" id="compromisos">
+      <div class="container">
+        <div class="ac-section-head">
+          <span class="ac-eyebrow">Lo que te pedimos</span>
+          <h2>Cuatro compromisos simples</h2>
+          <p>La confianza es lo que hace que un alumno reserve. Por eso pedimos poco, pero lo pedimos en serio.</p>
+        </div>
+        <div class="row row-cols-1 row-cols-md-2 g-3">
+          <div class="col"><div class="card h-100"><div class="card-body d-grid gap-2 align-content-start ac-gs-compromiso"><span class="ac-gs-num">1</span><h3 class="m-0">Al menos 4 contactos al mes</h3><p class="m-0 text-body-secondary">Atiendes como mínimo 4 solicitudes de alumnos cada mes y respondes dentro de 24 horas. Si un mes no puedes, avisas y pausamos tu perfil sin problema.</p></div></div></div>
+          <div class="col"><div class="card h-100"><div class="card-body d-grid gap-2 align-content-start ac-gs-compromiso"><span class="ac-gs-num">2</span><h3 class="m-0">Una transcripción pública</h3><p class="m-0 text-body-secondary">Al entrar, te comprometes a editar al menos 1 tema, que se publica gratis con tu firma. Después, uno por trimestre. Es tu vitrina y un regalo para quien aprende.</p></div></div></div>
+          <div class="col"><div class="card h-100"><div class="card-body d-grid gap-2 align-content-start ac-gs-compromiso"><span class="ac-gs-num">3</span><h3 class="m-0">Acordes escritos por ti, de oído</h3><p class="m-0 text-body-secondary">No copias de otros sitios ni de cancioneros. Declaras de dónde sale cada tema y cedes por escrito tu aporte. Nunca publicamos letras de terceros.</p></div></div></div>
+          <div class="col"><div class="card h-100"><div class="card-body d-grid gap-2 align-content-start ac-gs-compromiso"><span class="ac-gs-num">4</span><h3 class="m-0">Pasa por revisión editorial</h3><p class="m-0 text-body-secondary">Tu transcripción la revisa una segunda persona antes de publicarse. Así toda la Biblioteca mantiene la misma calidad, y tú también aprendes de la revisión.</p></div></div></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="ac-section pt-0" id="incentivos">
+      <div class="container">
+        <div class="ac-section-head">
+          <span class="ac-eyebrow">Lo que recibes</span>
+          <h2>Colaborar tiene recompensa</h2>
+          <p>Al inicio no hay pago fijo. A cambio, el programa se mide en visibilidad, alumnos y reconocimiento.</p>
+        </div>
+        <div class="row row-cols-1 row-cols-md-3 g-3">
+          <div class="col"><div class="card h-100"><div class="card-body d-grid gap-2 align-content-start ac-gs-compromiso"><h3 class="m-0">Tu firma en cada tema</h3><p class="m-0 text-body-secondary">Cada transcripción que publicas lleva tu nombre como editor. Quien aprende de ella sabe quién la hizo.</p></div></div></div>
+          <div class="col"><div class="card h-100"><div class="card-body d-grid gap-2 align-content-start ac-gs-compromiso"><h3 class="m-0">Perfil público de guía</h3><p class="m-0 text-body-secondary">Tu perfil aparece en las páginas de los temas que enseñas, con tu instrumento, tu barrio y tu disponibilidad.</p></div></div></div>
+          <div class="col"><div class="card h-100"><div class="card-body d-grid gap-2 align-content-start ac-gs-compromiso"><h3 class="m-0">Prioridad en las solicitudes</h3><p class="m-0 text-body-secondary">Cuando alguien pide clase de un tema que editaste, tú eres el primero en la lista. Cuantos más temas, más alumnos llegan a ti.</p></div></div></div>
+          <div class="col"><div class="card h-100"><div class="card-body d-grid gap-2 align-content-start ac-gs-compromiso"><h3 class="m-0">Créditos y niveles</h3><p class="m-0 text-body-secondary">Cada tema aprobado y cada revisión suman créditos. Subes de nivel dentro del programa y desbloqueas más visibilidad.</p></div></div></div>
+          <div class="col"><div class="card h-100"><div class="card-body d-grid gap-2 align-content-start ac-gs-compromiso"><h3 class="m-0">Clases a tu precio</h3><p class="m-0 text-body-secondary">Tú fijas lo que cobras y se lo cobras directo al alumno. Acordia no te quita comisión por tus clases.</p></div></div></div>
+          <div class="col"><div class="card h-100"><div class="card-body d-grid gap-2 align-content-start ac-gs-compromiso"><h3 class="m-0">Comunidad de guías</h3><p class="m-0 text-body-secondary">Un grupo pequeño y cerrado de gente que enseña. Revisas y te revisan, y entre todos mejoran la Biblioteca.</p></div></div></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="ac-section pt-0" id="postular">
+      <div class="container">
+        <div class="ac-section-head">
+          <span class="ac-eyebrow">Cómo postular</span>
+          <h2>Cuatro pasos</h2>
+        </div>
+        <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-4 g-3">
+          <div class="col"><div class="card h-100"><div class="card-body d-grid gap-2 align-content-start"><span class="ac-gs-num">1</span><h3 class="h5 m-0">Escríbenos</h3><p class="m-0 text-body-secondary">Un correo con tu instrumento, tu ciudad y los temas que enseñas. El botón trae un modelo prellenado.</p></div></div></div>
+          <div class="col"><div class="card h-100"><div class="card-body d-grid gap-2 align-content-start"><span class="ac-gs-num">2</span><h3 class="h5 m-0">Conversamos</h3><p class="m-0 text-body-secondary">Una charla corta para conocerte y resolver dudas.</p></div></div></div>
+          <div class="col"><div class="card h-100"><div class="card-body d-grid gap-2 align-content-start"><span class="ac-gs-num">3</span><h3 class="h5 m-0">Un tema de prueba</h3><p class="m-0 text-body-secondary">Transcribes un tema y lo revisamos juntos.</p></div></div></div>
+          <div class="col"><div class="card h-100"><div class="card-body d-grid gap-2 align-content-start"><span class="ac-gs-num">4</span><h3 class="h5 m-0">Alta</h3><p class="m-0 text-body-secondary">Tu tema se publica con tu firma y tu perfil entra a la lista de guías.</p></div></div></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="ac-section pt-0" id="preguntas">
+      <div class="container"><div style="max-width: 52rem">
+        <div class="ac-section-head">
+          <span class="ac-eyebrow">Preguntas</span>
+          <h2>Antes de escribir</h2>
+        </div>
+        <div class="accordion" id="faq">
+            <div class="accordion-item"><h3 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq1" aria-expanded="false" aria-controls="faq1">¿Tengo que ser profesional?</button></h3><div id="faq1" class="accordion-collapse collapse" data-bs-parent="#faq"><div class="accordion-body text-body-secondary">No. Importa que toques bien, que sepas explicar y que transcribas de oído con rigor. Muchos buenos guías son músicos que enseñan de a poco.</div></div></div>
+            <div class="accordion-item"><h3 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq2" aria-expanded="false" aria-controls="faq2">¿Qué instrumentos?</button></h3><div id="faq2" class="accordion-collapse collapse" data-bs-parent="#faq"><div class="accordion-body text-body-secondary">Guitarra, bajo y teclado.</div></div></div>
+            <div class="accordion-item"><h3 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq3" aria-expanded="false" aria-controls="faq3">¿Qué pasa si un mes no llego a los 4 contactos?</button></h3><div id="faq3" class="accordion-collapse collapse" data-bs-parent="#faq"><div class="accordion-body text-body-secondary">Hablamos. Si es un mes puntual, no pasa nada. Si se repite, pausamos tu perfil hasta que puedas retomar, sin perder tus transcripciones.</div></div></div>
+            <div class="accordion-item"><h3 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq4" aria-expanded="false" aria-controls="faq4">¿Puedo transcribir cualquier tema?</button></h3><div id="faq4" class="accordion-collapse collapse" data-bs-parent="#faq"><div class="accordion-body text-body-secondary">Cualquiera que escribas tú, de oído, y que declares como propio. No publicamos letras ni copiamos transcripciones de otros sitios.</div></div></div>
+            <div class="accordion-item"><h3 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq5" aria-expanded="false" aria-controls="faq5">¿Me pagan por transcribir?</button></h3><div id="faq5" class="accordion-collapse collapse" data-bs-parent="#faq"><div class="accordion-body text-body-secondary">Al inicio no hay pago fijo: el incentivo es la firma, el perfil, la prioridad en solicitudes y los créditos. Si eso cambia, se te avisa antes.</div></div></div>
+        </div>
+      </div></div>
+    </section>
+
+    <section class="ac-section pt-0" id="ser-guia">
+      <div class="container">
+        <div class="card"><div class="card-body d-grid gap-3 text-center p-4 p-lg-5">
+          <h2 class="m-0">¿Listo para enseñar?</h2>
+          <p class="m-0 text-body-secondary">Por ahora, postular es enviar un correo. Te respondemos personalmente.</p>
+          <div><a class="btn btn-jade btn-lg" href="mailto:contacto@saulapp.com?subject=Quiero%20ser%20gu%C3%ADa%20en%20Acordia&body=Hola%2C%20quiero%20postular%20como%20gu%C3%ADa%20de%20Acordia.%0A%0ANombre%3A%0AInstrumento%20%28guitarra%2C%20bajo%20o%20teclado%29%3A%0ACiudad%20o%20comuna%3A%0ATemas%20que%20ense%C3%B1o%3A%0AUn%20enlace%20a%20algo%20m%C3%ADo%20%28video%2C%20redes%20o%20sitio%29%3A%0APrimer%20tema%20que%20transcribir%C3%ADa%3A%0A%0AEntiendo%20los%20compromisos%3A%20al%20menos%204%20contactos%20al%20mes%20y%20una%20transcripci%C3%B3n%20p%C3%BAblica.">Postula por correo</a></div>
+          <p class="small text-body-secondary m-0">contacto@saulapp.com</p>
+        </div></div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="ac-footer">
+    <div class="container d-grid gap-3">
+      <div class="d-flex flex-wrap justify-content-between gap-3 align-items-center">
+        <span class="ac-footer-brand">Acordia. Donde se respiran acordes.</span>
+        <nav class="d-flex flex-wrap gap-3" aria-label="Pie de página">
+          <a href="index.html#biblioteca">Biblioteca</a><a href="guias.html">Guías</a><a href="ser-guia.html">Ser guía</a><a href="artistas.html">Artistas</a><a href="pedidos.html">Pide una canción</a><a href="index.html#planes">Planes</a>
+        </nav>
+      </div>
+      <p class="m-0">Acordia publica acordes, estructura y rasgueo. No publica letras de terceros. Un proyecto de SAÚL.</p>
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+  <script src="acordia.js"></script>
+</body>
+</html>

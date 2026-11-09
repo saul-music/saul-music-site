@@ -84,6 +84,7 @@ def test_web_dir_has_only_fixed_site_files():
         "index.html",
         "cancion.html",
         "guias.html",
+        "ser-guia.html",
         "artistas.html",
         "pedidos.html",
         "pedidos.js",
@@ -167,3 +168,13 @@ def test_home_shows_library_before_the_advantages(client):
         i: html.index(f'id="{i}"') for i in ("biblioteca", "problema", "niveles", "como", "planes")
     }
     assert pos["biblioteca"] < pos["problema"] < pos["niveles"] < pos["como"] < pos["planes"]
+
+
+def test_become_a_guide_page_asks_for_an_email_and_has_no_ai_pitch(client):
+    page = client.get("/ser-guia.html")
+    assert page.status_code == 200
+    assert "mailto:contacto@saulapp.com" in page.text
+    assert "Al menos 4 contactos al mes" in page.text
+    home = client.get("/").text
+    assert 'href="ser-guia.html"' in home
+    assert "La IA convierte" not in home
