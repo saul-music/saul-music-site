@@ -17,21 +17,30 @@
   <style>
     /* Landing: los acordes primero. Solo lo propio de esta página; el resto viene de style.css. */
     .ac-h1-sub { display: block; margin-top: .9rem; font-family: var(--ac-font-text); font-size: clamp(1.05rem, 2vw, 1.3rem); line-height: 1.35; color: var(--ac-fg-muted); letter-spacing: 0; }
-    .ac-caos { display: flex; flex-wrap: wrap; align-items: center; gap: .6rem; min-height: 4.2rem; }
-    .ac-caos .ac-chip-chord { display: inline-flex; align-items: center; font-size: 1.05rem; animation: ac-ordena 1.4s cubic-bezier(.2,.8,.2,1) both; animation-delay: calc(.5s + var(--i) * .18s); }
-    .ac-caos .ac-q { display: inline-block; max-width: 1ch; overflow: hidden; opacity: .9; animation: ac-sin-duda .5s ease both; animation-delay: calc(1.1s + var(--i) * .18s); }
-    .ac-caos .ac-q-fin { margin-left: .1em; }
-    .ac-caos .ac-q-ini { margin-right: .1em; }
-    .ac-caos-nota { margin: 0; font-size: .9rem; color: var(--ac-fg-muted); }
-    @keyframes ac-ordena {
-      from { transform: translate(var(--x), var(--y)) rotate(var(--r)); opacity: .55; }
-      to   { transform: none; opacity: 1; }
-    }
-    @keyframes ac-sin-duda { to { max-width: 0; opacity: 0; margin: 0; } }
     @media (prefers-reduced-motion: reduce) {
-      .ac-caos .ac-chip-chord, .ac-caos .ac-q { animation: none; }
-      .ac-caos .ac-q { display: none; }
-    }
+        }
+    .ac-hero { padding-block: clamp(2rem, 4vw, 3.5rem); }
+    .ac-hero h1 { font-size: clamp(2.2rem, 5vw, 3.8rem); }
+    .ac-hero-art { max-width: 380px; }
+    .ac-biblioteca { padding-top: clamp(1.5rem, 3vw, 2.5rem); background: radial-gradient(ellipse at 50% 0, rgba(var(--ac-accent-rgb), .10), transparent 60%); }
+    .ac-biblioteca .ac-section-head h2 { font-size: clamp(2rem, 4.5vw, 3rem); }
+    .ac-lib-filtros { display: flex; flex-wrap: wrap; align-items: center; gap: .6rem 1.2rem; margin-bottom: 1.25rem; }
+    .ac-lib-total { font-family: var(--ac-font-display); font-size: 1.4rem; color: var(--ac-accent); }
+    .ac-lib-chips { display: flex; flex-wrap: wrap; gap: .4rem; }
+    .ac-lib-chips button { border: 1px solid var(--ac-line); background: transparent; color: var(--ac-fg); border-radius: 999px; padding: .3rem .85rem; font-size: .9rem; cursor: pointer; transition: border-color .15s, background .15s; }
+    .ac-lib-chips button:hover { border-color: var(--ac-fill); }
+    .ac-lib-chips button[aria-pressed="true"] { background: var(--ac-fill); color: var(--ac-on-fill); border-color: var(--ac-fill); }
+    .ac-biblioteca a.card { box-shadow: 0 1px 0 rgba(0,0,0,.15); }
+    .ac-biblioteca a.card:hover { transform: translateY(-4px); box-shadow: 0 12px 28px -12px rgba(var(--ac-accent-rgb), .45); }
+    .ac-biblioteca a.card .ac-chip-chord { font-size: 1.05rem; }
+    .ac-biblioteca a.card .card-body::after { content: "Ver acordes →"; color: var(--ac-accent); font-size: .9rem; font-weight: 500; }
+    .ac-biblioteca .ac-nivel-tag { display: inline-block; padding: .1rem .6rem; border-radius: 999px; border: 1px solid currentColor; font-size: .8rem; }
+    .ac-biblioteca .ac-nivel-tag[data-n="inicial"] { color: var(--ac-second); }
+    .ac-biblioteca .ac-nivel-tag[data-n="medio"] { color: var(--ac-accent); }
+    .ac-biblioteca .ac-nivel-tag[data-n="avanzado"] { color: var(--ac-fg); }
+    .ac-fuera { display: none !important; }
+    .ac-porque { padding-top: var(--ac-space); text-align: center; }
+    .ac-porque-txt { margin: .5rem 0 0; font-family: var(--ac-font-display); font-size: clamp(1.4rem, 3vw, 2rem); }
     .ac-dolor-card h3 { font-size: 1.15rem; }
     .ac-dolor-card .ac-dolor-ico { font-family: var(--ac-font-display); font-size: 2rem; line-height: 1; color: var(--ac-accent); }
     .ac-dolor-cierre { margin-top: 2rem; font-family: var(--ac-font-display); font-size: clamp(1.4rem, 3vw, 2rem); }
@@ -83,20 +92,11 @@
     <!-- Hero -->
     <section class="ac-hero">
       <div class="container">
-        <div class="row align-items-center gy-5">
-          <div class="col-lg-6 d-grid gap-4">
+        <div class="row align-items-center gy-4">
+          <div class="col-lg-7 d-grid gap-4">
             <span class="ac-eyebrow">Acordia empieza en Chile</span>
             <h1>Donde se respiran acordes.<span class="ac-h1-sub">Encontrar el acorde no debería ser la parte difícil.</span></h1>
-            <p class="lead m-0">Acordes de canciones chilenas, revisados de oído y gratis. Sin cinco pestañas abiertas, y con un guía cuando no te sale.</p>
-            <div class="d-grid gap-2" aria-hidden="true">
-              <div class="ac-caos">
-                <span class="ac-chip ac-chip-chord" style="--i:0;--x:70px;--y:-34px;--r:-14deg"><span class="ac-q ac-q-ini">¿</span>Am<span class="ac-q ac-q-fin">?</span></span>
-                <span class="ac-chip ac-chip-chord" style="--i:1;--x:-60px;--y:28px;--r:11deg"><span class="ac-q ac-q-ini">¿</span>F<span class="ac-q ac-q-fin">?</span></span>
-                <span class="ac-chip ac-chip-chord" style="--i:2;--x:-110px;--y:-26px;--r:-9deg"><span class="ac-q ac-q-ini">¿</span>C<span class="ac-q ac-q-fin">?</span></span>
-                <span class="ac-chip ac-chip-chord" style="--i:3;--x:-150px;--y:34px;--r:16deg"><span class="ac-q ac-q-ini">¿</span>G<span class="ac-q ac-q-fin">?</span></span>
-              </div>
-              <p class="ac-caos-nota">De la duda al acorde, en orden.</p>
-            </div>
+            <p class="lead m-0 d-none d-md-block">Acordes de canciones chilenas, revisados de oído y gratis. Sin cinco pestañas abiertas, y con un guía cuando no te sale.</p>
             <p class="ac-count m-0 text-body-secondary"><!-- temas:inicio --><strong>15 canciones disponibles</strong><!-- temas:fin --> con acordes, gratis.</p>
 
             <form class="d-flex flex-column flex-sm-row gap-2" role="search" data-ac-search>
@@ -105,15 +105,9 @@
               <button class="btn btn-primary text-nowrap" type="submit">Buscar acordes</button>
             </form>
 
-            <div class="d-flex flex-wrap gap-2 align-items-center">
-              <span class="text-body-secondary small">Barrios:</span>
-              <a class="ac-chip text-decoration-none" href="#barrios">Rock</a>
-              <a class="ac-chip text-decoration-none" href="#barrios">Pop</a>
-              <a class="ac-chip text-decoration-none" href="#barrios">Indie</a>
-            </div>
           </div>
 
-          <div class="col-lg-6">
+          <div class="col-lg-5 d-none d-lg-block">
             <svg class="ac-hero-art" viewBox="0 0 520 600" role="img" aria-label="Ilustración: un portal en arco con cinco cuerdas bajo la noche de Atacama">
               <defs><clipPath id="ventana"><path d="M20 600V260A240 240 0 0 1 500 260V600Z"/></clipPath></defs>
               <g clip-path="url(#ventana)">
@@ -160,141 +154,18 @@
 
     <div class="ac-frieze" aria-hidden="true"></div>
 
-    <!-- El problema: encontrar un acorde -->
-    <section class="ac-section" id="problema">
-      <div class="container">
-        <div class="ac-section-head">
-          <span class="ac-eyebrow">Ya lo viviste</span>
-          <h2>Encontrar un acorde siempre fue un problema</h2>
-          <p>Abres una pestaña, luego otra, y ninguna se parece a la canción.</p>
-        </div>
-        <div class="row row-cols-1 row-cols-md-3 g-3">
-          <div class="col"><div class="card h-100 ac-dolor-card"><div class="card-body d-grid gap-2 align-content-start">
-            <span class="ac-dolor-ico" aria-hidden="true">↑</span>
-            <h3 class="m-0">Estaba un tono arriba</h3>
-            <p class="m-0 text-body-secondary">Lo tocas y no calza con el disco. Ni con tu voz.</p>
-          </div></div></div>
-          <div class="col"><div class="card h-100 ac-dolor-card"><div class="card-body d-grid gap-2 align-content-start">
-            <span class="ac-dolor-ico" aria-hidden="true">≠</span>
-            <h3 class="m-0">No coincidía con el disco</h3>
-            <p class="m-0 text-body-secondary">Tres versiones, ninguna igual. ¿Cuál es la buena?</p>
-          </div></div></div>
-          <div class="col"><div class="card h-100 ac-dolor-card"><div class="card-body d-grid gap-2 align-content-start">
-            <span class="ac-dolor-ico" aria-hidden="true">?</span>
-            <h3 class="m-0">Era para quien ya sabe tocar</h3>
-            <p class="m-0 text-body-secondary">Acordes enredados, sin decirte por dónde partir.</p>
-          </div></div></div>
-        </div>
-        <p class="ac-dolor-cierre mb-0">Para eso está Acordia. <a href="#biblioteca">Busca tu canción</a>.</p>
-      </div>
-    </section>
-
-    <!-- Un tema, tres niveles -->
-    <section class="ac-section" id="niveles">
-      <div class="container">
-        <div class="ac-section-head">
-          <span class="ac-eyebrow">Un tema, tres niveles</span>
-          <h2>El mismo tema, a tu medida</h2>
-          <p>Partes por lo simple y subes cuando quieras. Revisado de oído por músicos, no copiado de otro sitio.</p>
-        </div>
-        <div class="row row-cols-1 row-cols-md-3 g-3">
-          <div class="col"><div class="card h-100"><div class="card-body d-grid gap-3 align-content-start">
-            <h3 class="h4 m-0">Básico</h3>
-            <div class="ac-nivel-chords"><span class="ac-chip ac-chip-chord">Am</span><span class="ac-chip ac-chip-chord">F</span><span class="ac-chip ac-chip-chord">C</span><span class="ac-chip ac-chip-chord">G</span></div>
-            <p class="m-0 text-body-secondary">Los acordes y la estructura, para tocarlo hoy.</p>
-          </div></div></div>
-          <div class="col"><div class="card h-100"><div class="card-body d-grid gap-3 align-content-start">
-            <h3 class="h4 m-0">Intermedio</h3>
-            <div class="ac-nivel-chords"><span class="ac-chip ac-chip-chord">Am7</span><span class="ac-chip ac-chip-chord">Fmaj7</span><span class="ac-chip ac-chip-chord">C/E</span><span class="ac-chip ac-chip-chord">G</span></div>
-            <p class="m-0 text-body-secondary">Con bajos, matices y compases partidos.</p>
-          </div></div></div>
-          <div class="col"><div class="card h-100"><div class="card-body d-grid gap-3 align-content-start">
-            <h3 class="h4 m-0">Avanzado</h3>
-            <div class="ac-nivel-chords"><span class="ac-chip">Tabs</span><span class="ac-chip">Arreglos por sección</span></div>
-            <p class="m-0 text-body-secondary">Para quien quiere el detalle de cada parte.</p>
-          </div></div></div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Cómo funciona: es una secuencia real -->
-    <section class="ac-section" id="como">
-      <div class="container">
-        <div class="ac-section-head">
-          <span class="ac-eyebrow">Cómo funciona</span>
-          <h2>De la búsqueda a la canción completa</h2>
-        </div>
-        <div class="row g-4 g-lg-5">
-          <div class="col-md-4 d-grid gap-2 align-content-start">
-            <span class="ac-step-num ac-mono">1</span>
-            <h3 class="h4 m-0">Busca la canción</h3>
-            <p class="m-0 text-body-secondary">En la Biblioteca encuentras acordes revisados de oído, estructura y rasgueo. Gratis y sin registrarte.</p>
-          </div>
-          <div class="col-md-4 d-grid gap-2 align-content-start">
-            <span class="ac-step-num ac-mono">2</span>
-            <h3 class="h4 m-0">Practícala por pasos</h3>
-            <p class="m-0 text-body-secondary">Cada tema trae una ruta corta: primero los acordes, después el cambio difícil y al final la canción entera.</p>
-          </div>
-          <div class="col-md-4 d-grid gap-2 align-content-start">
-            <span class="ac-step-num ac-mono">3</span>
-            <h3 class="h4 m-0">Si no te sale, llama a un guía</h3>
-            <p class="m-0 text-body-secondary">Profes y músicos que ya enseñan esa canción, disponibles para una clase en línea o en tu comuna.</p>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Barrios -->
-    <section class="ac-section" id="barrios">
-      <div class="container">
-        <div class="ac-section-head">
-          <span class="ac-eyebrow">La primera región: Chile</span>
-          <h2>Recorre los barrios</h2>
-          <p>Cada barrio es un género. Empezamos por tres y crecemos según lo que pidan los habitantes.</p>
-        </div>
-        <div class="row row-cols-1 row-cols-md-3 g-3">
-          <div class="col">
-            <a class="card h-100" href="#biblioteca">
-              <div class="card-body d-grid gap-3">
-                <svg class="ac-barrio-icon" viewBox="0 0 64 64" aria-hidden="true"><path class="i-arch" d="M6 62V30a26 26 0 0 1 52 0v32" stroke-width="3"/><path class="i-jade" d="M10 58l14-20 8 10 10-16 14 26z"/><path class="i-oro" d="M34 14l-6 12h6l-4 10 10-14h-6l4-8z"/></svg>
-                <div><h3 class="h5 mb-1">Rock</h3><p class="m-0 small text-body-secondary">Power chords, guitarras con fuerza y bandas que suenan fuerte.</p></div>
-              </div>
-            </a>
-          </div>
-          <div class="col">
-            <a class="card h-100" href="#biblioteca">
-              <div class="card-body d-grid gap-3">
-                <svg class="ac-barrio-icon" viewBox="0 0 64 64" aria-hidden="true"><path class="i-arch" d="M6 62V30a26 26 0 0 1 52 0v32" stroke-width="3"/><circle class="i-oro" cx="32" cy="42" r="12"/><circle class="i-jade" cx="32" cy="42" r="4"/><rect class="i-fg" x="30" y="16" width="4" height="16"/></svg>
-                <div><h3 class="h5 mb-1">Pop</h3><p class="m-0 small text-body-secondary">Estribillos que se quedan y acordes simples para cantar.</p></div>
-              </div>
-            </a>
-          </div>
-          <div class="col">
-            <a class="card h-100" href="#biblioteca">
-              <div class="card-body d-grid gap-3">
-                <svg class="ac-barrio-icon" viewBox="0 0 64 64" aria-hidden="true"><path class="i-arch" d="M6 62V30a26 26 0 0 1 52 0v32" stroke-width="3"/><circle class="i-oro" cx="32" cy="40" r="14"/><circle cx="32" cy="40" r="9" fill="none" class="i-line" stroke-width="2"/><circle class="i-jade" cx="32" cy="40" r="4"/></svg>
-                <div><h3 class="h5 mb-1">Indie</h3><p class="m-0 small text-body-secondary">Sintetizadores, guitarras limpias y canciones hechas en casa.</p></div>
-              </div>
-            </a>
-          </div>
-        </div>
-        <div class="d-grid gap-2 mt-4">
-          <div class="d-flex flex-wrap align-items-center gap-2">
-            <span class="ac-chip ac-chip-ok">Chile · Disponible</span>
-            <span class="ac-chip">Latinoamérica · Próximamente</span>
-          </div>
-          <p class="m-0 small text-body-secondary">Partimos por Chile. Después vienen los barrios del resto de Latinoamérica.</p>
-        </div>
-      </div>
-    </section>
-
-    <!-- Biblioteca -->
-    <section class="ac-section" id="biblioteca">
+    <!-- Biblioteca primero -->
+    <section class="ac-section ac-biblioteca" id="biblioteca">
       <div class="container">
         <div class="ac-section-head">
           <span class="ac-eyebrow">La Biblioteca · abierta a todos</span>
           <h2>Acordes, estructura y rasgueo</h2>
           <p>Publicamos lo que necesitas para tocar. Las letras quedan con sus autores.</p>
+        </div>
+        <div class="ac-lib-filtros" id="lib-filtros" role="group" aria-label="Filtrar por barrio y nivel" hidden>
+          <span class="ac-lib-total" id="lib-total" aria-live="polite"></span>
+          <div class="ac-lib-chips" data-filtro="barrio"></div>
+          <div class="ac-lib-chips" data-filtro="nivel"></div>
         </div>
         <div class="ac-lib-search" role="search">
           <label class="visually-hidden" for="buscar-biblioteca">Filtra la Biblioteca por canción o artista</label>
@@ -485,6 +356,140 @@
       </div>
     </section>
 
+    <!-- Ventajas de Acordia: debajo de la Biblioteca -->
+    <div class="container ac-porque">
+      <span class="ac-eyebrow">¿Por qué Acordia?</span>
+      <p class="ac-porque-txt">Lo que hace distinta a la Biblioteca de arriba.</p>
+    </div>
+
+    <!-- El problema: encontrar un acorde -->
+    <section class="ac-section" id="problema">
+      <div class="container">
+        <div class="ac-section-head">
+          <span class="ac-eyebrow">Ya lo viviste</span>
+          <h2>Encontrar un acorde siempre fue un problema</h2>
+          <p>Abres una pestaña, luego otra, y ninguna se parece a la canción.</p>
+        </div>
+        <div class="row row-cols-1 row-cols-md-3 g-3">
+          <div class="col"><div class="card h-100 ac-dolor-card"><div class="card-body d-grid gap-2 align-content-start">
+            <span class="ac-dolor-ico" aria-hidden="true">↑</span>
+            <h3 class="m-0">Estaba un tono arriba</h3>
+            <p class="m-0 text-body-secondary">Lo tocas y no calza con el disco. Ni con tu voz.</p>
+          </div></div></div>
+          <div class="col"><div class="card h-100 ac-dolor-card"><div class="card-body d-grid gap-2 align-content-start">
+            <span class="ac-dolor-ico" aria-hidden="true">≠</span>
+            <h3 class="m-0">No coincidía con el disco</h3>
+            <p class="m-0 text-body-secondary">Tres versiones, ninguna igual. ¿Cuál es la buena?</p>
+          </div></div></div>
+          <div class="col"><div class="card h-100 ac-dolor-card"><div class="card-body d-grid gap-2 align-content-start">
+            <span class="ac-dolor-ico" aria-hidden="true">?</span>
+            <h3 class="m-0">Era para quien ya sabe tocar</h3>
+            <p class="m-0 text-body-secondary">Acordes enredados, sin decirte por dónde partir.</p>
+          </div></div></div>
+        </div>
+        <p class="ac-dolor-cierre mb-0">Para eso está Acordia. <a href="#biblioteca">Busca tu canción</a>.</p>
+      </div>
+    </section>
+
+    <!-- Un tema, tres niveles -->
+    <section class="ac-section" id="niveles">
+      <div class="container">
+        <div class="ac-section-head">
+          <span class="ac-eyebrow">Un tema, tres niveles</span>
+          <h2>El mismo tema, a tu medida</h2>
+          <p>Partes por lo simple y subes cuando quieras. Revisado de oído por músicos, no copiado de otro sitio.</p>
+        </div>
+        <div class="row row-cols-1 row-cols-md-3 g-3">
+          <div class="col"><div class="card h-100"><div class="card-body d-grid gap-3 align-content-start">
+            <h3 class="h4 m-0">Básico</h3>
+            <div class="ac-nivel-chords"><span class="ac-chip ac-chip-chord">Am</span><span class="ac-chip ac-chip-chord">F</span><span class="ac-chip ac-chip-chord">C</span><span class="ac-chip ac-chip-chord">G</span></div>
+            <p class="m-0 text-body-secondary">Los acordes y la estructura, para tocarlo hoy.</p>
+          </div></div></div>
+          <div class="col"><div class="card h-100"><div class="card-body d-grid gap-3 align-content-start">
+            <h3 class="h4 m-0">Intermedio</h3>
+            <div class="ac-nivel-chords"><span class="ac-chip ac-chip-chord">Am7</span><span class="ac-chip ac-chip-chord">Fmaj7</span><span class="ac-chip ac-chip-chord">C/E</span><span class="ac-chip ac-chip-chord">G</span></div>
+            <p class="m-0 text-body-secondary">Con bajos, matices y compases partidos.</p>
+          </div></div></div>
+          <div class="col"><div class="card h-100"><div class="card-body d-grid gap-3 align-content-start">
+            <h3 class="h4 m-0">Avanzado</h3>
+            <div class="ac-nivel-chords"><span class="ac-chip">Tabs</span><span class="ac-chip">Arreglos por sección</span></div>
+            <p class="m-0 text-body-secondary">Para quien quiere el detalle de cada parte.</p>
+          </div></div></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Cómo funciona: es una secuencia real -->
+    <section class="ac-section" id="como">
+      <div class="container">
+        <div class="ac-section-head">
+          <span class="ac-eyebrow">Cómo funciona</span>
+          <h2>De la búsqueda a la canción completa</h2>
+        </div>
+        <div class="row g-4 g-lg-5">
+          <div class="col-md-4 d-grid gap-2 align-content-start">
+            <span class="ac-step-num ac-mono">1</span>
+            <h3 class="h4 m-0">Busca la canción</h3>
+            <p class="m-0 text-body-secondary">En la Biblioteca encuentras acordes revisados de oído, estructura y rasgueo. Gratis y sin registrarte.</p>
+          </div>
+          <div class="col-md-4 d-grid gap-2 align-content-start">
+            <span class="ac-step-num ac-mono">2</span>
+            <h3 class="h4 m-0">Practícala por pasos</h3>
+            <p class="m-0 text-body-secondary">Cada tema trae una ruta corta: primero los acordes, después el cambio difícil y al final la canción entera.</p>
+          </div>
+          <div class="col-md-4 d-grid gap-2 align-content-start">
+            <span class="ac-step-num ac-mono">3</span>
+            <h3 class="h4 m-0">Si no te sale, llama a un guía</h3>
+            <p class="m-0 text-body-secondary">Profes y músicos que ya enseñan esa canción, disponibles para una clase en línea o en tu comuna.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Barrios -->
+    <section class="ac-section" id="barrios">
+      <div class="container">
+        <div class="ac-section-head">
+          <span class="ac-eyebrow">La primera región: Chile</span>
+          <h2>Recorre los barrios</h2>
+          <p>Cada barrio es un género. Empezamos por tres y crecemos según lo que pidan los habitantes.</p>
+        </div>
+        <div class="row row-cols-1 row-cols-md-3 g-3">
+          <div class="col">
+            <a class="card h-100" href="#biblioteca">
+              <div class="card-body d-grid gap-3">
+                <svg class="ac-barrio-icon" viewBox="0 0 64 64" aria-hidden="true"><path class="i-arch" d="M6 62V30a26 26 0 0 1 52 0v32" stroke-width="3"/><path class="i-jade" d="M10 58l14-20 8 10 10-16 14 26z"/><path class="i-oro" d="M34 14l-6 12h6l-4 10 10-14h-6l4-8z"/></svg>
+                <div><h3 class="h5 mb-1">Rock</h3><p class="m-0 small text-body-secondary">Power chords, guitarras con fuerza y bandas que suenan fuerte.</p></div>
+              </div>
+            </a>
+          </div>
+          <div class="col">
+            <a class="card h-100" href="#biblioteca">
+              <div class="card-body d-grid gap-3">
+                <svg class="ac-barrio-icon" viewBox="0 0 64 64" aria-hidden="true"><path class="i-arch" d="M6 62V30a26 26 0 0 1 52 0v32" stroke-width="3"/><circle class="i-oro" cx="32" cy="42" r="12"/><circle class="i-jade" cx="32" cy="42" r="4"/><rect class="i-fg" x="30" y="16" width="4" height="16"/></svg>
+                <div><h3 class="h5 mb-1">Pop</h3><p class="m-0 small text-body-secondary">Estribillos que se quedan y acordes simples para cantar.</p></div>
+              </div>
+            </a>
+          </div>
+          <div class="col">
+            <a class="card h-100" href="#biblioteca">
+              <div class="card-body d-grid gap-3">
+                <svg class="ac-barrio-icon" viewBox="0 0 64 64" aria-hidden="true"><path class="i-arch" d="M6 62V30a26 26 0 0 1 52 0v32" stroke-width="3"/><circle class="i-oro" cx="32" cy="40" r="14"/><circle cx="32" cy="40" r="9" fill="none" class="i-line" stroke-width="2"/><circle class="i-jade" cx="32" cy="40" r="4"/></svg>
+                <div><h3 class="h5 mb-1">Indie</h3><p class="m-0 small text-body-secondary">Sintetizadores, guitarras limpias y canciones hechas en casa.</p></div>
+              </div>
+            </a>
+          </div>
+        </div>
+        <div class="d-grid gap-2 mt-4">
+          <div class="d-flex flex-wrap align-items-center gap-2">
+            <span class="ac-chip ac-chip-ok">Chile · Disponible</span>
+            <span class="ac-chip">Latinoamérica · Próximamente</span>
+          </div>
+          <p class="m-0 small text-body-secondary">Partimos por Chile. Después vienen los barrios del resto de Latinoamérica.</p>
+        </div>
+      </div>
+    </section>
+
     <!-- Guías -->
     <section class="ac-section" id="guias">
       <div class="container">
@@ -587,5 +592,60 @@
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
   <script src="acordia.js"></script>
+  <script>
+  /* Filtros rápidos de la Biblioteca (barrio y nivel). Se suman al buscador de texto: usan una clase
+     propia (ac-fuera), así no chocan con el filtro por texto de acordia.js. */
+  (function () {
+    var lib = document.getElementById("biblioteca"), box = document.getElementById("lib-filtros");
+    if (!lib || !box) return;
+    var cards = Array.prototype.slice.call(lib.querySelectorAll(".row > .col:not(.ac-artist-head)"));
+    if (!cards.length) return;
+    function info(c) {
+      var barrio = "", nivel = "";
+      var s = c.querySelectorAll("span");
+      Array.prototype.forEach.call(s, function (n) {
+        var t = n.textContent.trim();
+        if (/^Nivel /i.test(t)) { nivel = t.replace(/^Nivel /i, "").toLowerCase(); n.classList.add("ac-nivel-tag"); n.setAttribute("data-n", nivel); }
+        else if (n.classList.contains("small") && n.classList.contains("text-body-secondary") && !barrio) barrio = t;
+      });
+      return { barrio: barrio, nivel: nivel };
+    }
+    var data = cards.map(function (c) { return { el: c, i: info(c) }; });
+    var sel = { barrio: "", nivel: "" };
+    var total = document.getElementById("lib-total");
+    function uniq(k) { var o = []; data.forEach(function (d) { var v = d.i[k]; if (v && o.indexOf(v) < 0) o.push(v); }); return o; }
+    function label(v) { return v.charAt(0).toUpperCase() + v.slice(1); }
+    function build(k, vals) {
+      var wrap = box.querySelector('[data-filtro="' + k + '"]');
+      if (vals.length < 2) { wrap.hidden = true; return; }
+      ["" ].concat(vals).forEach(function (v) {
+        var b = document.createElement("button");
+        b.type = "button"; b.textContent = v ? label(v) : (k === "barrio" ? "Todos los barrios" : "Todos los niveles");
+        b.setAttribute("aria-pressed", v === "" ? "true" : "false");
+        b.addEventListener("click", function () {
+          sel[k] = v;
+          Array.prototype.forEach.call(wrap.children, function (x) { x.setAttribute("aria-pressed", x === b ? "true" : "false"); });
+          apply();
+        });
+        wrap.appendChild(b);
+      });
+    }
+    function apply() {
+      var shown = 0, head = null, has = false;
+      function close() { if (head) head.classList.toggle("ac-fuera", !has); }
+      Array.prototype.forEach.call(lib.querySelectorAll(".row > .col, .row > .ac-artist-head"), function (el) {
+        if (el.classList.contains("ac-artist-head")) { close(); head = el; has = false; return; }
+        var d = data.filter(function (x) { return x.el === el; })[0];
+        var ok = d && (!sel.barrio || d.i.barrio.toLowerCase() === sel.barrio) && (!sel.nivel || d.i.nivel === sel.nivel);
+        el.classList.toggle("ac-fuera", !ok);
+        if (ok) { has = true; if (el.querySelector("a.card")) shown++; }
+      });
+      close();
+      if (total) total.textContent = shown + (shown === 1 ? " canción" : " canciones");
+    }
+    build("barrio", uniq("barrio")); build("nivel", uniq("nivel"));
+    box.hidden = false; apply();
+  })();
+  </script>
 </body>
 </html>

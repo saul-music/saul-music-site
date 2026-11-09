@@ -713,3 +713,13 @@ pantalla encendida al apretar Reproducir (Screen Wake Lock: Safari 16.4+, Chrome
 terminar la pasada; sin la función queda como antes. El site solo sube la dependencia; las pruebas de navegador de esto
 viven en la librería (RD8). **Pendiente:** comprobar en un iPhone real con bloqueo automático de 30 s que un tema de más
 de 1 minuto suena entero.
+
+## S54 · Landing: la Biblioteca va primero y las ventajas debajo (2026-11-09)
+
+**Decisión del usuario.** La portada pasa a: hero compacto → **Biblioteca** → «¿Por qué Acordia?» (problema, niveles, cómo funciona,
+barrios) → guías → planes. Reemplaza en parte a S52: sale la animación del caos de acordes y los chips de barrios del hero, y la
+ilustración queda solo en escritorio. La Biblioteca gana contador (solo temas con enlace, igual al del hero), filtros rápidos por
+barrio y nivel (script propio de la portada, clase `ac-fuera`, sin chocar con el filtro de texto de la librería), insignia de nivel
+de color y «Ver acordes →». Todo es HTML, CSS y JS de `index.html`; la librería no se toca. Se mantiene el buscador del hero.
+**Queda fuera:** foto del artista en la cabecera del grupo (el HTML lo genera la librería). **Pendiente:** revisar a ojo en Safari/iPhone
+y celular reales.
