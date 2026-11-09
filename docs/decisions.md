@@ -733,3 +733,9 @@ D-C21), incentivos sin pago fijo (firma, perfil público, prioridad en las solic
 pasos y preguntas frecuentes. **Postular es enviar un correo** a contacto@saulapp.com (`mailto` prellenado); no hay formulario ni base
 de datos. Sin montos ni porcentajes (P-15). **Pendiente:** V3 (relación con los guías, cesión y cobro) antes de operar el programa;
 revisar el texto de las preguntas frecuentes; revisar a ojo en celular real.
+
+## S56 · El site sube a `acordia-render` 0.4.2: acorde `7(b13)` (2026-11-09)
+
+La librería (RD13) reconoce `A7(b13)` / `A7b13` como acorde propio (A C# E G F, con la quinta justa), con notas, teclado y
+sonido; sin forma estándar, así que el tema lleva una forma propia. El site sube la dependencia para que un tema publicado
+con ese acorde no salga como texto. Sin otros cambios.
