@@ -723,3 +723,13 @@ barrio y nivel (script propio de la portada, clase `ac-fuera`, sin chocar con el
 de color y «Ver acordes →». Todo es HTML, CSS y JS de `index.html`; la librería no se toca. Se mantiene el buscador del hero.
 **Queda fuera:** foto del artista en la cabecera del grupo (el HTML lo genera la librería). **Pendiente:** revisar a ojo en Safari/iPhone
 y celular reales.
+
+## S55 · Página «Ser guía» y postulación por correo (2026-11-09)
+
+**Decisión del usuario.** El texto de la portada sobre la IA que arma la guía de práctica ya no aplica. «Quiero ser guía» lleva a
+`ser-guia.html`: qué es un guía, compromisos (**al menos 4 contactos al mes** con respuesta en 24 h, M18; **una transcripción pública**
+al entrar y luego una por trimestre; acordes de oído con declaración de procedencia y cesión por escrito, D-C15; revisión editorial,
+D-C21), incentivos sin pago fijo (firma, perfil público, prioridad en las solicitudes de los temas editados, créditos y niveles, D-C25),
+pasos y preguntas frecuentes. **Postular es enviar un correo** a contacto@saulapp.com (`mailto` prellenado); no hay formulario ni base
+de datos. Sin montos ni porcentajes (P-15). **Pendiente:** V3 (relación con los guías, cesión y cobro) antes de operar el programa;
+revisar el texto de las preguntas frecuentes; revisar a ojo en celular real.
