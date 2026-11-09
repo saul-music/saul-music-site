@@ -158,3 +158,12 @@ def test_landing_leads_with_chords(client):
     assert html.count('class="card h-100 ac-dolor-card"') == 3
     # La animación respeta a quien pide menos movimiento.
     assert "prefers-reduced-motion" in html
+
+
+def test_home_shows_library_before_the_advantages(client):
+    """La Biblioteca va primero; las ventajas de Acordia quedan debajo."""
+    html = client.get("/").text
+    pos = {
+        i: html.index(f'id="{i}"') for i in ("biblioteca", "problema", "niveles", "como", "planes")
+    }
+    assert pos["biblioteca"] < pos["problema"] < pos["niveles"] < pos["como"] < pos["planes"]
