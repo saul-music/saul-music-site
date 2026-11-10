@@ -179,3 +179,4 @@ AAAA-MM-DD · paso · qué se hizo · qué quedó pendiente · decisiones nuevas
 
 2026-11-10 · acorde 7add11 · el site sube a `acordia-render` 0.4.6 (RD17, S60): `F#7(add11)` se reconoce y se dibuja con forma propia; 249 tests · pendiente: probar con un tema publicado que lo use · S60
 2026-11-10 · mitades con `&` · el site sube a `acordia-render` 0.5.0 (RD18, S61): `C-G&D-Am-F` se dibuja con mitades y suena en la «y» · pendiente: oírlo en un dispositivo real; probar con un tema publicado que lo use · S61
+2026-11-10 · ligados legibles · el site sube a `acordia-render` 0.5.1 (RD19, RD20, S62): los compases con `&` se leen sin nombres pisados y `Acorde&Acorde` suena completo · pendiente: verlo y oírlo en el celular real · S62

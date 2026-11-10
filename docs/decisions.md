@@ -770,3 +770,8 @@ El site sube la dependencia; sin otros cambios.
 
 La librería (RD18) suma `&`: parte una parte en dos mitades iguales (`C-G&D-Am-F`: G en el 2 y D en la «y» del 2), compatible con `-` en el mismo compás. Máximo dos mitades, sin `%` en una mitad, y no vale en 6/8, 9/8 ni 12/8. La guitarra golpea en la «y» si ahí empieza un acorde nuevo; `_&G` expresa una anticipación.
 El site sube la dependencia; sin otros cambios.
+
+## S62 · El site sube a `acordia-render` 0.5.1: ligados legibles y `Acorde&Acorde` (2026-11-10)
+
+La librería (RD19, RD20) hace legibles los ligados en compases con `&` (el compás ocupa dos columnas y el ligado es una línea de sostén) y corrige `Acorde&Acorde`: cada parte con acorde golpea donde empieza, así que ya no queda muda la primera de un par cuando las unidades no caen sobre los tiempos (`E-F#&B-G#m`). Sin cambios de sintaxis ni de contrato.
+El site sube la dependencia; sin otros cambios.
