@@ -765,3 +765,8 @@ parte la cuenta fija de 4 clics (S10). El site sube la dependencia; sin otros ca
 La librería (RD17) reconoce `F#7(add11)` / `F#7add11` / `F#7add4` / `F#7(11)` como acorde propio (F# A# C# E B: 1, 3ª mayor, 5ª,
 7ª menor y 11ª), con notas, teclado y sonido. Sin forma estándar: el tema lleva una propia (`F#7add11 | 2 4 4 3 0 0`).
 El site sube la dependencia; sin otros cambios.
+
+## S61 · El site sube a `acordia-render` 0.5.0: mitades con `&` (2026-11-10)
+
+La librería (RD18) suma `&`: parte una parte en dos mitades iguales (`C-G&D-Am-F`: G en el 2 y D en la «y» del 2), compatible con `-` en el mismo compás. Máximo dos mitades, sin `%` en una mitad, y no vale en 6/8, 9/8 ni 12/8. La guitarra golpea en la «y» si ahí empieza un acorde nuevo; `_&G` expresa una anticipación.
+El site sube la dependencia; sin otros cambios.
