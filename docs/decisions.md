@@ -759,3 +759,9 @@ hay panel ni peticiones extra. Sin texto de la persona ni de los temas en el reg
 La librería (RD16) cuenta un compás entero antes de empezar: tantos clics como el numerador (3/4 → 1 2 3; 6/8 → 1 a 6; 4/4
 igual), con el acento en el primero. Con más de 6 clics (9/8, 12/8) el botón muestra solo el actual («n / N»). Reemplaza en
 parte la cuenta fija de 4 clics (S10). El site sube la dependencia; sin otros cambios.
+
+## S60 · El site sube a `acordia-render` 0.4.6: acorde `7add11` (2026-11-10)
+
+La librería (RD17) reconoce `F#7(add11)` / `F#7add11` / `F#7add4` / `F#7(11)` como acorde propio (F# A# C# E B: 1, 3ª mayor, 5ª,
+7ª menor y 11ª), con notas, teclado y sonido. Sin forma estándar: el tema lleva una propia (`F#7add11 | 2 4 4 3 0 0`).
+El site sube la dependencia; sin otros cambios.

@@ -176,3 +176,5 @@ AAAA-MM-DD · paso · qué se hizo · qué quedó pendiente · decisiones nuevas
 2026-11-10 · diagnóstico de audio · el site sube a `acordia-render` 0.4.4 (RD15, S58): registro de audio y panel `?debug=audio` para el bug de iPhone; 249 tests · pendiente: reproducir el fallo en el iPhone con el panel y leer el registro · S58
 
 2026-11-10 · cuenta por compás · el site sube a `acordia-render` 0.4.5 (RD16, S59): la cuenta inicial es un compás completo (6/8 cuenta 1 a 6); 249 tests · pendiente: oírlo en un 6/8 real y en celular · S59
+
+2026-11-10 · acorde 7add11 · el site sube a `acordia-render` 0.4.6 (RD17, S60): `F#7(add11)` se reconoce y se dibuja con forma propia; 249 tests · pendiente: probar con un tema publicado que lo use · S60
