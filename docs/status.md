@@ -172,3 +172,5 @@ AAAA-MM-DD · paso · qué se hizo · qué quedó pendiente · decisiones nuevas
 - **Pantalla encendida (S53):** el site sube a `acordia-render` 0.4.1 (RD11): mientras suena, el bloqueo automático del iPhone no apaga la pantalla ni corta el tema. Pendiente: iPhone real.
 
 2026-11-10 · cejilla deducida · el site sube a `acordia-render` 0.4.3 (RD14, S57): las formas propias dibujan cejilla en el traste más bajo; 248 tests · pendiente: verlo en producción y en celular real · S57
+
+2026-11-10 · diagnóstico de audio · el site sube a `acordia-render` 0.4.4 (RD15, S58): registro de audio y panel `?debug=audio` para el bug de iPhone; 249 tests · pendiente: reproducir el fallo en el iPhone con el panel y leer el registro · S58

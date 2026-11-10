@@ -746,3 +746,10 @@ La librería (RD14) deduce la cejilla de las formas propias, que no traían el d
 cuerdas lo pisan y ninguna cuerda intermedia está al aire, apagada o más baja. Las formas de chords-db no cambian.
 El site sube la dependencia; sin otros cambios. Limitación: formas propias como D (`x x 0 2 3 2`) o A (`x 0 2 2 2 0`)
 también muestran cejilla.
+
+## S58 · El site sube a `acordia-render` 0.4.4: registro y panel de diagnóstico de audio (2026-11-10)
+
+La librería (RD15) guarda siempre los últimos 200 eventos del audio de cada pestaña (estado del contexto, `resume()`,
+ciclo de vida de la página, carga de muestras) y ofrece un panel con `?debug=audio` (se recuerda; `?debug=off` lo quita)
+para investigar el audio que se pierde en iPhone tras usar otras apps. Sin soluciones todavía: solo medir. Sin la marca no
+hay panel ni peticiones extra. Sin texto de la persona ni de los temas en el registro.
