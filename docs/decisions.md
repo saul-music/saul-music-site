@@ -739,3 +739,10 @@ revisar el texto de las preguntas frecuentes; revisar a ojo en celular real.
 La librería (RD13) reconoce `A7(b13)` / `A7b13` como acorde propio (A C# E G F, con la quinta justa), con notas, teclado y
 sonido; sin forma estándar, así que el tema lleva una forma propia. El site sube la dependencia para que un tema publicado
 con ese acorde no salga como texto. Sin otros cambios.
+
+## S57 · El site sube a `acordia-render` 0.4.3: cejilla en las formas propias (2026-11-10)
+
+La librería (RD14) deduce la cejilla de las formas propias, que no traían el dato: solo en el traste más bajo, si 2 o más
+cuerdas lo pisan y ninguna cuerda intermedia está al aire, apagada o más baja. Las formas de chords-db no cambian.
+El site sube la dependencia; sin otros cambios. Limitación: formas propias como D (`x x 0 2 3 2`) o A (`x 0 2 2 2 0`)
+también muestran cejilla.

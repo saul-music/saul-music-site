@@ -170,3 +170,5 @@ AAAA-MM-DD · paso · qué se hizo · qué quedó pendiente · decisiones nuevas
 - **Biblioteca primero (S54):** la portada muestra la Biblioteca justo bajo el hero, con contador y filtros por barrio y nivel; las ventajas de Acordia quedan debajo. Pendiente: revisar a ojo en Safari/iPhone y celular reales.
 - **Landing con los acordes primero (S52):** lema «Donde se respiran acordes», animación del caos que se ordena, «Ya lo viviste» (3 tarjetas) y «El mismo tema, a tu medida». Pendiente: revisar en Safari/iPhone y celular reales; el pie de las páginas de cada canción (plantilla de la librería) conserva el lema anterior.
 - **Pantalla encendida (S53):** el site sube a `acordia-render` 0.4.1 (RD11): mientras suena, el bloqueo automático del iPhone no apaga la pantalla ni corta el tema. Pendiente: iPhone real.
+
+2026-11-10 · cejilla deducida · el site sube a `acordia-render` 0.4.3 (RD14, S57): las formas propias dibujan cejilla en el traste más bajo; 248 tests · pendiente: verlo en producción y en celular real · S57
