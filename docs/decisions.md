@@ -753,3 +753,9 @@ La librería (RD15) guarda siempre los últimos 200 eventos del audio de cada pe
 ciclo de vida de la página, carga de muestras) y ofrece un panel con `?debug=audio` (se recuerda; `?debug=off` lo quita)
 para investigar el audio que se pierde en iPhone tras usar otras apps. Sin soluciones todavía: solo medir. Sin la marca no
 hay panel ni peticiones extra. Sin texto de la persona ni de los temas en el registro.
+
+## S59 · El site sube a `acordia-render` 0.4.5: la cuenta inicial es un compás completo (2026-11-10)
+
+La librería (RD16) cuenta un compás entero antes de empezar: tantos clics como el numerador (3/4 → 1 2 3; 6/8 → 1 a 6; 4/4
+igual), con el acento en el primero. Con más de 6 clics (9/8, 12/8) el botón muestra solo el actual («n / N»). Reemplaza en
+parte la cuenta fija de 4 clics (S10). El site sube la dependencia; sin otros cambios.
