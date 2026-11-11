@@ -829,3 +829,7 @@ El artículo de intervalos remite a «Clave americana» para quien llega sin eso
 
 Sin código propio: el acorde y su regla (RD23 de la librería) llegan con la dependencia. `Bsus2(6)`, `Bsus2add6`,
 `Bsus26` y `B6sus2` son un solo acorde (B C# F# G#, sin 3ª), con forma propia obligatoria porque chords-db no lo trae.
+
+## S68 · El site sube a `acordia-render` 0.6.2: los acordes de quinta son Básicos (2026-11-11)
+
+`C5`, `F#5` y `Bb5` valen en el modo Básico, con su diagrama de guitarra calculado (RD24 de la librería); `Cm5` y `C5/G` siguen fuera de Básico.
