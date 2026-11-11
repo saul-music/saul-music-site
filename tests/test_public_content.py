@@ -5,6 +5,7 @@ import re
 import pytest
 from acordia_render.songpages import render_published
 
+from musicsite import learn
 from musicsite.app import HEADERS, LIB_WEB_DIR, SONGS_DIR, WEB_DIR
 from musicsite.artists import build_page
 
@@ -20,6 +21,10 @@ FILES = {
 FILES["artistas.html"] = build_page(
     (WEB_DIR / "artistas.html").read_text(encoding="utf-8"), None, SONGS_DIR
 ).lower()
+# «Aprender» (S65): las páginas y estilos que arma `learn`, revisados como todo lo público.
+FILES |= {
+    path.lstrip("/"): body.decode().lower() for path, (body, _kind) in learn.build_pages().items()
+}
 SONG_PAGES = {
     f"cancion-{slug}.html": page.lower() for slug, page in render_published(SONGS_DIR).items()
 }

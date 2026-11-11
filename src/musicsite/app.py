@@ -20,6 +20,8 @@ from acordia_render.songpages import WEB_DIR as LIB_WEB_DIR
 from fastapi import FastAPI, Request, Response
 from starlette.exceptions import HTTPException
 
+from musicsite import learn
+
 WEB_DIR = Path(__file__).parent / "web"
 SONGS_DIR = Path(__file__).parent / "songs"
 TYPES = {
@@ -71,7 +73,8 @@ def create_app(
     guides.use(profes)  # las guías de ejemplo son del sitio; la librería las pide a este módulo
     # Los archivos de la página de canción (style.css, acordia.js, guitarra.js, la tipografía y las
     # muestras) vienen de la librería; los del sitio (portada, guías, artistas…) tienen prioridad.
-    files = {**load_files(LIB_WEB_DIR), **load_files(root)}
+    # «Aprender» (S65): páginas y estilos armados una vez desde `aprender/`; los del sitio mandan.
+    files = {**load_files(LIB_WEB_DIR), **learn.build_pages(), **load_files(root)}
     index_html = files["/index.html"][0].decode() if "/index.html" in files else ""
     artists_html = files["/artistas.html"][0].decode() if "/artistas.html" in files else ""
     catalog = Catalog(index_html, songs, editorial, refresh_seconds, artists_html=artists_html)

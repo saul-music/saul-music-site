@@ -1,0 +1,50 @@
+/* Aprender (S65): árbol de rutas, artículos y figuras. Usa los colores de style.css (tema claro y oscuro). */
+.ac-tree, .ac-tree ol { list-style: none; margin: 0; padding: 0; }
+.ac-tree > li { margin-bottom: 1rem; }
+.ac-tree details { border: 2px solid var(--ac-line); border-radius: var(--ac-radius); background: var(--ac-surface); }
+.ac-tree summary { display: flex; flex-wrap: wrap; align-items: baseline; gap: .25rem .75rem; padding: .9rem 1.1rem; cursor: pointer; }
+.ac-tree summary strong { font-family: var(--ac-font-display); font-size: 1.35rem; }
+.ac-tree summary:focus-visible { outline: 2px solid var(--ac-accent); outline-offset: 2px; }
+.ac-tree-body { padding: 0 1.1rem 1.1rem; display: grid; gap: .9rem; }
+.ac-tree ol { margin-left: .5rem; padding-left: 1.1rem; border-left: 2px solid var(--ac-fill-2); display: grid; gap: .75rem; }
+.ac-tree ol li { position: relative; }
+.ac-tree ol li::before { content: ""; position: absolute; left: -1.1rem; top: .85rem; width: .8rem; border-top: 2px solid var(--ac-fill-2); }
+.ac-tree a.ac-tree-link { font-weight: 600; text-decoration: none; }
+.ac-tree a.ac-tree-link:hover { text-decoration: underline; }
+.ac-tree [aria-current="page"] { color: var(--ac-accent); }
+.ac-tree-soon { color: var(--ac-fg-muted); border: 2px dashed var(--ac-line); border-radius: var(--ac-radius); padding: .8rem 1.1rem; }
+.ac-learn-meta { color: var(--ac-fg-muted); font-size: .9rem; }
+.ac-learn-side { position: sticky; top: calc(var(--ac-nav-h, 4rem) + 1rem); align-self: start; }
+@media (max-width: 991.98px) { .ac-learn-side { position: static; } }
+.ac-article { max-width: 46rem; }
+.ac-article h2 { margin-top: 2.2rem; font-size: clamp(1.5rem, 2.6vw, 1.9rem); }
+.ac-article h3 { margin-top: 1.6rem; font-size: 1.25rem; }
+.ac-article .ac-callout { border-left: 4px solid var(--ac-accent); background: var(--ac-surface); padding: .8rem 1rem; border-radius: 0 var(--ac-radius) var(--ac-radius) 0; margin-block: 1.2rem; }
+.ac-article .ac-callout p:last-child { margin-bottom: 0; }
+.ac-fig { margin: 1.4rem 0; }
+.ac-fig figcaption { color: var(--ac-fg-muted); font-size: .9rem; margin-top: .5rem; }
+.ac-fig-pair { display: flex; flex-wrap: wrap; gap: 1.5rem; justify-content: center; margin: 1.4rem 0; }
+.ac-fig-pair .ac-fig { margin: 0; text-align: center; }
+.ac-fb-wrap { overflow-x: auto; }
+.ac-fb { width: 100%; min-width: 34rem; max-width: 46rem; height: auto; display: block; }
+.ac-cd { width: 9rem; height: auto; display: block; margin-inline: auto; }
+.ac-fb-string, .ac-fb-fret { stroke: var(--ac-fg-muted); stroke-width: 1.2; }
+.ac-fb-nut { stroke: var(--ac-fg); stroke-width: 4; }
+.ac-fb-label, .ac-fb-num { fill: var(--ac-fg-muted); font-size: 11px; font-family: var(--ac-font-mono, monospace); }
+.ac-fb-inlay { fill: var(--ac-line); }
+.ac-fb-dot.ac-fb-note { fill: var(--ac-fill-2); }
+.ac-fb-dot.ac-fb-root { fill: var(--ac-fill); }
+.ac-fb-dot-text { fill: var(--ac-on-fill); font-size: 10px; font-weight: 600; font-family: var(--ac-font-mono, monospace); }
+.ac-fb-dot.ac-fb-note + .ac-fb-dot-text { fill: var(--ac-on-fill-2); }
+.ac-cd-open { fill: none; stroke: var(--ac-fg); stroke-width: 1.5; }
+.ac-cd-open.ac-cd-hl { fill: var(--ac-fill); stroke: var(--ac-fill); }
+.ac-cd-barre { stroke: var(--ac-fill-2); stroke-width: 12; stroke-linecap: round; opacity: .55; }
+.ac-chromatic { list-style: none; display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: .4rem; padding: 0; margin: 0; }
+@media (min-width: 768px) { .ac-chromatic { grid-template-columns: repeat(12, minmax(0, 1fr)); } }
+.ac-note { text-align: center; border: 2px solid var(--ac-line); border-radius: var(--ac-radius); padding: .5rem .2rem; font-family: var(--ac-font-mono, monospace); line-height: 1.15; background: var(--ac-surface); }
+.ac-note small { display: block; color: var(--ac-fg-muted); font-size: .7rem; }
+.ac-note-nat { border-color: var(--ac-fill-2); font-weight: 600; }
+.ac-table { --bs-table-bg: transparent; --bs-table-color: var(--ac-fg); --bs-table-border-color: var(--ac-line); }
+.ac-table caption { caption-side: top; color: var(--ac-fg-muted); padding-top: 0; }
+.ac-learn-nav { display: flex; flex-wrap: wrap; justify-content: space-between; gap: .75rem; margin-top: 3rem; padding-top: 1.5rem; border-top: 1px solid var(--ac-line); }
+@media (prefers-reduced-motion: no-preference) { .ac-tree a.ac-tree-link { transition: color .15s; } }

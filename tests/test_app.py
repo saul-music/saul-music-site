@@ -21,6 +21,8 @@ def client() -> TestClient:
         ("/index.html", "text/html"),
         ("/cancion.html", "text/html"),
         ("/guias.html", "text/html"),
+        ("/aprender.html", "text/html"),
+        ("/aprender.css", "text/css"),
         ("/style.css", "text/css"),
         ("/acordia.js", "text/javascript"),
     ],
