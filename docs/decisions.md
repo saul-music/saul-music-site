@@ -775,3 +775,8 @@ El site sube la dependencia; sin otros cambios.
 
 La librería (RD19, RD20) hace legibles los ligados en compases con `&` (el compás ocupa dos columnas y el ligado es una línea de sostén) y corrige `Acorde&Acorde`: cada parte con acorde golpea donde empieza, así que ya no queda muda la primera de un par cuando las unidades no caen sobre los tiempos (`E-F#&B-G#m`). Sin cambios de sintaxis ni de contrato.
 El site sube la dependencia; sin otros cambios.
+
+## S63 · El site sube a `acordia-render` 0.5.2: acordes dentro de una mitad (2026-11-10)
+
+La librería (RD21, 0.5.2) corrige que un acorde que solo aparece dentro de una mitad (`…-D6/F#&Em9`) no tuviera forma, bajo ni muestras y sonara mudo: los datos de acordes del tema ahora parten también por `&`. Además la nota del arco aparece si el único ligado está dentro de una mitad (`_&G`).
+El site sube la dependencia; sin otros cambios.
