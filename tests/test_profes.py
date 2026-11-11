@@ -83,7 +83,8 @@ def test_guides_appear_once_as_a_strip_before_the_player():
     assert page.count('data-bs-target="#guias-panel"') == 3  # franja, botón corto y cerrar
     assert page.count('href="guias.html?tema=ven-aqui"') == 3  # franja y botón (respaldo) + panel
     assert "data-ac-met-help" in page and " hidden>¿Se complica" in page
-    assert page.count("<aside") == 1 and "Ver guías" not in page
+    # una sola franja de guías (la de Utilidades, RD22, es otra aparte)
+    assert page.count('aria-label="Guías de este tema"') == 1 and "Ver guías" not in page
     # La franja va primero: antes de la barra del metrónomo, las pestañas y los compases.
     assert (
         page.index("data-ac-met-guides") < page.index("data-ac-metronome") < page.index('id="tabs"')

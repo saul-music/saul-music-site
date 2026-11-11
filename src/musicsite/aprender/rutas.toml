@@ -1,0 +1,22 @@
+# Árbol de rutas de aprendizaje (S65). Hoy es contenido estático del repo; a futuro el admin podrá
+# publicar artículos nuevos (ver docs/decisions.md, S65). Cada artículo es un fragmento HTML en
+# aprender/<ruta>/<slug>.html; las figuras se piden con [[fig:nombre]] (ver learn_figures.FIGURES).
+
+[[ruta]]
+id = "acordes"
+titulo = "Acordes"
+resumen = "De las distancias entre notas a armar tus propios acordes, con la guitarra en la mano."
+
+  [[ruta.articulo]]
+  slug = "intervalos"
+  titulo = "Intervalos con # y b, y cómo ubicarlos en la guitarra"
+  resumen = "Qué es un semitono, qué hacen el sostenido y el bemol, y cómo encontrar las distancias en el mástil."
+  descripcion = "Aprende qué son los intervalos, qué significan # y b y cómo ubicarlos fácilmente en el mástil de la guitarra."
+  lectura = 7
+
+  [[ruta.articulo]]
+  slug = "mayores-y-menores"
+  titulo = "Cómo se forman los acordes mayores y menores"
+  resumen = "Raíz, tercera y quinta: por qué un solo semitono separa un acorde alegre de uno oscuro."
+  descripcion = "Aprende a formar acordes mayores y menores con la escala mayor y a verlos en la guitarra, con ejemplos en E, Em, G y Gm."
+  lectura = 8

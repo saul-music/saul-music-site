@@ -780,3 +780,35 @@ El site sube la dependencia; sin otros cambios.
 
 La librería (RD21, 0.5.2) corrige que un acorde que solo aparece dentro de una mitad (`…-D6/F#&Em9`) no tuviera forma, bajo ni muestras y sonara mudo: los datos de acordes del tema ahora parten también por `&`. Además la nota del arco aparece si el único ligado está dentro de una mitad (`_&G`).
 El site sube la dependencia; sin otros cambios.
+
+## S64 · El site sube a `acordia-render` 0.6.0: Utilidades (afinador y «Aprende teoría») (2026-11-11)
+
+La librería (RD22, 0.6.0) agrega bajo la franja de guías una franja propia **Utilidades**, siempre visible, con el afinador de guitarra
+(tonos guía y micrófono opcional, aislado del reproductor) y el botón «Aprende teoría», que abre `aprender.html` **en otra pestaña**
+(`target="_blank" rel="noopener"`). El admin de research no la muestra (`Assets(tuner=False)`). El site sube la dependencia y ajusta
+`test_profes` (la franja de guías se cuenta por su etiqueta, ya que ahora hay otra franja). **Pendiente:** el cambio de `pyproject.toml`
+y `uv.lock` espera a que la 0.6.0 esté publicada en Artifact Registry.
+
+## S65 · «Aprender»: rutas de aprendizaje con artículos pedagógicos (2026-11-11)
+
+**Qué.** Una página `aprender.html` con un **árbol de rutas de aprendizaje**; la primera ruta es **«Acordes»**, con dos tópicos:
+(1) *Intervalos con # y b, y cómo ubicarlos en la guitarra* y (2) *Cómo se forman los acordes mayores y menores*. Cada tópico es una
+página `aprender-<ruta>-<slug>.html` con migas de pan, el árbol marcando dónde estás, y «Anterior» y «Siguiente» dentro de la ruta.
+Se llega desde el botón «Aprende teoría» de la franja de Utilidades de cada tema (S64). No se tocó la barra de navegación.
+**Cómo está hecho.** Sin tecnología nueva: `musicsite/learn.py` lee `aprender/rutas.toml` (el árbol) y un fragmento HTML por artículo
+(`aprender/<ruta>/<slug>.html`), y arma las páginas al arrancar con un `shell.html` (cabecera, barra y pie iguales a los de las otras
+páginas). El árbol es HTML con `<details>`: funciona sin JavaScript. Estilos en `aprender.css` (archivo propio, el CSP no cambia).
+**Figuras calculadas, no escritas a mano** (`learn_figures.py`): tablas y diagramas de mástil y de acordes salen de la afinación
+(`chordtheory.TUNING`) y la teoría de acordes de la librería; los tests comparan contra valores conocidos y contra `note_names`
+(una escala o una tríada mal escrita falla un test). Cada SVG lleva `role="img"` y título.
+**Futuro, anotado y sin construir: artículos desde el admin.** Hoy el contenido es nuestro y vive en el repo. Cuando el admin de
+research pueda agregar artículos, seguirá el patrón de los temas (M17 y M20): publica `rutas.json` más los artículos a un bucket,
+con `format` e `index.json`, y el sitio los relee cada 60 s; cambiar la fuente de la carpeta al bucket no toca las plantillas.
+**Antes** hay que decidir un formato restringido (por ejemplo Markdown acotado, con las figuras como tokens `[[fig:nombre]]`) y sanear
+el HTML, porque dejaría de ser contenido solo nuestro. No se construye ninguna abstracción por adelantado.
+**Pruebas.** Unitarias (teoría, coherencia árbol-archivos, títulos únicos, enlaces, rutas 200 y 404), contenido público (las páginas
+entran en las revisiones de CSP, palabras prohibidas y enlaces) y e2e en Chromium, Firefox, WebKit e iPhone 14 (árbol, navegación,
+sin desborde a 360 y 1100 px, sin JavaScript, tema claro, y el botón que abre otra pestaña).
+**Pendiente (a ojo, por el usuario):** que la pedagogía sea clara y el tono sea el correcto, leerlo en el celular, y la revisión
+de la teoría antes de anunciar.
+
