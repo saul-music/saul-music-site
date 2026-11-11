@@ -812,3 +812,15 @@ sin desborde a 360 y 1100 px, sin JavaScript, tema claro, y el botón que abre o
 **Pendiente (a ojo, por el usuario):** que la pedagogía sea clara y el tono sea el correcto, leerlo en el celular, y la revisión
 de la teoría antes de anunciar.
 
+## S66 · «Aprender»: ruta «Básicos» antes de «Acordes» (2026-11-11)
+
+**Decisión del usuario.** Una ruta nueva, **«Básicos»**, va antes de «Acordes» en el árbol, con dos tópicos de **teoría musical pura** (no de cómo se usa
+Acordia): (1) **Clave americana**, la equivalencia entre Do Re Mi y C D E, cómo se escriben sostenidos, bemoles y acordes, y las cuerdas al aire en letras;
+(2) **El compás y el pulso** (elegido por mí, a pedido del usuario, como lo que más falta para sentirse cómodo con cualquier canción): pulso, tempo en bpm,
+compás 4/4, 3/4 y 6/8, figuras y silencios, y cómo conviven acordes y compás.
+**Cómo.** Mismo mecanismo que S65: dos fragmentos en `aprender/basicos/`, la ruta en `rutas.toml` (primera) y figuras calculadas nuevas en
+`learn_figures.py`: la tabla de equivalencias sale de `chordtheory.NATURAL`, los acordes de ejemplo los interpreta la librería, las cuerdas al aire salen de la
+afinación, las duraciones de las figuras y los segundos por pulso (60 ÷ bpm) se calculan, y las cuadrículas de pulsos salen del compás. Los tests comparan todo.
+**«Anterior» y «Siguiente» siguen el orden de lectura aunque cambie de ruta** (el último de Básicos lleva al primero de Acordes, con la ruta entre paréntesis).
+El artículo de intervalos remite a «Clave americana» para quien llega sin eso. **Pendiente (a ojo, por el usuario):** el tono y la claridad de los textos.
+

@@ -139,18 +139,27 @@ def _hub_main(routes: list[Route]) -> str:
 
 def _article_main(routes: list[Route], route: Route, article: Article) -> str:
     index = route.articles.index(article)
-    previous = route.articles[index - 1] if index > 0 else None
-    following = route.articles[index + 1] if index + 1 < len(route.articles) else None
+    # «Anterior» y «Siguiente» siguen el orden de lectura aunque cambie de ruta (Básicos → Acordes).
+    flat = [(r, a) for r in routes for a in r.articles]
+    position = next(i for i, (_, a) in enumerate(flat) if a.url == article.url)
+    previous = flat[position - 1] if position > 0 else None
+    following = flat[position + 1] if position + 1 < len(flat) else None
+
+    def label(entry: tuple[Route, Article]) -> str:
+        other, target = entry
+        suffix = f" ({escape(other.title)})" if other.id != route.id else ""
+        return escape(target.title) + suffix
+
     links = []
     if previous:
         links.append(
-            f'<a class="btn btn-outline-secondary" href="{previous.url}" rel="prev">← {escape(previous.title)}</a>'
+            f'<a class="btn btn-outline-secondary" href="{previous[1].url}" rel="prev">← {label(previous)}</a>'
         )
     else:
         links.append("<span></span>")
     if following:
         links.append(
-            f'<a class="btn btn-primary" href="{following.url}" rel="next">{escape(following.title)} →</a>'
+            f'<a class="btn btn-primary" href="{following[1].url}" rel="next">{label(following)} →</a>'
         )
     else:
         links.append(

@@ -121,9 +121,11 @@ def test_every_figure_renders_accessibly_without_external_resources():
 # ---- Árbol, artículos y páginas ----
 
 
-def test_the_first_route_is_acordes_with_the_two_first_topics_in_order(routes):
-    assert [r.id for r in routes][0] == "acordes" and routes[0].title == "Acordes"
-    assert [a.slug for a in routes[0].articles] == ["intervalos", "mayores-y-menores"]
+def test_the_routes_are_basicos_then_acordes_with_their_topics_in_order(routes):
+    assert [r.id for r in routes] == ["basicos", "acordes"]
+    assert [r.title for r in routes] == ["Básicos", "Acordes"]
+    assert [a.slug for a in routes[0].articles] == ["clave-americana", "compas-y-pulso"]
+    assert [a.slug for a in routes[1].articles] == ["intervalos", "mayores-y-menores"]
 
 
 def test_every_figure_token_in_the_articles_exists_and_none_is_left_over(routes):
@@ -178,24 +180,33 @@ def test_unknown_learning_pages_are_404_with_no_body(client):
         assert response.status_code == 404 and response.content == b""
 
 
-def test_the_hub_shows_the_tree_with_acordes_open_and_both_topics(client, routes):
+def test_the_hub_shows_both_routes_in_order_with_all_four_topics(client, routes):
     page = client.get("/aprender.html").text
-    assert "<details open>" in page and "Acordes" in page
-    for article in routes[0].articles:
-        assert f'href="{article.url}"' in page and article.title in page
+    assert page.count("<details open>") == 2
+    assert page.index("Básicos") < page.index("Acordes")
+    for route in routes:
+        for article in route.articles:
+            assert f'href="{article.url}"' in page and article.title in page
     assert "Más rutas, pronto" in page and "<title>Aprender · Acordia</title>" in page
 
 
 def test_an_article_has_breadcrumb_current_marker_and_prev_next(client, routes):
-    first, second = routes[0].articles
+    first = routes[0].articles[0]  # el primero de todos
     page = client.get("/" + first.url).text
     assert 'aria-label="Migas de pan"' in page and "Tópico 1 de 2" in page
     assert page.count('aria-current="page"') == 2  # miga y árbol
-    assert f'href="{second.url}" rel="next"' in page and 'rel="prev"' not in page
-    last = client.get("/" + second.url).text
-    assert f'href="{first.url}" rel="prev"' in last and 'rel="next"' not in last
+    assert f'href="{routes[0].articles[1].url}" rel="next"' in page and 'rel="prev"' not in page
+    last = client.get("/" + routes[1].articles[-1].url).text  # el último de todos
+    assert f'href="{routes[1].articles[0].url}" rel="prev"' in last and 'rel="next"' not in last
     assert 'href="aprender.html">Volver al mapa' in last
-    assert f"<title>{first.title.replace('#', '#')} · Acordia</title>" in page
+
+
+def test_previous_and_next_follow_the_reading_order_across_routes(client, routes):
+    end_of_basics, start_of_chords = routes[0].articles[-1], routes[1].articles[0]
+    page = client.get("/" + end_of_basics.url).text
+    assert f'href="{start_of_chords.url}" rel="next">{start_of_chords.title} (Acordes) →' in page
+    page = client.get("/" + start_of_chords.url).text
+    assert f'href="{end_of_basics.url}" rel="prev">← {end_of_basics.title} (Básicos)' in page
 
 
 def test_internal_links_and_styles_of_the_learning_pages_resolve(client):
@@ -218,3 +229,67 @@ def test_the_learning_pages_load_nothing_new_from_outside(client):
         hosts = set(re.findall(r'(?:href|src)="https?://([^/"]+)', page))
         assert hosts <= {"fonts.googleapis.com", "fonts.gstatic.com", "cdn.jsdelivr.net"}, hosts
         assert "<style" not in page.split("<body>", 1)[0]  # estilos en archivo propio, no en línea
+
+
+# ---- Básicos: clave americana, compás y pulso ----
+
+
+def test_the_spanish_and_american_names_match_the_library_theory():
+    from acordia_render.chordtheory import NATURAL
+
+    assert list(fig.SPANISH) == ["C", "D", "E", "F", "G", "A", "B"]
+    assert [fig.SPANISH[letter] for letter in fig.SPANISH] == [
+        "Do",
+        "Re",
+        "Mi",
+        "Fa",
+        "Sol",
+        "La",
+        "Si",
+    ]
+    assert [NATURAL[letter] for letter in fig.SPANISH] == [0, 2, 4, 5, 7, 9, 11]  # una escala de Do
+
+
+def test_every_written_chord_in_the_article_is_one_the_library_understands():
+    for name, token in fig.CHORD_WRITING:
+        chord = parse(token)
+        assert chord is not None, token
+        assert name.split()[0] in fig.SPANISH.values(), name  # empieza por el nombre en español
+        assert fig.SPANISH[token[0]] == name.split()[0], (name, token)
+
+
+def test_the_open_strings_in_letters_match_the_tuning():
+    letters = [fig.note_at(string, 0) for string in fig.STRINGS]
+    assert letters == ["E", "A", "D", "G", "B", "E"]  # la 1 se escribe «e» en el texto
+    assert "<td class='ac-mono'>e</td>" in fig.open_strings_table()
+
+
+def test_note_values_are_halves_and_the_bar_of_4_4_is_filled():
+    assert [beats for _, _, beats in fig.NOTE_VALUES] == [4.0, 2.0, 1.0, 0.5, 0.25]
+    for _, _, beats in fig.NOTE_VALUES:
+        assert (4 / beats) * beats == 4  # n figuras iguales llenan el compás
+    assert [fig.beats_text(b) for _, _, b in fig.NOTE_VALUES] == ["4", "2", "1", "1/2", "1/4"]
+
+
+@pytest.mark.parametrize(("bpm", "seconds"), [(60, 1.0), (120, 0.5), (90, 2 / 3), (100, 0.6)])
+def test_seconds_per_beat_is_sixty_over_bpm(bpm, seconds):
+    assert fig.seconds_per_beat(bpm) == pytest.approx(seconds)
+
+
+def test_the_meter_grids_have_the_right_number_of_beats_and_accents():
+    html = fig.meter_grids()
+    grids = {
+        name: html.split(f"Pulsos del compás de {name}")[1].split("</ol>")[0]
+        for name, _ in fig.METERS
+    }
+    assert grids["4/4"].count("ac-beat ") == 4 and grids["3/4"].count("ac-beat ") == 3
+    assert grids["6/8"].count("ac-beat ") == 6
+    for grid in grids.values():
+        assert grid.count("ac-beat-strong") == 1  # un solo tiempo fuerte por compás
+    assert grids["4/4"].count("ac-beat-mid") == 1 and grids["6/8"].count("ac-beat-mid") == 1
+    assert grids["3/4"].count("ac-beat-mid") == 0
+
+
+def test_the_intervals_article_points_to_clave_americana(routes):
+    body = next(a for r in routes for a in r.articles if a.slug == "intervalos").body
+    assert 'href="aprender-basicos-clave-americana.html"' in body
