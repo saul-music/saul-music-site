@@ -824,3 +824,8 @@ afinación, las duraciones de las figuras y los segundos por pulso (60 ÷ bpm) s
 **«Anterior» y «Siguiente» siguen el orden de lectura aunque cambie de ruta** (el último de Básicos lleva al primero de Acordes, con la ruta entre paréntesis).
 El artículo de intervalos remite a «Clave americana» para quien llega sin eso. **Pendiente (a ojo, por el usuario):** el tono y la claridad de los textos.
 
+
+## S67 · El site sube a `acordia-render` 0.6.1: acorde `sus2add6` (`Bsus2(6)`) (2026-11-11)
+
+Sin código propio: el acorde y su regla (RD23 de la librería) llegan con la dependencia. `Bsus2(6)`, `Bsus2add6`,
+`Bsus26` y `B6sus2` son un solo acorde (B C# F# G#, sin 3ª), con forma propia obligatoria porque chords-db no lo trae.

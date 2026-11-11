@@ -496,15 +496,15 @@ wheels = [
 
 [[package]]
 name = "saul-music-render"
-version = "0.6.0"
+version = "0.6.1"
 source = { registry = "https://southamerica-west1-python.pkg.dev/saulapp-music/acordia/simple/" }
 dependencies = [
     { name = "jinja2" },
     { name = "markupsafe" },
 ]
-sdist = { url = "https://southamerica-west1-python.pkg.dev/saulapp-music/acordia/saul-music-render/saul_music_render-0.6.0.tar.gz", hash = "sha256:fca7e7ddcf493a58be49468edb50419f042dc07ef4bbb7b045c27857687d9a34" }
+sdist = { url = "https://southamerica-west1-python.pkg.dev/saulapp-music/acordia/saul-music-render/saul_music_render-0.6.1.tar.gz", hash = "sha256:e321383163ec44eb0fbe5a57ea2c7ea2e8649db6d88e039a492fe7ec4889c5e3" }
 wheels = [
-    { url = "https://southamerica-west1-python.pkg.dev/saulapp-music/acordia/saul-music-render/saul_music_render-0.6.0-py3-none-any.whl", hash = "sha256:da9cd8dfbbe416ce6e42d9aa6fff4b8bff976ffd24e2ec2d61c121924ea90989" },
+    { url = "https://southamerica-west1-python.pkg.dev/saulapp-music/acordia/saul-music-render/saul_music_render-0.6.1-py3-none-any.whl", hash = "sha256:1c7686896f774870da4bfb123885e32ccec112f512c0eb5d123d980007cfd985" },
 ]
 
 [[package]]
@@ -528,7 +528,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "fastapi", specifier = ">=0.162.0" },
-    { name = "saul-music-render", specifier = "==0.6.0", index = "https://southamerica-west1-python.pkg.dev/saulapp-music/acordia/simple/" },
+    { name = "saul-music-render", specifier = "==0.6.1", index = "https://southamerica-west1-python.pkg.dev/saulapp-music/acordia/simple/" },
     { name = "uvicorn", specifier = ">=0.54.0" },
 ]
 
