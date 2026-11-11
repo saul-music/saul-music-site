@@ -3,6 +3,25 @@
 # aprender/<ruta>/<slug>.html; las figuras se piden con [[fig:nombre]] (ver learn_figures.FIGURES).
 
 [[ruta]]
+id = "basicos"
+titulo = "Básicos"
+resumen = "Lo mínimo de teoría para leer música con tranquilidad: cómo se llaman las notas y cómo se cuenta el tiempo."
+
+  [[ruta.articulo]]
+  slug = "clave-americana"
+  titulo = "Clave americana"
+  resumen = "Por qué las notas también se llaman C, D, E, F, G, A y B, y cómo se escribe un acorde con letras."
+  descripcion = "Aprende la clave americana: la equivalencia entre Do Re Mi y C D E, cómo se escriben los sostenidos, bemoles y acordes, y las cuerdas de la guitarra en letras."
+  lectura = 5
+
+  [[ruta.articulo]]
+  slug = "compas-y-pulso"
+  titulo = "El compás y el pulso"
+  resumen = "Qué es el pulso, cómo se mide el tempo y cómo se agrupan los tiempos en un compás."
+  descripcion = "Aprende qué es el pulso, el tempo en bpm, el compás (4/4, 3/4 y 6/8) y la duración de las figuras, con cuadrículas y ejemplos para contar."
+  lectura = 7
+
+[[ruta]]
 id = "acordes"
 titulo = "Acordes"
 resumen = "De las distancias entre notas a armar tus propios acordes, con la guitarra en la mano."

@@ -379,6 +379,146 @@ def barre_shapes() -> str:
     return f'<div class="ac-fig-pair">{major}{minor}</div>'
 
 
+# ---- Básicos: clave americana, compás y pulso ----
+
+SPANISH = {"C": "Do", "D": "Re", "E": "Mi", "F": "Fa", "G": "Sol", "A": "La", "B": "Si"}
+# (nombre en español, cómo se escribe) de los acordes del ejemplo; el segundo debe ser un acorde que
+# la librería sepa interpretar (lo comprueba un test).
+CHORD_WRITING = (
+    ("Do mayor", "C"),
+    ("Do menor", "Cm"),
+    ("Do séptima", "C7"),
+    ("Do mayor séptima", "Cmaj7"),
+    ("Do sostenido mayor", "C#"),
+    ("Re bemol mayor", "Db"),
+    ("Fa sostenido menor", "F#m"),
+    ("Sol mayor con Si en el bajo", "G/B"),
+)
+NOTE_VALUES = (  # (figura, silencio, pulsos que dura con un pulso = negra)
+    ("Redonda", "silencio de redonda", 4.0),
+    ("Blanca", "silencio de blanca", 2.0),
+    ("Negra", "silencio de negra", 1.0),
+    ("Corchea", "silencio de corchea", 0.5),
+    ("Semicorchea", "silencio de semicorchea", 0.25),
+)
+METERS = (  # (compás, grupos de pulsos: el primero de cada grupo se acentúa)
+    ("4/4", (2, 2)),
+    ("3/4", (3,)),
+    ("6/8", (3, 3)),
+)
+
+
+def beats_text(value: float) -> str:
+    """«4», «1/2», «1/4» (los pulsos que dura una figura, como se dice en voz alta)."""
+    return str(int(value)) if value >= 1 else f"1/{round(1 / value)}"
+
+
+def seconds_per_beat(bpm: int) -> float:
+    return 60 / bpm
+
+
+def spanish_names_table() -> str:
+    """Las siete notas con su nombre en español y su letra (la clave americana)."""
+    rows = "".join(
+        f"<tr><th scope='row'>{SPANISH[letter]}</th><td class='ac-mono'>{letter}</td></tr>"
+        for letter in LETTERS_IN_ORDER
+    )
+    return (
+        '<figure class="ac-fig"><div class="table-responsive"><table class="table ac-table ac-table-narrow">'
+        "<caption>Las siete notas, con sus dos nombres.</caption>"
+        "<thead><tr><th scope='col'>Nombre</th><th scope='col'>Letra</th></tr></thead>"
+        f"<tbody>{rows}</tbody></table></div></figure>"
+    )
+
+
+LETTERS_IN_ORDER = tuple(SPANISH)  # C D E F G A B: de Do a Si
+
+
+def chord_writing_table() -> str:
+    rows = "".join(
+        f"<tr><td>{escape(name)}</td><td class='ac-mono'>{escape(token)}</td></tr>"
+        for name, token in CHORD_WRITING
+    )
+    return (
+        '<figure class="ac-fig"><div class="table-responsive"><table class="table ac-table">'
+        "<caption>Cómo se escribe cada acorde en clave americana.</caption>"
+        "<thead><tr><th scope='col'>Se dice</th><th scope='col'>Se escribe</th></tr></thead>"
+        f"<tbody>{rows}</tbody></table></div></figure>"
+    )
+
+
+def open_strings_table() -> str:
+    rows = "".join(
+        f"<tr><th scope='row' class='ac-mono'>{string}</th><td>{OPEN_NAMES[string]}</td>"
+        f"<td class='ac-mono'>{'e' if string == 1 else note_at(string, 0)}</td></tr>"
+        for string in STRINGS
+    )
+    return (
+        '<figure class="ac-fig"><div class="table-responsive"><table class="table ac-table ac-table-narrow">'
+        "<caption>Las cuerdas de la guitarra al aire.</caption>"
+        "<thead><tr><th scope='col'>Cuerda</th><th scope='col'>Nombre</th><th scope='col'>Letra</th></tr></thead>"
+        f"<tbody>{rows}</tbody></table></div>"
+        "<figcaption>La cuerda 1 se escribe con e minúscula para distinguirla de la 6: ambas son Mi, "
+        "pero dos octavas más aguda.</figcaption></figure>"
+    )
+
+
+def meter_grids() -> str:
+    """Una cuadrícula de pulsos por compás: el primero de cada compás es el fuerte (F) y el primero
+    de cada grupo siguiente, medio fuerte (m)."""
+    blocks = []
+    for name, groups in METERS:
+        cells = []
+        number = 0
+        for group in groups:
+            for i in range(group):
+                number += 1
+                kind = "ac-beat-strong" if number == 1 else ("ac-beat-mid" if i == 0 else "")
+                cells.append(
+                    f'<li class="ac-beat {kind}"><span class="ac-mono">{number}</span></li>'
+                )
+        blocks.append(
+            f'<div class="ac-meter"><strong class="ac-mono">{name}</strong>'
+            f'<ol class="ac-beats" aria-label="Pulsos del compás de {name}">{"".join(cells)}</ol></div>'
+        )
+    return (
+        '<figure class="ac-fig">'
+        + "".join(blocks)
+        + "<figcaption>Cada recuadro es un pulso. El dorado es el tiempo fuerte (el 1); el de borde verde es "
+        "un tiempo medio fuerte (el 3 en 4/4, el 4 en 6/8).</figcaption></figure>"
+    )
+
+
+def note_values_table() -> str:
+    rows = "".join(
+        f"<tr><th scope='row'>{name}</th><td>{rest}</td><td class='ac-mono'>{beats_text(beats)}</td>"
+        f"<td class='ac-mono'>{beats_text(4 / beats) if beats <= 4 else '–'}</td></tr>"
+        for name, rest, beats in NOTE_VALUES
+    )
+    return (
+        '<figure class="ac-fig"><div class="table-responsive"><table class="table ac-table">'
+        "<caption>Cuánto dura cada figura cuando el pulso es una negra (como en 4/4).</caption>"
+        "<thead><tr><th scope='col'>Figura</th><th scope='col'>Su silencio</th>"
+        "<th scope='col'>Pulsos que dura</th><th scope='col'>Caben en un compás de 4/4</th></tr></thead>"
+        f"<tbody>{rows}</tbody></table></div></figure>"
+    )
+
+
+def tempo_table(tempos: tuple[int, ...] = (60, 80, 100, 120)) -> str:
+    rows = "".join(
+        f"<tr><th scope='row' class='ac-mono'>{bpm}</th>"
+        f"<td class='ac-mono'>{seconds_per_beat(bpm):.2f} s</td>"
+        f"<td class='ac-mono'>{4 * seconds_per_beat(bpm):.1f} s</td></tr>"
+        for bpm in tempos
+    )
+    return (
+        '<figure class="ac-fig"><div class="table-responsive"><table class="table ac-table ac-table-narrow">'
+        "<caption>Cuánto dura un pulso, y un compás de 4/4, según el tempo.</caption>"
+        "<thead><tr><th scope='col'>bpm</th><th scope='col'>Un pulso</th><th scope='col'>Un compás de 4/4</th></tr></thead>"
+        f"<tbody>{rows}</tbody></table></div></figure>"
+    )
+
+
 FIGURES = {
     "escala-cromatica": chromatic_row,
     "tabla-intervalos": intervals_table,
@@ -388,4 +528,10 @@ FIGURES = {
     "tabla-triadas": triads_table,
     "e-em": e_and_em,
     "cejilla": barre_shapes,
+    "tabla-clave-americana": spanish_names_table,
+    "tabla-escritura-acordes": chord_writing_table,
+    "cuerdas-al-aire": open_strings_table,
+    "cuadricula-compases": meter_grids,
+    "tabla-figuras": note_values_table,
+    "tabla-tempo": tempo_table,
 }

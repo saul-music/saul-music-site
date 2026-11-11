@@ -48,3 +48,10 @@
 .ac-table caption { caption-side: top; color: var(--ac-fg-muted); padding-top: 0; }
 .ac-learn-nav { display: flex; flex-wrap: wrap; justify-content: space-between; gap: .75rem; margin-top: 3rem; padding-top: 1.5rem; border-top: 1px solid var(--ac-line); }
 @media (prefers-reduced-motion: no-preference) { .ac-tree a.ac-tree-link { transition: color .15s; } }
+.ac-table-narrow { max-width: 28rem; }
+.ac-meter { display: grid; gap: .4rem; margin-bottom: 1rem; }
+.ac-beats { display: flex; flex-wrap: wrap; gap: .4rem; list-style: none; padding: 0; margin: 0; }
+.ac-beat { width: 3rem; height: 3rem; display: grid; place-items: center; border: 2px solid var(--ac-line); border-radius: var(--ac-radius); background: var(--ac-surface); }
+.ac-beat-mid { border-color: var(--ac-fill-2); }
+.ac-beat-strong { border-color: var(--ac-fill); background: rgba(var(--ac-accent-rgb), .18); font-weight: 700; }
+
