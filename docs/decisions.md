@@ -833,3 +833,8 @@ Sin código propio: el acorde y su regla (RD23 de la librería) llegan con la de
 ## S68 · El site sube a `acordia-render` 0.6.2: los acordes de quinta son Básicos (2026-11-11)
 
 `C5`, `F#5` y `Bb5` valen en el modo Básico, con su diagrama de guitarra calculado (RD24 de la librería); `Cm5` y `C5/G` siguen fuera de Básico.
+
+## S69 · El site sube a `acordia-render` 0.6.3: casillas densas (2026-11-12)
+
+Sin código propio: la casilla de nombres largos con ligado (`Bb13sus4-_-Eb9sus-G7(#9)`) ocupa la fila entera y, en celular, su ligado
+es una línea de sostén; deja de dibujarse pisada (RD25 de la librería).
