@@ -77,7 +77,15 @@ def create_app(
     files = {**load_files(LIB_WEB_DIR), **learn.build_pages(), **load_files(root)}
     index_html = files["/index.html"][0].decode() if "/index.html" in files else ""
     artists_html = files["/artistas.html"][0].decode() if "/artistas.html" in files else ""
-    catalog = Catalog(index_html, songs, editorial, refresh_seconds, artists_html=artists_html)
+    guides_html = files["/guias.html"][0].decode() if "/guias.html" in files else ""
+    catalog = Catalog(
+        index_html,
+        songs,
+        editorial,
+        refresh_seconds,
+        artists_html=artists_html,
+        guides_html=guides_html,
+    )
     app = FastAPI(docs_url=None, redoc_url=None, openapi_url=None, redirect_slashes=False)
 
     @app.middleware("http")
@@ -101,6 +109,8 @@ def create_app(
             return Response(state.index, media_type=TYPES[".html"])
         if path == "/artistas.html" and state.artists is not None:
             return Response(state.artists, media_type=TYPES[".html"])
+        if path == "/guias.html" and state.guides is not None:
+            return Response(state.guides, media_type=TYPES[".html"])
         photo = state.photos.get(path[1:]) if path.startswith("/fotos/") else None
         if photo is not None:  # el nombre lleva el hash: una foto nueva es otro archivo
             return Response(
