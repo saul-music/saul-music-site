@@ -898,3 +898,8 @@ Sigue a RD31 de la librería. En el modo estudio los acordes con ligadura llevan
 
 Sin código propio. Sigue a RD32: en el modo estudio la figura del ligado (S74) era redundante en todos los ligados; ahora aparece solo cuando el acorde se perdería de la pantalla y una sola vez por pantalla.
 
+## S76 · Las guías y la Biblioteca usan los temas publicados, no una lista fija: `acordia-render` 0.10.0 (2026-11-17)
+
+`musicsite.profes` ya no importa `REPERTOIRE`: el catálogo registra el título y el artista de cada tema al cargar una publicación (`use_catalog`), y de ahí salen quién enseña qué, los títulos y el filtro por tema de `guias.html`.
+**Arregla un fallo:** las guías con regla por artista no alcanzaban a los temas publicados desde el admin que no estaban en la lista antigua. `guias.html` se arma con lo publicado (`State.guides`); una publicación descartada no cambia lo que las guías conocen.
+Una regla que no alcanza ningún tema publicado se avisa en el log (`catalog_warnings`), no impide mostrar nada. `python -m musicsite.profes guides --dir <carpeta>` exige la carpeta de temas. La Biblioteca ya no trae «Próximamente» (RD33). 343 pruebas.
