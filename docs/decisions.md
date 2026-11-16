@@ -855,3 +855,15 @@ demo de «Pide una canción» (ahora pide una **versión**). La dificultad del t
 define quien escribe la partitura. La prueba de orden de la franja de guías se ajustó (las pestañas van antes de la barra).
 **Usa `acordia-render` 0.7.1** (0.7.0 más RD27: la ayuda de guías va sobre la barra y no cambia su alto). La prueba «no empuja los compases» mide ahora la versión visible.
 
+
+## S71 · Biblioteca por artista: paneles en tres intensidades y acordeón en celular (2026-11-16)
+
+Sigue a RD28 de la librería (`acordia-render` 0.8.0), que arma el HTML, el CSS y el comportamiento del acordeón; el site solo lo usa. **Qué ve la
+persona:** cada artista es un panel cuya intensidad (un solo matiz, malva) depende de cuántos temas tiene (1 / 2 a 4 / 5 o más), sin leyenda; en
+escritorio las fichas van en fila y en celular los artistas parten cerrados y se abren de a uno con un toque. **Cambios propios del site:** los
+filtros de barrio y nivel de la portada avisan al acordeón (`AcordiaBiblioteca.openMatches`) para abrir los artistas con temas a la vista; el bloque
+estático de la Biblioteca (el respaldo) se regeneró con el HTML nuevo; y las pruebas de navegador de la Biblioteca viven aquí, porque solo existe en
+esta portada: intensidad por cantidad de temas, panel sin temas a la vista que desaparece entero, acordeón en celular (abre uno sin cerrar los otros,
+teclado, «Abrir todos / Cerrar todos», búsqueda, filtros y `?q=`) y que en escritorio todo esté abierto y las cabeceras no sean botones. Dos pruebas
+antiguas suponían la Biblioteca abierta y ahora la abren primero en celular. **Pendiente:** iPhone y Android reales.
+
