@@ -85,8 +85,8 @@ def test_guides_appear_once_as_a_strip_before_the_player():
     assert "data-ac-met-help" in page and " hidden>¿Se complica" in page
     # una sola franja de guías (la de Utilidades, RD22, es otra aparte)
     assert page.count('aria-label="Guías de este tema"') == 1 and "Ver guías" not in page
-    # La franja va primero: antes de las pestañas de versión (que asoman sobre la barra, RD26), de la
-    # barra del metrónomo y de los compases.
+    # La franja va primero: antes de las pestañas de versión (sobre la barra, RD26), de la barra
+    # del metrónomo y de los compases.
     assert (
         page.index("data-ac-met-guides") < page.index('id="tabs"') < page.index("data-ac-metronome")
     )
