@@ -912,3 +912,7 @@ Solo sube la versión (RD34 de la librería): un tema puede traer `Em9*` en `[fo
 ## S78 · El site sube a `acordia-render` 0.11.1: diagramas de posiciones con su estilo y sin piano (2026-11-17)
 
 Solo sube la versión (RD35): corrige los diagramas de «Posiciones de los acordes» (salían negros) y retira el piano del render por ahora. 343 pruebas; las e2e viven en la librería. **Pendiente:** `curl` en producción y verlo en celular real.
+
+## S79 · El site sube a `acordia-render` 0.11.2: fichas de posiciones alineadas (2026-11-17)
+
+Solo sube la versión (RD36): las fichas de «Posiciones de los acordes» quedan a la misma altura. 343 pruebas; las e2e viven en la librería.
