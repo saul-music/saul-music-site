@@ -877,3 +877,12 @@ tiene algo que mostrar. **Pruebas:** como el CI salta el e2e cuando solo sube la
 más los 337 tests sin navegador, antes del PR (lección de RD27).
 **Pendiente:** ver la vitrina con materiales reales: publicar un tema con materiales desde el admin y abrirlo en el sitio.
 
+
+## S73 · El site usa el modo estudio (2026-11-16)
+
+Sigue a RD30 de la librería (`acordia-render` 0.9.0), que trae el botón, la pantalla completa y toda la lógica; el site solo sube de versión. **Qué ve la persona:** un botón «Modo estudio» en
+la barra de reproducción de cada tema (solo el ícono en celular) que abre el reproductor y los compases a pantalla completa: horizontal por defecto, con la figura de guitarra sobre cada compás, o
+vertical; en celular vertical, páginas de hasta 3 figuras. La barra de reproducción real se muda al estudio y vuelve al salir. **Cambio propio del site:** una prueba de navegador (abrir desde la
+barra, ver compases y la barra real dentro, cerrar con `Esc` y recuperar la barra). La navegación entre 768 y 991 px, que medía 858 px a 844 px, se compactó en la librería. **Pendiente:** iPhone
+y Android reales y la pantalla completa nativa en cada navegador.
+
