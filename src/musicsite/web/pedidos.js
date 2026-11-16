@@ -18,14 +18,14 @@
   function DemoSource(intervalMs) {
     /* Canciones del repertorio ya público o genéricas; sin letras ni acordes. */
     var pool = [
-      ["Bailando solo", "Los Bunkers", "Básico"],
-      ["Ven aquí", "Los Bunkers", "Intermedio"],
-      ["Cámara lenta", "Javiera Mena", "Avanzado"],
-      ["Déjate caer", "Los Tres", "Básico"],
-      ["Una canción de cuna (ejemplo)", "Tradicional", "Básico"],
-      ["Un vals criollo (ejemplo)", "Tradicional", "Intermedio"],
-      ["Una balada de fogata (ejemplo)", "Autor de ejemplo", "Básico"],
-      ["Una cueca para guitarra (ejemplo)", "Tradicional", "Avanzado"]
+      ["Bailando solo", "Los Bunkers", "Simplificada"],
+      ["Ven aquí", "Los Bunkers", "Original"],
+      ["Cámara lenta", "Javiera Mena", "A fondo"],
+      ["Déjate caer", "Los Tres", "Simplificada"],
+      ["Una canción de cuna (ejemplo)", "Tradicional", "Simplificada"],
+      ["Un vals criollo (ejemplo)", "Tradicional", "Original"],
+      ["Una balada de fogata (ejemplo)", "Autor de ejemplo", "Simplificada"],
+      ["Una cueca para guitarra (ejemplo)", "Tradicional", "A fondo"]
     ];
     var items = [], next = 0, turn = 0, listeners = [], timer = null, serial = 0;
     function add(status) {
@@ -81,7 +81,7 @@
     h.textContent = item.title;
     var meta = document.createElement("p");
     meta.className = "m-0 small text-body-secondary";
-    meta.textContent = item.artist + " · Nivel " + item.level.toLowerCase();
+    meta.textContent = item.artist + " · Versión " + item.level.toLowerCase();
     name.append(h, meta);
     var badges = document.createElement("div");
     badges.className = "d-flex flex-wrap gap-2 align-items-center";
