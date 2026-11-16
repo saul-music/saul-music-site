@@ -457,7 +457,7 @@ def test_the_library_link_from_the_artists_page_opens_that_artist_on_mobile(
 
 
 def test_study_mode_opens_from_the_player_bar_and_closes_with_escape(page: Page, base_url: str):
-    """RD30 (S73): el site sirve `estudio.js` y el botón abre la pantalla completa con los compases."""
+    """RD30 (S73): el site sirve `estudio.js` y el botón abre el estudio con los compases."""
     page.set_viewport_size(DESKTOP)
     page.goto(base_url + SONG)
     page.locator("[data-ac-study-open]").click()
