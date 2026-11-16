@@ -99,7 +99,9 @@ def test_guides_collapse_opens_from_the_scrolled_bar_without_moving_the_bars(son
     song.evaluate("window.scrollTo(0, 900)")
     help_button = song.locator("[data-ac-met-help]")
     expect(help_button).to_be_visible()
-    first_bar = song.locator("#p-basico .ac-bar").first
+    first_bar = song.locator(
+        ".tab-pane.active .ac-bar"
+    ).first  # la versión visible (Original, RD26)
     page_y = "el => el.getBoundingClientRect().top + window.scrollY"
     before = first_bar.evaluate(page_y)
     help_button.click()

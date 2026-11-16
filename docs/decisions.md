@@ -838,3 +838,20 @@ Sin código propio: el acorde y su regla (RD23 de la librería) llegan con la de
 
 Sin código propio: la casilla de nombres largos con ligado (`Bb13sus4-_-Eb9sus-G7(#9)`) ocupa la fila entera y, en celular, su ligado
 es una línea de sostén; deja de dibujarse pisada (RD25 de la librería).
+
+
+## S70 · El site usa las versiones Original, Simplificada y A fondo (2026-11-15)
+
+Sigue a RD26 de la librería (`acordia-render` 0.7.0) y M76 de research. **La página de canción cambia sola al subir la
+versión**: pestañas de navegador sobre la barra de reproducción (Original por defecto, Simplificada y A fondo), barra con color
+propio y enlaces `#original`, `#simplificada` y `#a-fondo` (los viejos `#basico`, `#intermedio` y `#avanzado` siguen valiendo).
+**«A fondo» es una vitrina de marketing, no contenido:** lista lo que las guías tienen preparado para ese tema («Tab de una
+sección», «2 tips de la guía») con el botón «Habla con una guía»; el material nunca llega al site, porque el admin lo quita del
+TOML publicado y deja solo la lista en el `index.json` del release, que la librería lee al renderizar (`render_published`). Sin
+lista no hay pestaña, así que hoy ningún tema la muestra. Quién ve el material (las guías, quien paga) **no está decidido**: hace
+falta identidad, almacenamiento privado y una decisión de producto aparte.
+**Cambios propios del site:** la sección de la portada «Un tema, tres versiones» (Original, Simplificada y A fondo) y el formulario
+demo de «Pide una canción» (ahora pide una **versión**). La dificultad del tema (`nivel`: inicial, medio, avanzado) no cambia: la
+define quien escribe la partitura. La prueba de orden de la franja de guías se ajustó (las pestañas van antes de la barra).
+**Usa `acordia-render` 0.7.1** (0.7.0 más RD27: la ayuda de guías va sobre la barra y no cambia su alto). La prueba «no empuja los compases» mide ahora la versión visible.
+
