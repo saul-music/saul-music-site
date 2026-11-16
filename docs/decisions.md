@@ -886,3 +886,10 @@ vertical; en celular vertical, páginas de hasta 3 figuras. La barra de reproduc
 barra, ver compases y la barra real dentro, cerrar con `Esc` y recuperar la barra). La navegación entre 768 y 991 px, que medía 858 px a 844 px, se compactó en la librería. **Pendiente:** iPhone
 y Android reales y la pantalla completa nativa en cada navegador.
 
+
+## S74 · El site sube a `acordia-render` 0.9.1: ligados con figura y «¿Se complica esta parte?» en el estudio (2026-11-16)
+
+Sigue a RD31 de la librería. En el modo estudio los acordes con ligadura llevan la figura del acorde que sigue sonando (antes dejaban una casilla vacía) y se mantiene el marketing de las guías:
+«¿Se complica esta parte? Habla con una guía» y su panel flotan arriba a la derecha y siguen a la vista (`Esc` cierra primero el panel y luego el estudio). **Cambio propio del site:** dos pruebas de navegador de la ayuda
+(escritorio y celular), porque solo existe si el tema tiene guías y los perfiles son de este repo.
+

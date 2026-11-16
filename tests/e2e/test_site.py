@@ -468,3 +468,39 @@ def test_study_mode_opens_from_the_player_bar_and_closes_with_escape(page: Page,
     page.keyboard.press("Escape")
     expect(dialog).to_be_hidden()
     expect(page.locator(".ac-sticky-tools [data-ac-met-toggle]")).to_be_visible()
+
+
+def test_the_guides_help_stays_in_the_study_with_its_panel_and_everything_comes_back(
+    page: Page, base_url: str
+):
+    """RD31 (S74): «¿Se complica esta parte?» sigue en el estudio y su panel de guías abre."""
+    page.set_viewport_size(DESKTOP)
+    page.goto(base_url + SONG)
+    page.locator("[data-ac-study-open]").click()
+    dialog = page.locator("[data-ac-study]")
+    help_button = dialog.locator("[data-ac-met-help]")
+    expect(
+        help_button
+    ).to_be_visible()  # en la página se oculta con la franja a la vista; en el estudio no
+    expect(help_button).to_be_in_viewport()
+    help_button.click()
+    panel = dialog.locator("#guias-panel")
+    expect(panel).to_have_class(re.compile(r"\bshow\b"))
+    expect(panel.get_by_role("link", name=re.compile("^Ver las"))).to_be_visible()
+    page.keyboard.press("Escape")  # cierra primero el panel
+    expect(panel).to_be_hidden()
+    expect(dialog).to_be_visible()
+    page.keyboard.press("Escape")  # y luego el estudio
+    expect(dialog).to_be_hidden()
+    expect(page.locator(".ac-sticky-tools [data-ac-met-help]")).to_have_count(1)
+    expect(page.locator(".ac-sticky-tools #guias-panel")).to_have_count(1)
+
+
+def test_the_guides_help_is_visible_in_the_study_on_a_phone(page: Page, base_url: str):
+    page.set_viewport_size(PHONE)
+    page.goto(base_url + SONG)
+    page.locator("[data-ac-study-open]").click()
+    help_button = page.locator("[data-ac-study] [data-ac-met-help]")
+    expect(help_button).to_be_visible()
+    box = help_button.bounding_box()
+    assert box["x"] >= 0 and box["x"] + box["width"] <= PHONE["width"] + 1
