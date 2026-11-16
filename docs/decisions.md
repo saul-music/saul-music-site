@@ -867,3 +867,13 @@ esta portada: intensidad por cantidad de temas, panel sin temas a la vista que d
 teclado, «Abrir todos / Cerrar todos», búsqueda, filtros y `?q=`) y que en escritorio todo esté abierto y las cabeceras no sean botones. Dos pruebas
 antiguas suponían la Biblioteca abierta y ahora la abren primero en celular. **Pendiente:** iPhone y Android reales.
 
+
+## S72 · El site sube a `acordia-render` 0.8.1: la vitrina de «A fondo» cuenta los materiales por tipo (2026-11-16)
+
+**Decisión del usuario.** La vitrina de «A fondo» dice qué material hay por tipo («1 partitura», «2 audios», «1 curso») para atraer a quien visita el tema
+(librería RD29, admin M78 y M79). El site no tiene código nuevo: solo sube la dependencia; la librería dibuja la vitrina con la lista que trae el `index.json`
+del release. **Privacidad:** esa lista lleva solo conteos; ningún título, enlace ni nota llega aquí. La pestaña «A fondo» sigue apareciendo solo si el tema
+tiene algo que mostrar. **Pruebas:** como el CI salta el e2e cuando solo sube la librería (S48), corrí aquí los 50 e2e en Chromium y en WebKit con iPhone 14,
+más los 337 tests sin navegador, antes del PR (lección de RD27).
+**Pendiente:** ver la vitrina con materiales reales: publicar un tema con materiales desde el admin y abrirlo en el sitio.
+
