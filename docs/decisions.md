@@ -893,3 +893,8 @@ Sigue a RD31 de la librería. En el modo estudio los acordes con ligadura llevan
 «¿Se complica esta parte? Habla con una guía» y su panel flotan arriba a la derecha y siguen a la vista (`Esc` cierra primero el panel y luego el estudio). **Cambio propio del site:** dos pruebas de navegador de la ayuda
 (escritorio y celular), porque solo existe si el tema tiene guías y los perfiles son de este repo.
 
+
+## S75 · El site sube a `acordia-render` 0.9.2: la figura del ligado una vez por pantalla (2026-11-16)
+
+Sin código propio. Sigue a RD32: en el modo estudio la figura del ligado (S74) era redundante en todos los ligados; ahora aparece solo cuando el acorde se perdería de la pantalla y una sola vez por pantalla.
+
