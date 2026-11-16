@@ -454,3 +454,17 @@ def test_the_library_link_from_the_artists_page_opens_that_artist_on_mobile(
     group = page.locator("#biblioteca .ac-artist-group:visible")
     expect(group).to_have_count(1)
     expect(group.locator(".ac-artist-head")).to_have_attribute("aria-expanded", "true")
+
+
+def test_study_mode_opens_from_the_player_bar_and_closes_with_escape(page: Page, base_url: str):
+    """RD30 (S73): el site sirve `estudio.js` y el botón abre el estudio con los compases."""
+    page.set_viewport_size(DESKTOP)
+    page.goto(base_url + SONG)
+    page.locator("[data-ac-study-open]").click()
+    dialog = page.locator("[data-ac-study]")
+    expect(dialog).to_be_visible()
+    expect(dialog.locator(".ac-st-bar").first).to_be_visible()
+    expect(dialog.locator("[data-ac-met-toggle]")).to_be_visible()  # la barra real, ya dentro
+    page.keyboard.press("Escape")
+    expect(dialog).to_be_hidden()
+    expect(page.locator(".ac-sticky-tools [data-ac-met-toggle]")).to_be_visible()
