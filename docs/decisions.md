@@ -903,3 +903,8 @@ Sin código propio. Sigue a RD32: en el modo estudio la figura del ligado (S74) 
 `musicsite.profes` ya no importa `REPERTOIRE`: el catálogo registra el título y el artista de cada tema al cargar una publicación (`use_catalog`), y de ahí salen quién enseña qué, los títulos y el filtro por tema de `guias.html`.
 **Arregla un fallo:** las guías con regla por artista no alcanzaban a los temas publicados desde el admin que no estaban en la lista antigua. `guias.html` se arma con lo publicado (`State.guides`); una publicación descartada no cambia lo que las guías conocen.
 Una regla que no alcanza ningún tema publicado se avisa en el log (`catalog_warnings`), no impide mostrar nada. `python -m musicsite.profes guides --dir <carpeta>` exige la carpeta de temas. La Biblioteca ya no trae «Próximamente» (RD33). 343 pruebas.
+
+## S77 · El site sube a `acordia-render` 0.11.0: variantes de forma con `*` y «Posiciones de los acordes» interactivas (2026-11-17)
+
+Solo sube la versión (RD34 de la librería): un tema puede traer `Em9*` en `[formas]` y pedirlo en la partitura (el `*` no se ve); cada acorde de «Posiciones de los acordes» tiene Guitarra/Teclado, «Tocar», «Otra posición» y la casilla «Usar esta posición en la canción» (desmarcada por defecto; gana el `*` del tema; no se recuerda). El site no tiene código propio de esto; `bpm` y publicaciones sin `*` quedan idénticas.
+**Pruebas:** 343 unitarias; las e2e de la página viven en la librería (S50), y el cambio solo de versión no corre la matriz aquí (S48): `scripts/e2e-produccion.sh` tras el despliegue. **Pendiente:** verificar en producción con `curl` y oír en iPhone y Android reales.
