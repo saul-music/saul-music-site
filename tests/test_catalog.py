@@ -8,7 +8,6 @@ import tomllib
 from pathlib import Path
 
 import pytest
-from acordia_render.acordes import REPERTOIRE
 from acordia_render.songpages import (
     apply_count,
     apply_library,
@@ -81,14 +80,15 @@ def test_publication_replaces_songs_in_git(editorial):
     assert client.get("/cancion-dejate-caer.html").status_code == 404  # está en git, no publicado
 
 
-def test_library_lists_published_and_marks_the_rest_as_coming_soon(editorial):
+def test_library_lists_only_what_is_published(editorial):
     editorial.mkdir()
     make_release(editorial, {"otra-era": song_text("otra-era")})
     index = TestClient(create_app(editorial=editorial)).get("/").text
     assert 'href="cancion-otra-era.html"' in index
     assert 'href="cancion-dejate-caer.html"' not in index
-    assert index.count("Próximamente") >= len(REPERTOIRE) - 1  # el resto del repertorio
-    assert "Dos veces" not in index and "Esquemas juveniles" in index  # título y artista visibles
+    block = index.split("<!-- biblioteca:inicio -->")[1].split("<!-- biblioteca:fin -->")[0]
+    assert "Próximamente" not in block  # RD33: ya no hay tarjetas de temas sin publicar
+    assert "Esquemas juveniles" not in block and "Dos veces" not in block
     # lo que está fuera de la Biblioteca no cambia
     assert (
         "<strong>1 canción disponible</strong>" in index
@@ -101,17 +101,6 @@ def test_library_lists_published_and_marks_the_rest_as_coming_soon(editorial):
     assert index.split("<!-- biblioteca:fin -->")[1] == static.split("<!-- biblioteca:fin -->")[1]
 
 
-def test_coming_soon_cards_do_not_leak_draft_data(editorial):
-    editorial.mkdir()
-    make_release(editorial, {"otra-era": song_text("otra-era")})
-    index = TestClient(create_app(editorial=editorial)).get("/").text
-    at = index.index("Cantar y amar")
-    start = index.rindex('<div class="col">', 0, at)
-    end = index.find('<div class="col">', at)
-    card = index[start : end if end != -1 else len(index)]
-    assert "Próximamente" in card and "ac-chip-chord" not in card and "bpm" not in card
-
-
 def test_changed_content_and_a_new_song_show_up(editorial):
     editorial.mkdir()
     new = song_text("tema-nuevo", slug="tema-nuevo", titulo="Tema nuevo", artista="Artista Nuevo")
@@ -121,8 +110,8 @@ def test_changed_content_and_a_new_song_show_up(editorial):
     assert client.get("/cancion-tema-nuevo.html").status_code == 200
     index = client.get("/").text
     assert 'href="cancion-tema-nuevo.html"' in index and "Artista Nuevo" in index
-    # los nuevos se mezclan por artista (S14): «Artista Nuevo» va antes que «Los Bunkers»
-    assert index.index("Artista Nuevo") < index.index("Los Bunkers")
+    # los nuevos se mezclan por artista (S14): «Artista Nuevo» va antes que «Javiera Mena»
+    assert index.index("Artista Nuevo") < index.index("Javiera Mena")
 
 
 def test_new_publication_is_picked_up_after_the_refresh_interval(editorial, monkeypatch):
@@ -207,3 +196,41 @@ def test_apply_library_matches_the_generator_the_cli_uses(tmp_path):
         (WEB_DIR / "index.html").read_text(encoding="utf-8"), published_library_html(SONGS_DIR)
     )
     assert index.read_text(encoding="utf-8") == expected
+
+
+# --- Guías según lo publicado (S76: ya no hay una lista fija de temas) ---------------------
+
+
+def test_guides_know_a_published_song_that_was_never_in_a_fixed_list(editorial):
+    """Un tema publicado desde el admin lo enseña quien tiene regla por su artista (antes, no)."""
+    from musicsite import profes
+
+    editorial.mkdir()
+    new = song_text("otra-era", slug="tema-nuevo", titulo="Tema nuevo", artista="Los Tres")
+    make_release(editorial, {"tema-nuevo": new})
+    client = TestClient(create_app(editorial=editorial))
+    by_artist = [
+        p for p in profes.load_profiles() if p["ensena"] != [{"artista": "*"}] and p["id"] != "x"
+    ]
+    teachers = {p["id"] for p in profes.teachers_for("tema-nuevo")}
+    assert any(p["id"] in teachers for p in by_artist)  # alguna guía con regla por «Los Tres»
+    page = client.get("/guias.html").text
+    assert 'id="guia-' in page and "tema-nuevo" in page  # el filtro por tema lo conoce
+
+
+def test_a_discarded_publication_does_not_change_which_songs_the_guides_know(
+    editorial, monkeypatch
+):
+    import musicsite.catalog as catalog
+    from musicsite import profes
+
+    clock = Clock()
+    monkeypatch.setattr(catalog.time, "monotonic", clock)
+    editorial.mkdir()
+    make_release(editorial, {"otra-era": song_text("otra-era")})
+    client = TestClient(create_app(editorial=editorial, refresh_seconds=60))
+    assert "otra-era" in profes._catalog
+    make_release(editorial, {"otra-era": 'slug = "otra-era"\n', "otro": "x = 1\n"})  # no sirve
+    clock.now = 61
+    client.get("/")
+    assert set(profes._catalog) == {"otra-era"}  # lo anterior, no lo de la publicación descartada

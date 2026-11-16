@@ -3,18 +3,47 @@
 import pytest
 from acordia_render.songpages import render
 
+from musicsite import profes
 from musicsite.profes import (
     GUIDES_END,
     GUIDES_START,
+    catalog_warnings,
     check_rule,
+    check_rule_in_catalog,
     describe,
     load_profiles,
+    render_guides,
+    songs_in,
     songs_of,
     teachers_for,
     teaches,
     top_teachers,
     update_guides,
 )
+
+# Temas publicados de estas pruebas. «moizefala» nunca estuvo en el repertorio inicial:
+# las guías por artista también lo alcanzan.
+CATALOG = {
+    "dejate-caer": ("Déjate caer", "Los Tres"),
+    "he-barrido-el-sol": ("He barrido el sol", "Los Tres"),
+    "moizefala": ("Moizefala", "Los Tres"),
+    "ven-aqui": ("Ven aquí", "Los Bunkers"),
+    "llueve-sobre-la-ciudad": ("Llueve sobre la ciudad", "Los Bunkers"),
+    "bailando-solo": ("Bailando solo", "Los Bunkers"),
+    "camara-lenta": ("Cámara lenta", "Javiera Mena"),
+    "esquemas-juveniles": ("Esquemas juveniles", "Javiera Mena"),
+    "otra-era": ("Otra era", "Javiera Mena"),
+    "yo-no-te-pido-la-luna": ("Yo no te pido la luna", "Javiera Mena (versión)"),
+    "hablar-de-ti": ("Hablar de ti", "Gepe"),
+}
+
+
+@pytest.fixture(autouse=True)
+def published_songs():
+    profes.use_catalog(CATALOG)
+    yield
+    profes.use_catalog({})
+
 
 BY_ARTIST = {"ensena": [{"artista": "Los Tres"}]}
 BY_SONG = {"ensena": [{"artista": "Los Bunkers", "tema": "ven-aqui"}]}
@@ -37,17 +66,48 @@ def test_wildcard_covers_everything_and_version_suffix_counts_as_the_artist():
 
 @pytest.mark.parametrize(
     "rule",
+    [{}, {"artista": "*", "tema": "ven-aqui"}, {"artista": "Los Tres", "extra": 1}],
+)
+def test_malformed_rules_are_rejected(rule):
+    assert check_rule(rule)
+
+
+@pytest.mark.parametrize(
+    "rule",
     [
-        {},
         {"artista": "Nadie"},
         {"artista": "Los Tres", "tema": "ven-aqui"},
         {"artista": "Los Tres", "tema": "no-existe"},
-        {"artista": "*", "tema": "ven-aqui"},
-        {"artista": "Los Tres", "extra": 1},
     ],
 )
-def test_invalid_rules_are_rejected(rule):
-    assert check_rule(rule)
+def test_rules_that_reach_nothing_published_are_reported(rule):
+    assert not check_rule(rule)  # la forma está bien
+    assert check_rule_in_catalog(rule)  # pero hoy no alcanza ningún tema publicado
+
+
+def test_a_song_published_later_is_reached_by_the_artist_rule():
+    """Antes las reglas por artista solo veían los 15 temas de una lista fija."""
+    assert teaches(BY_ARTIST, "moizefala")
+    assert "moizefala" in songs_of(BY_ARTIST)
+
+
+def test_without_a_catalog_only_the_wildcard_teaches_and_nothing_breaks():
+    profes.use_catalog({})
+    assert not teaches(BY_ARTIST, "dejate-caer") and teaches(EVERYTHING, "dejate-caer")
+    assert songs_of(BY_ARTIST) == [] and profes.song_title("x") == "x"
+
+
+def test_songs_in_reads_title_and_artist_from_a_folder(tmp_path):
+    (tmp_path / "otra-era.toml").write_text('titulo = "Otra era"\nartista = "Javiera Mena"\n')
+    (tmp_path / "sin-datos.toml").write_text('slug = "sin-datos"\n')
+    assert songs_in(tmp_path) == {
+        "otra-era": ("Otra era", "Javiera Mena"),
+        "sin-datos": ("sin-datos", ""),
+    }
+
+
+def test_the_real_profiles_do_not_point_at_missing_published_songs():
+    assert catalog_warnings(load_profiles()) == []
 
 
 def test_real_file_is_valid_and_two_people_teach_everything():
@@ -64,10 +124,8 @@ def test_invalid_file_reports_all_errors(tmp_path):
         load_profiles(bad)
 
 
-def test_every_repertoire_song_has_at_least_two_teachers():
-    from acordia_render.acordes import REPERTOIRE
-
-    assert all(len(teachers_for(slug)) >= 2 for slug, *_ in REPERTOIRE)
+def test_every_published_song_has_at_least_two_teachers():
+    assert all(len(teachers_for(slug)) >= 2 for slug in CATALOG)
 
 
 def test_guides_appear_once_as_a_strip_before_the_player():
@@ -99,6 +157,8 @@ def test_update_guides_writes_one_card_per_profile(tmp_path):
     text = page.read_text(encoding="utf-8")
     assert text.count('data-temas="') == len(load_profiles())
     assert "Todo el repertorio" in text
+    assert "moizefala" in text  # el filtro por tema conoce los temas publicados
+    assert render_guides(f"{GUIDES_START}{GUIDES_END}").count("data-temas") == len(load_profiles())
 
 
 def test_top_teachers_rank_by_score_and_leave_unrated_last():

@@ -1,20 +1,19 @@
 """Quién enseña qué: perfiles de ejemplo con reglas explícitas por artista o por tema.
 
 Cada profe declara en `profes.toml` lo que puede enseñar: todos los temas de un artista, un tema
-puntual o todo el repertorio (artista = "*"). Este módulo valida esas reglas contra el repertorio,
-dice quién puede enseñar un tema y escribe las tarjetas de guias.html.
+puntual o todo el repertorio (artista = "*"). Los temas existentes son los **publicados**: el
+catálogo (`musicsite.catalog`) registra aquí el título y el artista de cada uno al cargar una
+publicación (`use_catalog`). Este módulo dice quién puede enseñar un tema y escribe las tarjetas de guias.html.
 
-Uso:
-    python -m musicsite.profes validate
-    python -m musicsite.profes guides [--page src/musicsite/web/guias.html]
+Uso (con una carpeta de temas: una publicación o una copia local de lo publicado):
+    python -m musicsite.profes validate [--dir <carpeta>]
+    python -m musicsite.profes guides --dir <carpeta> [--page src/musicsite/web/guias.html]
 """
 
 import argparse
 import re
 import tomllib
 from pathlib import Path
-
-from acordia_render.acordes import REPERTOIRE
 
 from musicsite.app import WEB_DIR
 
@@ -32,28 +31,70 @@ def artist_base(name: str) -> str:
     return re.sub(r"\s*\(.*\)$", "", name)
 
 
-TITLES = {slug: title for slug, title, _, _ in REPERTOIRE}
-SONG_ARTIST = {slug: artist_base(artist) for slug, _, artist, _ in REPERTOIRE}
-ARTISTS = set(SONG_ARTIST.values())
+# slug -> (título, artista) de los temas publicados; lo registra el catálogo (`use_catalog`).
+_catalog: dict[str, tuple[str, str]] = {}
+
+
+def use_catalog(songs: dict[str, tuple[str, str]]) -> None:
+    """Fija los temas que existen (los publicados): de ahí salen títulos, artistas y quién enseña qué."""
+    global _catalog
+    _catalog = dict(songs)
+
+
+def songs_in(directory: Path) -> dict[str, tuple[str, str]]:
+    """slug -> (título, artista) de los `.toml` de una carpeta (una publicación o una copia de ella)."""
+    songs = {}
+    for path in sorted(directory.glob("*.toml")):
+        data = tomllib.loads(path.read_text(encoding="utf-8"))
+        songs[path.stem] = (str(data.get("titulo", path.stem)), str(data.get("artista", "")))
+    return songs
+
+
+def song_artist(slug: str) -> str | None:
+    entry = _catalog.get(slug)
+    return artist_base(entry[1]) if entry else None
+
+
+def song_title(slug: str) -> str:
+    return _catalog[slug][0] if slug in _catalog else slug
 
 
 def check_rule(rule: dict) -> list[str]:
+    """Forma de una regla (lo que no depende de qué temas haya publicados)."""
     errors = []
     if unknown := set(rule) - RULE_KEYS:
         errors.append(f"claves desconocidas {sorted(unknown)}")
-    artist, slug = rule.get("artista"), rule.get("tema")
+    artist = rule.get("artista")
     if not artist:
         return errors + ["la regla no declara artista"]
-    if artist == ALL:
-        if slug:
-            errors.append("artista = «*» no admite tema")
-    elif artist not in ARTISTS:
-        errors.append(f"artista «{artist}» no está en el repertorio")
-    elif slug and SONG_ARTIST.get(slug) != artist:
-        errors.append(f"tema «{slug}» no es de {artist}")
-    elif slug is not None and slug not in SONG_ARTIST:
-        errors.append(f"tema «{slug}» no está en el repertorio")
+    if artist == ALL and rule.get("tema"):
+        errors.append("artista = «*» no admite tema")
     return errors
+
+
+def check_rule_in_catalog(rule: dict) -> list[str]:
+    """Lo que la regla dice contra los temas publicados: el artista o el tema pueden no existir (aún)."""
+    artist, slug = rule.get("artista"), rule.get("tema")
+    if not artist or artist == ALL:
+        return []
+    artists = {song_artist(s) for s in _catalog}
+    if artist not in artists:
+        return [f"artista «{artist}» no tiene temas publicados"]
+    if slug and slug not in _catalog:
+        return [f"tema «{slug}» no está publicado"]
+    if slug and song_artist(slug) != artist:
+        return [f"tema «{slug}» no es de {artist}"]
+    return []
+
+
+def catalog_warnings(profiles: list[dict]) -> list[str]:
+    """Reglas que hoy no alcanzan a ningún tema publicado: se avisan, pero no impiden mostrar nada."""
+    return [
+        f"{p.get('id', '?')}: regla {rule}: {e}"
+        for p in profiles
+        for rule in p.get("ensena", [])
+        for e in check_rule_in_catalog(rule)
+    ]
 
 
 def check_profile(profile: dict) -> list[str]:
@@ -97,13 +138,13 @@ def teaches(profile: dict, slug: str) -> bool:
     for rule in profile["ensena"]:
         if rule["artista"] == ALL:
             return True
-        if rule["artista"] == SONG_ARTIST.get(slug) and rule.get("tema", slug) == slug:
+        if rule["artista"] == song_artist(slug) and rule.get("tema", slug) == slug:
             return True
     return False
 
 
 def songs_of(profile: dict) -> list[str]:
-    return [slug for slug, *_ in REPERTOIRE if teaches(profile, slug)]
+    return [slug for slug in _catalog if teaches(profile, slug)]
 
 
 def teachers_for(slug: str, profiles: list[dict] | None = None) -> list[dict]:
@@ -136,7 +177,7 @@ def coverage(profile: dict, slug: str) -> str:
     for rule in profile["ensena"]:
         if rule["artista"] == ALL:
             best = best or "Todo el repertorio"
-        elif rule["artista"] == SONG_ARTIST.get(slug):
+        elif rule["artista"] == song_artist(slug):
             if rule.get("tema") == slug:
                 return "Este tema"
             if "tema" not in rule:
@@ -151,7 +192,7 @@ def describe(profile: dict) -> str:
         if rule["artista"] == ALL:
             return "Todo el repertorio"
         slug = rule.get("tema")
-        parts.append(TITLES[slug] if slug else f"{rule['artista']} (todos)")
+        parts.append(song_title(slug) if slug else f"{rule['artista']} (todos)")
     return ", ".join(parts)
 
 
@@ -208,14 +249,19 @@ def guide_card(profile: dict, index: int) -> str:
       </div>"""
 
 
-def update_guides(page: Path, profiles: list[dict] | None = None) -> int:
-    """Reemplaza las tarjetas de guias.html entre las marcas de los guías."""
+def render_guides(text: str, profiles: list[dict] | None = None) -> str:
+    """`text` (guias.html) con las tarjetas de los guías entre las marcas; usa los temas publicados."""
     profiles = profiles or load_profiles()
-    text = page.read_text(encoding="utf-8")
     start = text.index(GUIDES_START) + len(GUIDES_START)
     end = text.index(GUIDES_END)
     cards = "\n".join(guide_card(p, i) for i, p in enumerate(profiles))
-    page.write_text(text[:start] + "\n" + cards + "\n      " + text[end:], encoding="utf-8")
+    return text[:start] + "\n" + cards + "\n      " + text[end:]
+
+
+def update_guides(page: Path, profiles: list[dict] | None = None) -> int:
+    """Reemplaza las tarjetas de guias.html entre las marcas de los guías."""
+    profiles = profiles or load_profiles()
+    page.write_text(render_guides(page.read_text(encoding="utf-8"), profiles), encoding="utf-8")
     return len(profiles)
 
 
@@ -223,16 +269,26 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="musicsite.profes", description=__doc__.split("\n")[0])
     parser.add_argument("command", choices=["validate", "guides"])
     parser.add_argument("--page", type=Path, default=WEB_DIR / "guias.html")
+    parser.add_argument(
+        "--dir", type=Path, help="carpeta con los temas (publicación o copia local)"
+    )
     args = parser.parse_args(argv)
     try:
         profiles = load_profiles()
     except ValueError as error:
         print(error)
         return 1
+    if args.dir:
+        use_catalog(songs_in(args.dir))
     if args.command == "guides":
+        if not args.dir:
+            parser.error("guides exige --dir (los temas que existen)")
         print(f"{update_guides(args.page, profiles)} tarjetas escritas en {args.page}")
     else:
         print(f"{len(profiles)} perfiles válidos")
+        if args.dir:
+            for warning in catalog_warnings(profiles):
+                print(f"  aviso: {warning}")
     return 0
 
 

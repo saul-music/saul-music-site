@@ -43,6 +43,7 @@ class State:
         None  # artistas.html con artists.json (o el respaldo) y los conteos (S24)
     )
     photos: dict[str, bytes] = field(default_factory=dict)  # "fotos/<archivo>.jpg" -> JPEG (S33)
+    guides: bytes | None = None  # guias.html con las tarjetas de los guías según lo publicado (S76)
 
 
 class Catalog:
@@ -54,9 +55,14 @@ class Catalog:
         refresh_seconds: float = 60,
         clock: Callable[[], float] | None = None,
         artists_html: str = "",
+        guides_html: str = "",
     ) -> None:
+        from musicsite import profes  # aquí y no arriba: profes importa `musicsite.app`
+
         self._index_html = index_html
         self._artists_html = artists_html
+        self._guides_html = guides_html
+        self._songs: dict[str, tuple[str, str]] = {}  # los temas publicados que conocen las guías
         self._editorial = editorial
         self._ttl = refresh_seconds
         self._clock = clock or (lambda: time.monotonic())  # noqa: PLW0108 - se resuelve al llamar
@@ -64,11 +70,15 @@ class Catalog:
         self._rejected = ""  # publicación descartada por datos; no se reintenta hasta que cambie
         pages = {}
         if git_songs is not None:  # un dato malo en git rompe el arranque, como siempre
+            self._songs = profes.songs_in(git_songs)
+            profes.use_catalog(
+                self._songs
+            )  # antes de armar las páginas: ellas piden quién enseña cada tema
             pages = {
                 f"/cancion-{s}.html": h.encode() for s, h in render_published(git_songs).items()
             }
         artists, photos = self._artists_page(None, git_songs)
-        self._state = State("git", "", pages, None, artists, photos)
+        self._state = State("git", "", pages, None, artists, photos, self._guides_page())
         self._next_check = self._clock() + self._ttl
         if editorial is not None:
             self._try_load(self._pointer())
@@ -118,10 +128,41 @@ class Catalog:
         bad = [n for n in names if not SLUG.fullmatch(n)]
         if bad:
             raise ValueError(f"nombres de tema no válidos: {bad}")
-        pages = {f"/cancion-{s}.html": h.encode() for s, h in render_published(directory).items()}
-        index = apply_library(self._index_html, published_library_html(directory)).encode()
-        artists, photos = self._artists_page(directory, directory)
-        return State("editorial", release, pages, index, artists, photos)
+        from musicsite import profes
+
+        songs = profes.songs_in(directory)
+        profes.use_catalog(songs)  # antes de armar las páginas: ellas piden quién enseña cada tema
+        try:
+            pages = {
+                f"/cancion-{s}.html": h.encode() for s, h in render_published(directory).items()
+            }
+            index = apply_library(self._index_html, published_library_html(directory)).encode()
+            artists, photos = self._artists_page(directory, directory)
+            guides = self._guides_page()
+        except BaseException:
+            profes.use_catalog(
+                self._songs
+            )  # una publicación descartada no cambia lo que se muestra
+            raise
+        self._songs = songs
+        return State("editorial", release, pages, index, artists, photos, guides)
+
+    def _guides_page(self) -> bytes | None:
+        """guias.html con las tarjetas de los guías para los temas publicados (S76).
+
+        Nunca impide cargar una publicación: si algo falla, esa página sigue siendo la de web/."""
+        if not self._guides_html:
+            return None
+        from musicsite import profes
+
+        try:
+            profiles = profes.load_profiles()
+            for warning in profes.catalog_warnings(profiles):
+                log.warning("catálogo: guías: %s", warning)
+            return profes.render_guides(self._guides_html, profiles).encode()
+        except Exception as error:  # noqa: BLE001
+            log.warning("catálogo: no se pudo armar guias.html: %s", error)
+            return None
 
     def _artists_page(
         self, directory: Path | None, songs: Path | None
