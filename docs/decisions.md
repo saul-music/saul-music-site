@@ -853,5 +853,5 @@ falta identidad, almacenamiento privado y una decisión de producto aparte.
 **Cambios propios del site:** la sección de la portada «Un tema, tres versiones» (Original, Simplificada y A fondo) y el formulario
 demo de «Pide una canción» (ahora pide una **versión**). La dificultad del tema (`nivel`: inicial, medio, avanzado) no cambia: la
 define quien escribe la partitura. La prueba de orden de la franja de guías se ajustó (las pestañas van antes de la barra).
-**Depende de `acordia-render` 0.7.0** publicada: falta subir la versión en `pyproject.toml` y regenerar `uv.lock`.
+**Usa `acordia-render` 0.7.1** (0.7.0 más RD27: la ayuda de guías va sobre la barra y no cambia su alto). La prueba «no empuja los compases» mide ahora la versión visible.
 
