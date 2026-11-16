@@ -908,3 +908,7 @@ Una regla que no alcanza ningún tema publicado se avisa en el log (`catalog_war
 
 Solo sube la versión (RD34 de la librería): un tema puede traer `Em9*` en `[formas]` y pedirlo en la partitura (el `*` no se ve); cada acorde de «Posiciones de los acordes» tiene Guitarra/Teclado, «Tocar», «Otra posición» y la casilla «Usar esta posición en la canción» (desmarcada por defecto; gana el `*` del tema; no se recuerda). El site no tiene código propio de esto; `bpm` y publicaciones sin `*` quedan idénticas.
 **Pruebas:** 343 unitarias; las e2e de la página viven en la librería (S50), y el cambio solo de versión no corre la matriz aquí (S48): `scripts/e2e-produccion.sh` tras el despliegue. **Pendiente:** verificar en producción con `curl` y oír en iPhone y Android reales.
+
+## S78 · El site sube a `acordia-render` 0.11.1: diagramas de posiciones con su estilo y sin piano (2026-11-17)
+
+Solo sube la versión (RD35): corrige los diagramas de «Posiciones de los acordes» (salían negros) y retira el piano del render por ahora. 343 pruebas; las e2e viven en la librería. **Pendiente:** `curl` en producción y verlo en celular real.
