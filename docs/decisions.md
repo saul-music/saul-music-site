@@ -924,3 +924,7 @@ Solo sube la versión (RD37): en la página el compás de inicio se elige tocand
 ## S81 · El site sube a `acordia-render` 0.13.0: loop de sección (2026-11-17)
 
 Solo sube la versión (RD38): en la página cada sección trae un «⟲» que la repite (una pasada por vuelta, sin cuenta, «vuelta N»), también en el modo estudio; se apaga con la ✕ de la ficha «⟲ Repitiendo: …».
+
+## S82 · El site sube a `acordia-render` 0.13.1: la ficha ya no tapa la ayuda de guías (2026-11-17)
+
+Solo sube la versión (RD39, bug del usuario): en la página, con la barra fija en pantallas anchas, la ficha «Repitiendo: … ✕» o «Desde el compás N ✕» se corre a la izquierda de «¿Se complica esta parte?» (o sube a la línea del título) en vez de taparla.
