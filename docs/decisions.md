@@ -951,3 +951,8 @@ aparición, y «+N»; sin Original, los de la Simplificada. La plantilla base ya
 
 Solo sube la versión (RD42): `Em7...` = `Em7-.-.-.`, `G__` = `G-_-_`, `G%%` = `G-%-%`; el sitio los lee al publicar el admin y los
 dibuja igual que la forma con guiones. Ya se pueden usar en los temas una vez desplegados el site y el admin (M94).
+
+## S87 · El site sube a `acordia-render` 0.16.0: el alias perdona el guion y sobran partes si pasan de los tiempos (2026-11-17)
+
+Solo sube la versión (RD43): `G#m__F#/A#` = `G#m-_-_-F#/A#`, y un compás con más partes que tiempos (`G-C-D-C-G` en 4/4) es un error, porque la
+última parte nunca sonaba. En la publicación vigente (`releases/20261117-213205-a3f4`, 40 temas) ningún compás cae en la regla nueva.
