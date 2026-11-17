@@ -166,10 +166,16 @@ def test_landing_leads_with_chords(client):
 def test_home_shows_library_before_the_advantages(client):
     """La Biblioteca va primero; las ventajas de Acordia quedan debajo."""
     html = client.get("/").text
-    pos = {
-        i: html.index(f'id="{i}"') for i in ("biblioteca", "problema", "niveles", "como", "planes")
-    }
-    assert pos["biblioteca"] < pos["problema"] < pos["niveles"] < pos["como"] < pos["planes"]
+    pos = {i: html.index(f'id="{i}"') for i in ("biblioteca", "problema", "niveles", "como")}
+    assert pos["biblioteca"] < pos["problema"] < pos["niveles"] < pos["como"]
+
+
+def test_pages_have_no_plans_or_prices_from_acordia(client):
+    """Sin suscripción ni planes (C11): ninguna página ofrece planes ni cobra una conexión."""
+    for page in ("/", "/guias.html", "/ser-guia.html", "/artistas.html", "/pedidos.html"):
+        html = client.get(page).text
+        assert 'id="planes"' not in html and "#planes" not in html, page
+        assert "Acordia Plus" not in html and "$3.990" not in html and "$2.990" not in html, page
 
 
 def test_become_a_guide_page_asks_for_an_email_and_has_no_ai_pitch(client):

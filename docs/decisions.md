@@ -932,3 +932,13 @@ Solo sube la versión (RD39, bug del usuario): en la página, con la barra fija 
 ## S83 · El site sube a `acordia-render` 0.14.0: sin pestaña Simplificada en los temas ya simples (2026-11-17)
 
 Solo sube la versión (RD40): un tema publicado con `sin_simplificada = true` (casilla del admin, M88) muestra solo Original (y «A fondo» si hay material) y la Biblioteca lo cuenta con una versión.
+
+## S84 · Sin «Planes» ni precios de Acordia en el sitio (2026-11-17)
+
+**Decisión del usuario (control C11):** sin suscripción, planes ni cobro de Acordia; por ahora no entra dinero, y el sitio solo
+conecta guías con estudiantes. Se quita la sección `#planes` de la portada (Biblioteca $0, conexión $3.990 por guía, «Acordia Plus»),
+el enlace «Planes» del menú y del pie, y el cobro de conexión del modal de `guias.html`, de `cancion.html` y de `ser-guia.html`.
+«Entrar a Acordia» pasa a «Ver la Biblioteca». Se conserva el precio que cada guía fija a su clase. **No se tocó** la ruta «Aprender»
+(`aprender/shell.html`, pedido del usuario): su menú conserva un enlace «Planes» que ya no lleva a ninguna sección. **Pruebas:**
+`test_pages_have_no_plans_or_prices_from_acordia` y el orden de la portada sin `planes`.
+
