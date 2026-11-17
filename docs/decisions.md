@@ -928,3 +928,7 @@ Solo sube la versión (RD38): en la página cada sección trae un «⟲» que la
 ## S82 · El site sube a `acordia-render` 0.13.1: la ficha ya no tapa la ayuda de guías (2026-11-17)
 
 Solo sube la versión (RD39, bug del usuario): en la página, con la barra fija en pantallas anchas, la ficha «Repitiendo: … ✕» o «Desde el compás N ✕» se corre a la izquierda de «¿Se complica esta parte?» (o sube a la línea del título) en vez de taparla.
+
+## S83 · El site sube a `acordia-render` 0.14.0: sin pestaña Simplificada en los temas ya simples (2026-11-17)
+
+Solo sube la versión (RD40): un tema publicado con `sin_simplificada = true` (casilla del admin, M88) muestra solo Original (y «A fondo» si hay material) y la Biblioteca lo cuenta con una versión.
