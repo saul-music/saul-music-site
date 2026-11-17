@@ -942,3 +942,8 @@ el enlace «Planes» del menú y del pie, y el cobro de conexión del modal de `
 (`aprender/shell.html`, pedido del usuario): su menú conserva un enlace «Planes» que ya no lleva a ninguna sección. **Pruebas:**
 `test_pages_have_no_plans_or_prices_from_acordia` y el orden de la portada sin `planes`.
 
+## S85 · El site sube a `acordia-render` 0.14.1: acordes de la Original en la tarjeta (2026-11-17)
+
+Solo sube la versión (RD41): la tarjeta de la Biblioteca muestra los primeros 4 acordes de la partitura Original, en orden de
+aparición, y «+N»; sin Original, los de la Simplificada. La plantilla base ya no tiene «Planes» (S84).
+
