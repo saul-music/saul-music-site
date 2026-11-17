@@ -916,3 +916,7 @@ Solo sube la versión (RD35): corrige los diagramas de «Posiciones de los acord
 ## S79 · El site sube a `acordia-render` 0.11.2: fichas de posiciones alineadas (2026-11-17)
 
 Solo sube la versión (RD36): las fichas de «Posiciones de los acordes» quedan a la misma altura. 343 pruebas; las e2e viven en la librería.
+
+## S80 · El site sube a `acordia-render` 0.12.0: compás de inicio tocando el compás (2026-11-17)
+
+Solo sube la versión (RD37): en la página el compás de inicio se elige tocando el compás (burbuja «▶ Desde aquí», ficha con ✕, «Partir desde este compás» en el panel del acorde y cinta en el modo estudio); se retira la bandera chica.
