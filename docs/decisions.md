@@ -920,3 +920,7 @@ Solo sube la versión (RD36): las fichas de «Posiciones de los acordes» quedan
 ## S80 · El site sube a `acordia-render` 0.12.0: compás de inicio tocando el compás (2026-11-17)
 
 Solo sube la versión (RD37): en la página el compás de inicio se elige tocando el compás (burbuja «▶ Desde aquí», ficha con ✕, «Partir desde este compás» en el panel del acorde y cinta en el modo estudio); se retira la bandera chica.
+
+## S81 · El site sube a `acordia-render` 0.13.0: loop de sección (2026-11-17)
+
+Solo sube la versión (RD38): en la página cada sección trae un «⟲» que la repite (una pasada por vuelta, sin cuenta, «vuelta N»), también en el modo estudio; se apaga con la ✕ de la ficha «⟲ Repitiendo: …».
