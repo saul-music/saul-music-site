@@ -966,3 +966,8 @@ en investigación · los temas y guías que ves son de ejemplo». No se tocan lo
 ## S89 · El site sube a `acordia-render` 0.16.1: los nombres de los ligados cuentan para la casilla ancha (2026-11-17)
 
 Solo sube la versión (RD44): `G#m__F#/A#` (= `G#m-_-_-F#/A#`) ocupa dos columnas y ya no se pisa. Sin cambios en el validador ni el contrato.
+
+## S90 · El site sube a `acordia-render` 0.18.0: `__` al inicio de una parte y cambio de compás `{2/4}` (2026-11-18)
+
+Sube la versión (RD45, RD46). **`__` al inicio** de una parte liga con lo anterior (`Fm9 __-Gb13 Fm9` = `Fm9 _-_-Gb13 Fm9`). **Cambio de compás:** `G7 {2/4}C9 F9 Bb9 {4/4}Ebmaj7` (la medida vale hasta el próximo `{…}` o el fin de la sección), con la clave de tiempo dibujada al inicio y en cada cambio, y el cursor, el metrónomo y la guitarra con los tiempos de cada compás. Los temas publicados no cambian (ningún token nuevo aparece en ellos).
+Pruebas de navegador del site (Chromium e iPhone 14) en verde con la versión nueva. Pendiente: verlo en un celular real.
