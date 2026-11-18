@@ -962,3 +962,7 @@ Solo sube la versión (RD43): `G#m__F#/A#` = `G#m-_-_-F#/A#`, y un compás con m
 Por pedido del usuario se retira de las seis páginas estáticas (`index`, `cancion`, `artistas`, `guias`, `ser-guia`, `pedidos`) el aviso «Prototipo
 en investigación · los temas y guías que ves son de ejemplo». No se tocan los avisos propios de cada página (p. ej. «Demo / datos de ejemplo» de
 `pedidos.html`, S25) ni V2/S2 (la canción ajena marcada «Ejemplo»), que siguen pendientes antes de anunciar.
+
+## S89 · El site sube a `acordia-render` 0.16.1: los nombres de los ligados cuentan para la casilla ancha (2026-11-17)
+
+Solo sube la versión (RD44): `G#m__F#/A#` (= `G#m-_-_-F#/A#`) ocupa dos columnas y ya no se pisa. Sin cambios en el validador ni el contrato.
