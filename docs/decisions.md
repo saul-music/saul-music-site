@@ -956,3 +956,9 @@ dibuja igual que la forma con guiones. Ya se pueden usar en los temas una vez de
 
 Solo sube la versión (RD43): `G#m__F#/A#` = `G#m-_-_-F#/A#`, y un compás con más partes que tiempos (`G-C-D-C-G` en 4/4) es un error, porque la
 última parte nunca sonaba. En la publicación vigente (`releases/20261117-213205-a3f4`, 40 temas) ningún compás cae en la regla nueva.
+
+## S88 · Se quita el banner «Prototipo en investigación» (2026-11-17)
+
+Por pedido del usuario se retira de las seis páginas estáticas (`index`, `cancion`, `artistas`, `guias`, `ser-guia`, `pedidos`) el aviso «Prototipo
+en investigación · los temas y guías que ves son de ejemplo». No se tocan los avisos propios de cada página (p. ej. «Demo / datos de ejemplo» de
+`pedidos.html`, S25) ni V2/S2 (la canción ajena marcada «Ejemplo»), que siguen pendientes antes de anunciar.
