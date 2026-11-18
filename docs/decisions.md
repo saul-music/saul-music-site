@@ -971,3 +971,8 @@ Solo sube la versión (RD44): `G#m__F#/A#` (= `G#m-_-_-F#/A#`) ocupa dos columna
 
 Sube la versión (RD45, RD46). **`__` al inicio** de una parte liga con lo anterior (`Fm9 __-Gb13 Fm9` = `Fm9 _-_-Gb13 Fm9`). **Cambio de compás:** `G7 {2/4}C9 F9 Bb9 {4/4}Ebmaj7` (la medida vale hasta el próximo `{…}` o el fin de la sección), con la clave de tiempo dibujada al inicio y en cada cambio, y el cursor, el metrónomo y la guitarra con los tiempos de cada compás. Los temas publicados no cambian (ningún token nuevo aparece en ellos).
 Pruebas de navegador del site (Chromium e iPhone 14) en verde con la versión nueva. Pendiente: verlo en un celular real.
+
+## S91 · El site sube a `acordia-render` 0.19.0: clave en todo el modo estudio y cuenta inicial con el primer compás (2026-11-18)
+
+Sube la versión (RD47): la clave de tiempo se dibuja también en el carril y la vista vertical del modo estudio, y la cuenta inicial dura lo que el primer compás que suena (un tema 4/4 que parte con `{2/4}` cuenta 2 clics). Sin cambios en el validador ni el contrato; los temas publicados no cambian.
+Pruebas de navegador del site (Chromium e iPhone 14) en verde con la versión nueva.
