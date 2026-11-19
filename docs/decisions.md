@@ -992,3 +992,7 @@ La portada explica el camino en cinco pasos: conocer los acordes, tocar junto al
 - El oro es la estructura (arcos, «Paso N», botón principal) y el verde acompaña lo que sucede o se logra (íconos, tips, modo estudio, cierre). Solo el JS necesario: probar el bucle, la guitarra y los dos modos; nada suena.
 - Los chips «Ejemplo» y «Perfiles de ejemplo» se mantienen. El banner «Prototipo en investigación» sale con la librería 0.20.0 (RD50).
 **Pruebas:** `test_home_explains_how_it_works_in_five_steps`.
+
+## S94 · El site sube a `acordia-render` 0.20.0: sin aviso de prototipo y Biblioteca plegable en escritorio (2026-11-19)
+
+Las páginas de canción ya no muestran «Prototipo en investigación» (RD50; los chips «Ejemplo» siguen). En escritorio la Biblioteca parte abierta y se puede plegar con «Ver solo los artistas» o con cada artista (RD51); celular no cambia. **Reemplaza** la prueba «en escritorio las cabeceras no son botones» por cuatro de escritorio (arranque abierto, plegar y volver, abrir uno y teclado, búsqueda sobre lo plegado) y una de celular (sin botón y con «Abrir todos · Cerrar todos»).
