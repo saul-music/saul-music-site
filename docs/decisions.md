@@ -1008,3 +1008,11 @@ Las páginas de canción ya no muestran «Prototipo en investigación» (RD50; l
 
 `acordia-render` 0.20.1 (RD52) quita el `*` de las variantes de forma de los chips de la Biblioteca; el site la adopta sin más cambios.
 **Pruebas:** `test_library_never_shows_the_shape_variant_asterisk`.
+
+## S97 · Biblioteca comprimida, separador y «¿Qué nivel elijo?»; sube a `acordia-render` 0.21.0 (2026-11-19)
+
+- **Biblioteca:** en escritorio y celular los artistas parten comprimidos; un botón «Mostrar todos» / «Solo artistas» abre o cierra todos (RD53 de la librería). Los e2e de escritorio y celular se unifican.
+- **Separador:** una línea entre «Cómo funciona» y «¿Por qué Acordia?».
+- **«¿Qué nivel elijo?»** (`#dificultad`, después de «Un tema, tres versiones»): tres tarjetas, Inicial (acordes mayores y menores, ritmo parejo), Medio (sextas, séptimas, novenas, inversiones, cambios de compás) y Avanzado (tensiones y alteraciones: 9sus4, 13, b9, #9), con acordes de ejemplo. Explica la dificultad del tema; no reemplaza las versiones Original / Simplificada / A fondo (C4).
+- Los bordes de la Biblioteca pasan a la línea neutra (eran los únicos amarillos en modo oscuro).
+**Pendiente:** verlo a ojo en iPhone y Android reales.
