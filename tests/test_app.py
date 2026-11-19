@@ -198,7 +198,7 @@ def test_how_it_works_diagrams_are_real_six_string_shapes(client):
 
 
 def test_library_never_shows_the_shape_variant_asterisk(client):
-    """El `*` de las variantes de forma es de uso interno: ninguna tarjeta de la Biblioteca lo muestra (RD52)."""
+    """El `*` de las variantes de forma es de uso interno: ninguna tarjeta lo muestra (RD52)."""
     import re
 
     html = client.get("/").text
