@@ -513,3 +513,18 @@ def test_the_guides_help_is_visible_in_the_study_on_a_phone(page: Page, base_url
     expect(help_button).to_be_visible()
     box = help_button.bounding_box()
     assert box["x"] >= 0 and box["x"] + box["width"] <= PHONE["width"] + 1
+
+
+def test_library_counter_shows_songs_and_artists_and_follows_the_filters(page: Page, base_url: str):
+    page.goto(f"{base_url}/index.html")
+    total = page.locator("#lib-total")
+    songs = page.locator("#biblioteca a.card").count()
+    artists = page.locator("#biblioteca .ac-artist-head").count()
+    expect(total).to_have_text(f"{songs} canciones · {artists} artistas")
+    page.fill("#buscar-biblioteca", "los tres")
+    page.locator('#lib-filtros [data-filtro="nivel"] button', has_text="Todos").click()
+    page.locator('#lib-filtros [data-filtro="barrio"] button').nth(1).click()
+    text = total.inner_text()
+    assert re.fullmatch(r"\d+ canciones? · \d+ artistas?", text), text
+    nums = [int(n) for n in re.findall(r"\d+", text)]
+    assert nums[1] <= nums[0] and nums[1] <= artists
