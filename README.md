@@ -7,7 +7,7 @@ Sitio público de SAÚL música (Acordia). Servicio FastAPI en Cloud Run (`south
 - Estrategia, decisiones y verificaciones comunes de SAÚL música viven en un repo de control privado.
 - Los cambios van por rama y PR hacia `main`. El pipeline es uno solo y secuencial:
   `ci` (lint y tests) → `image` → `publish` → `deploy`. Los PR terminan en `image`.
-- Infraestructura manual en GCP: `bootstrap/gcp.sh` (ver `bootstrap/README.md`).
+- Infraestructura en GCP: Terraform, en un repo privado de infraestructura (S92). Aquí no se crea infra a mano.
 - Estado, plan y puntos abiertos: `docs/status.md`.
 
 ## Desarrollo
