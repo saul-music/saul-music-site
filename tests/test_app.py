@@ -197,6 +197,14 @@ def test_how_it_works_diagrams_are_real_six_string_shapes(client):
     assert len(re.findall(r'<svg class="ac-como-mini"', sec)) == 4
 
 
+def test_library_never_shows_the_shape_variant_asterisk(client):
+    """El `*` de las variantes de forma es de uso interno: ninguna tarjeta de la Biblioteca lo muestra (RD52)."""
+    import re
+
+    html = client.get("/").text
+    assert not re.findall(r'ac-chip-chord">[^<]*\*', html)
+
+
 def test_pages_have_no_plans_or_prices_from_acordia(client):
     """Sin suscripción ni planes (C11): ninguna página ofrece planes ni cobra una conexión."""
     for page in ("/", "/guias.html", "/ser-guia.html", "/artistas.html", "/pedidos.html"):
