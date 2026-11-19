@@ -170,6 +170,17 @@ def test_home_shows_library_before_the_advantages(client):
     assert pos["biblioteca"] < pos["problema"] < pos["niveles"] < pos["como"]
 
 
+def test_home_explains_how_it_works_in_five_steps(client):
+    """«Cómo funciona»: cinco pasos y un cierre; el plan de estudios todavía es «Pronto»."""
+    html = client.get("/").text
+    sec = html[html.index('id="como"') : html.index('id="barrios"')]
+    assert sec.count('class="ac-como-step"') == 5
+    for n in range(1, 6):
+        assert f"Paso {n}" in sec
+    assert 'href="guias.html"' in sec and 'href="aprender.html"' in sec
+    assert "ac-como-soon" in sec and "Prototipo en investigación" not in html
+
+
 def test_pages_have_no_plans_or_prices_from_acordia(client):
     """Sin suscripción ni planes (C11): ninguna página ofrece planes ni cobra una conexión."""
     for page in ("/", "/guias.html", "/ser-guia.html", "/artistas.html", "/pedidos.html"):
