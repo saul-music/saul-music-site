@@ -9,7 +9,7 @@ name: pipeline
 # -> image (build amd64 + smoke)
 # -> publish (imagen a Artifact Registry) -> deploy (sitio en Cloud Run).
 # publish y deploy solo corren en main; los PR terminan en image. Todo lo que necesitan en GCP
-# lo crea bootstrap/gcp.sh (D56). Sin llaves JSON: WIF restringido a este repo y a main.
+# lo crea Terraform en el repo privado de infraestructura (S92). Sin llaves JSON: WIF restringido a este repo y a main.
 on:
   pull_request:
     paths-ignore: ["**/*.md"]

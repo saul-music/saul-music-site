@@ -976,3 +976,11 @@ Pruebas de navegador del site (Chromium e iPhone 14) en verde con la versión nu
 
 Sube la versión (RD47): la clave de tiempo se dibuja también en el carril y la vista vertical del modo estudio, y la cuenta inicial dura lo que el primer compás que suena (un tema 4/4 que parte con `{2/4}` cuenta 2 clics). Sin cambios en el validador ni el contrato; los temas publicados no cambian.
 Pruebas de navegador del site (Chromium e iPhone 14) en verde con la versión nueva.
+
+## S92 · La infra del sitio pasa a Terraform; se retira `bootstrap/gcp.sh` (2026-11-19)
+
+La infraestructura de GCP de SAÚL música se mantiene con Terraform en un repo privado de infraestructura, por PR y
+pipeline (decisión C12 del control); lo existente se importó sin cambios. Se borran `bootstrap/gcp.sh` y su README:
+el repo de imágenes, las cuentas, sus permisos y el proveedor WIF del sitio están allí. No quedan como respaldo, porque
+correr el script otra vez crearía permisos que Terraform no declara. El servicio de Cloud Run sigue en el pipeline de
+este repo. **Reemplaza en parte** S1 y lo que dice S9 sobre «lo crea `gcp.sh`».
