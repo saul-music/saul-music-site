@@ -81,7 +81,7 @@
     .ac-como-ui .ac-bars { margin-top: .6rem; }
     .ac-como-ui .ac-bar { padding: .55rem .25rem; font-size: 1.05rem; }
     .ac-como-fret { width: 100%; max-width: 150px; margin-inline: auto; display: block; color: var(--ac-fg-muted); }
-    .ac-como-fret .dot { fill: var(--ac-fill); } .ac-como-fret .num { fill: var(--ac-on-fill); font: 700 9px var(--ac-font-text); text-anchor: middle; }
+    .ac-como-fret .dot, .ac-como-mini .dot { fill: var(--ac-fill); } .ac-como-fret[hidden] { display: none; } .ac-como-fret .mk { fill: var(--ac-fg-muted); stroke: none; font: 600 10px var(--ac-font-text); text-anchor: middle; } .ac-como-fret .num { fill: var(--ac-on-fill); font: 700 9px var(--ac-font-text); text-anchor: middle; }
     .ac-como-cells { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); }
     .ac-como-cell { border: 1px solid var(--ac-line); margin-left: -1px; text-align: center; padding: .35rem .1rem .45rem; font-family: var(--ac-font-display); font-size: 1.05rem; display: grid; gap: .1rem; justify-items: center; }
     .ac-como-cell.is-now { box-shadow: inset 0 0 0 2px var(--ac-accent); background: rgba(var(--ac-accent-rgb), .14); }
@@ -443,69 +443,6 @@
       </div>
     </section>
 
-    <!-- Ventajas de Acordia: debajo de la Biblioteca -->
-    <div class="container ac-porque">
-      <span class="ac-eyebrow">¿Por qué Acordia?</span>
-      <p class="ac-porque-txt">Lo que hace distinta a la Biblioteca de arriba.</p>
-    </div>
-
-    <!-- El problema: encontrar un acorde -->
-    <section class="ac-section" id="problema">
-      <div class="container">
-        <div class="ac-section-head">
-          <span class="ac-eyebrow">Ya lo viviste</span>
-          <h2>Encontrar un acorde siempre fue un problema</h2>
-          <p>Abres una pestaña, luego otra, y ninguna se parece a la canción.</p>
-        </div>
-        <div class="row row-cols-1 row-cols-md-3 g-3">
-          <div class="col"><div class="card h-100 ac-dolor-card"><div class="card-body d-grid gap-2 align-content-start">
-            <span class="ac-dolor-ico" aria-hidden="true">↑</span>
-            <h3 class="m-0">Estaba un tono arriba</h3>
-            <p class="m-0 text-body-secondary">Lo tocas y no calza con el disco. Ni con tu voz.</p>
-          </div></div></div>
-          <div class="col"><div class="card h-100 ac-dolor-card"><div class="card-body d-grid gap-2 align-content-start">
-            <span class="ac-dolor-ico" aria-hidden="true">≠</span>
-            <h3 class="m-0">No coincidía con el disco</h3>
-            <p class="m-0 text-body-secondary">Tres versiones, ninguna igual. ¿Cuál es la buena?</p>
-          </div></div></div>
-          <div class="col"><div class="card h-100 ac-dolor-card"><div class="card-body d-grid gap-2 align-content-start">
-            <span class="ac-dolor-ico" aria-hidden="true">?</span>
-            <h3 class="m-0">Era para quien ya sabe tocar</h3>
-            <p class="m-0 text-body-secondary">Acordes enredados, sin decirte por dónde partir.</p>
-          </div></div></div>
-        </div>
-        <p class="ac-dolor-cierre mb-0">Para eso está Acordia. <a href="#biblioteca">Busca tu canción</a>.</p>
-      </div>
-    </section>
-
-    <!-- Un tema, tres niveles -->
-    <section class="ac-section" id="niveles">
-      <div class="container">
-        <div class="ac-section-head">
-          <span class="ac-eyebrow">Un tema, tres versiones</span>
-          <h2>El mismo tema, a tu medida</h2>
-          <p>Tócalo como suena, empieza por una versión simplificada o ve a fondo con una guía. Revisado de oído por músicos, no copiado de otro sitio.</p>
-        </div>
-        <div class="row row-cols-1 row-cols-md-3 g-3">
-          <div class="col"><div class="card h-100"><div class="card-body d-grid gap-3 align-content-start">
-            <h3 class="h4 m-0">Original</h3>
-            <div class="ac-nivel-chords"><span class="ac-chip ac-chip-chord">Am7</span><span class="ac-chip ac-chip-chord">Fmaj7</span><span class="ac-chip ac-chip-chord">C/E</span><span class="ac-chip ac-chip-chord">G</span></div>
-            <p class="m-0 text-body-secondary">Los acordes reales del tema, con bajos, matices y compases partidos.</p>
-          </div></div></div>
-          <div class="col"><div class="card h-100"><div class="card-body d-grid gap-3 align-content-start">
-            <h3 class="h4 m-0">Simplificada</h3>
-            <div class="ac-nivel-chords"><span class="ac-chip ac-chip-chord">Am</span><span class="ac-chip ac-chip-chord">F</span><span class="ac-chip ac-chip-chord">C</span><span class="ac-chip ac-chip-chord">G</span></div>
-            <p class="m-0 text-body-secondary">Los acordes simples y la estructura, para tocarlo hoy.</p>
-          </div></div></div>
-          <div class="col"><div class="card h-100"><div class="card-body d-grid gap-3 align-content-start">
-            <h3 class="h4 m-0">A fondo</h3>
-            <div class="ac-nivel-chords"><span class="ac-chip">Tabs</span><span class="ac-chip">Arreglos</span><span class="ac-chip">Con tu guía</span></div>
-            <p class="m-0 text-body-secondary">Lo que nuestras guías tienen preparado para estudiar el tema en profundidad.</p>
-          </div></div></div>
-        </div>
-      </div>
-    </section>
-
     <!-- Cómo funciona: cinco pasos, de la ayuda completa a tocar solo; el modo estudio y el normal se adaptan a cada forma de estudiar (C14) -->
     <section class="ac-section" id="como">
       <div class="container">
@@ -527,7 +464,7 @@
             <div class="ac-como-ui" aria-hidden="true">
               <div class="ac-como-cap"><span>Panel del acorde</span><span>Guitarra</span></div>
               <div class="ac-como-row"><button type="button" class="ac-chip ac-chip-chord" aria-pressed="true" data-como-chord>Am</button><button type="button" class="ac-chip ac-chip-chord" aria-pressed="false" data-como-chord>F</button><button type="button" class="ac-chip ac-chip-chord" aria-pressed="false" data-como-chord>C</button><button type="button" class="ac-chip ac-chip-chord" aria-pressed="false" data-como-chord>G</button></div>
-              <svg class="ac-como-fret" viewBox="0 0 120 130" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 12h80" stroke-width="4"/><path d="M20 12v108M38 12v108M56 12v108M74 12v108M92 12v108M20 40h72M20 68h72M20 96h72" opacity=".6"/><circle class="dot" cx="65" cy="54" r="8" stroke="none"/><circle class="dot" cx="83" cy="82" r="8" stroke="none"/><circle class="dot" cx="47" cy="82" r="8" stroke="none"/><text class="num" x="65" y="57">1</text><text class="num" x="83" y="85">3</text><text class="num" x="47" y="85">2</text></svg>
+              <svg class="ac-como-fret" data-chord="Am" viewBox="0 0 120 138" fill="none" stroke="currentColor" stroke-width="1.5" role="img" aria-label="Posición de Am"><path d="M2018H100" stroke-width="4"/><path d="M20 18V122M36 18V122M52 18V122M68 18V122M84 18V122M100 18V122M20 44H100M20 70H100M20 96H100M20 122H100" opacity=".6" stroke-width="1.5"/><text class="mk" x="20" y="13">×</text><text class="mk" x="36" y="13">○</text><text class="mk" x="100" y="13">○</text><circle class="dot" cx="52" cy="57" r="7.5" stroke="none"/><text class="num" x="52" y="60">2</text><circle class="dot" cx="68" cy="57" r="7.5" stroke="none"/><text class="num" x="68" y="60">3</text><circle class="dot" cx="84" cy="31" r="7.5" stroke="none"/><text class="num" x="84" y="34">1</text></svg><svg class="ac-como-fret" data-chord="F" hidden viewBox="0 0 120 138" fill="none" stroke="currentColor" stroke-width="1.5" role="img" aria-label="Posición de F"><path d="M2018H100" stroke-width="4"/><path d="M20 18V122M36 18V122M52 18V122M68 18V122M84 18V122M100 18V122M20 44H100M20 70H100M20 96H100M20 122H100" opacity=".6" stroke-width="1.5"/><text class="mk" x="20" y="13">×</text><text class="mk" x="36" y="13">×</text><rect class="dot" x="76.5" y="23.5" width="31" height="15" rx="7.5" stroke="none"/><circle class="dot" cx="52" cy="83" r="7.5" stroke="none"/><text class="num" x="52" y="86">3</text><circle class="dot" cx="68" cy="57" r="7.5" stroke="none"/><text class="num" x="68" y="60">2</text><text class="num" x="84" y="34">1</text></svg><svg class="ac-como-fret" data-chord="C" hidden viewBox="0 0 120 138" fill="none" stroke="currentColor" stroke-width="1.5" role="img" aria-label="Posición de C"><path d="M2018H100" stroke-width="4"/><path d="M20 18V122M36 18V122M52 18V122M68 18V122M84 18V122M100 18V122M20 44H100M20 70H100M20 96H100M20 122H100" opacity=".6" stroke-width="1.5"/><text class="mk" x="20" y="13">×</text><text class="mk" x="68" y="13">○</text><text class="mk" x="100" y="13">○</text><circle class="dot" cx="36" cy="83" r="7.5" stroke="none"/><text class="num" x="36" y="86">3</text><circle class="dot" cx="52" cy="57" r="7.5" stroke="none"/><text class="num" x="52" y="60">2</text><circle class="dot" cx="84" cy="31" r="7.5" stroke="none"/><text class="num" x="84" y="34">1</text></svg><svg class="ac-como-fret" data-chord="G" hidden viewBox="0 0 120 138" fill="none" stroke="currentColor" stroke-width="1.5" role="img" aria-label="Posición de G"><path d="M2018H100" stroke-width="4"/><path d="M20 18V122M36 18V122M52 18V122M68 18V122M84 18V122M100 18V122M20 44H100M20 70H100M20 96H100M20 122H100" opacity=".6" stroke-width="1.5"/><text class="mk" x="52" y="13">○</text><text class="mk" x="68" y="13">○</text><text class="mk" x="84" y="13">○</text><circle class="dot" cx="20" cy="83" r="7.5" stroke="none"/><text class="num" x="20" y="86">2</text><circle class="dot" cx="36" cy="57" r="7.5" stroke="none"/><text class="num" x="36" y="60">1</text><circle class="dot" cx="100" cy="83" r="7.5" stroke="none"/><text class="num" x="100" y="86">3</text></svg>
             </div>
           </li>
 
@@ -552,7 +489,7 @@
                 <button class="btn ac-study-btn" type="button" data-como-mode="study" aria-pressed="false"><svg class="ac-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>Modo estudio</button>
               </div>
               <div class="ac-score" data-como-view="normal"><div class="ac-bars" data-como-cursor><div class="ac-bar is-now" data-i="0">Am</div><div class="ac-bar" data-i="1">F</div><div class="ac-bar" data-i="2">C</div><div class="ac-bar" data-i="3">G</div></div></div>
-              <div class="ac-score" data-como-view="study" hidden><div class="ac-como-cells" data-como-cursor><div class="ac-como-cell is-now" data-i="0"><svg class="ac-como-mini" viewBox="0 0 60 64" fill="none" stroke="currentColor" stroke-width="1.2" aria-hidden="true"><path d="M8 6h44" stroke-width="3"/><path d="M8 6v52M20 6v52M32 6v52M44 6v52M56 6v52M8 22h48M8 38h48M8 54h48" opacity=".55" stroke-width="1"/><circle class="dot" cx="26" cy="30" r="4.2"/><circle class="dot" cx="38" cy="30" r="4.2"/><circle class="dot" cx="32" cy="46" r="4.2"/></svg>Am</div><div class="ac-como-cell" data-i="1"><svg class="ac-como-mini" viewBox="0 0 60 64" fill="none" stroke="currentColor" stroke-width="1.2" aria-hidden="true"><path d="M8 6h44" stroke-width="3"/><path d="M8 6v52M20 6v52M32 6v52M44 6v52M56 6v52M8 22h48M8 38h48M8 54h48" opacity=".55" stroke-width="1"/><circle class="dot" cx="26" cy="14" r="4.2"/><circle class="dot" cx="14" cy="30" r="4.2"/><circle class="dot" cx="32" cy="46" r="4.2"/></svg>F</div><div class="ac-como-cell" data-i="2"><svg class="ac-como-mini" viewBox="0 0 60 64" fill="none" stroke="currentColor" stroke-width="1.2" aria-hidden="true"><path d="M8 6h44" stroke-width="3"/><path d="M8 6v52M20 6v52M32 6v52M44 6v52M56 6v52M8 22h48M8 38h48M8 54h48" opacity=".55" stroke-width="1"/><circle class="dot" cx="26" cy="14" r="4.2"/><circle class="dot" cx="44" cy="30" r="4.2"/><circle class="dot" cx="14" cy="46" r="4.2"/></svg>C</div><div class="ac-como-cell" data-i="3"><svg class="ac-como-mini" viewBox="0 0 60 64" fill="none" stroke="currentColor" stroke-width="1.2" aria-hidden="true"><path d="M8 6h44" stroke-width="3"/><path d="M8 6v52M20 6v52M32 6v52M44 6v52M56 6v52M8 22h48M8 38h48M8 54h48" opacity=".55" stroke-width="1"/><circle class="dot" cx="14" cy="30" r="4.2"/><circle class="dot" cx="14" cy="46" r="4.2"/><circle class="dot" cx="50" cy="46" r="4.2"/></svg>G</div></div></div>
+              <div class="ac-score" data-como-view="study" hidden><div class="ac-como-cells" data-como-cursor><div class="ac-como-cell is-now" data-i="0"><svg class="ac-como-mini" viewBox="0 0 60 64" fill="none" stroke="currentColor" stroke-width="1" aria-hidden="true"><path d="M8.010H56.0" stroke-width="2.4"/><path d="M8 10V62M17.6 10V62M27.2 10V62M36.8 10V62M46.4 10V62M56 10V62M8 23H56M8 36H56M8 49H56M8 62H56" opacity=".6" stroke-width="1"/><circle class="dot" cx="27.2" cy="29.5" r="3.8" stroke="none"/><circle class="dot" cx="36.8" cy="29.5" r="3.8" stroke="none"/><circle class="dot" cx="46.4" cy="16.5" r="3.8" stroke="none"/></svg>Am</div><div class="ac-como-cell" data-i="1"><svg class="ac-como-mini" viewBox="0 0 60 64" fill="none" stroke="currentColor" stroke-width="1" aria-hidden="true"><path d="M8.010H56.0" stroke-width="2.4"/><path d="M8 10V62M17.6 10V62M27.2 10V62M36.8 10V62M46.4 10V62M56 10V62M8 23H56M8 36H56M8 49H56M8 62H56" opacity=".6" stroke-width="1"/><rect class="dot" x="42.6" y="12.7" width="17.2" height="7.6" rx="3.8" stroke="none"/><circle class="dot" cx="27.2" cy="42.5" r="3.8" stroke="none"/><circle class="dot" cx="36.8" cy="29.5" r="3.8" stroke="none"/></svg>F</div><div class="ac-como-cell" data-i="2"><svg class="ac-como-mini" viewBox="0 0 60 64" fill="none" stroke="currentColor" stroke-width="1" aria-hidden="true"><path d="M8.010H56.0" stroke-width="2.4"/><path d="M8 10V62M17.6 10V62M27.2 10V62M36.8 10V62M46.4 10V62M56 10V62M8 23H56M8 36H56M8 49H56M8 62H56" opacity=".6" stroke-width="1"/><circle class="dot" cx="17.6" cy="42.5" r="3.8" stroke="none"/><circle class="dot" cx="27.2" cy="29.5" r="3.8" stroke="none"/><circle class="dot" cx="46.4" cy="16.5" r="3.8" stroke="none"/></svg>C</div><div class="ac-como-cell" data-i="3"><svg class="ac-como-mini" viewBox="0 0 60 64" fill="none" stroke="currentColor" stroke-width="1" aria-hidden="true"><path d="M8.010H56.0" stroke-width="2.4"/><path d="M8 10V62M17.6 10V62M27.2 10V62M36.8 10V62M46.4 10V62M56 10V62M8 23H56M8 36H56M8 49H56M8 62H56" opacity=".6" stroke-width="1"/><circle class="dot" cx="8" cy="42.5" r="3.8" stroke="none"/><circle class="dot" cx="17.6" cy="29.5" r="3.8" stroke="none"/><circle class="dot" cx="56" cy="42.5" r="3.8" stroke="none"/></svg>G</div></div></div>
               <div class="ac-como-note" data-como-note>Solo ves el nombre del acorde: la posición la pones tú.</div>
               <div class="ac-como-row"><span class="btn btn-primary"><svg class="ac-ico" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 4.5v15a1 1 0 0 0 1.5.86l12-7.5a1 1 0 0 0 0-1.72l-12-7.5A1 1 0 0 0 7 4.5z"/></svg>Reproducir</span></div>
             </div>
@@ -618,6 +555,69 @@
         <div class="ac-como-done">
           <div><h3>Un tema menos en tu lista de pendientes</h3><p>Cuando ya lo toques de memoria, elige el siguiente.</p></div>
           <a class="btn btn-primary" href="#biblioteca">Elegir una canción</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Ventajas de Acordia: debajo de la Biblioteca -->
+    <div class="container ac-porque">
+      <span class="ac-eyebrow">¿Por qué Acordia?</span>
+      <p class="ac-porque-txt">Lo que hace distinta a la Biblioteca de arriba.</p>
+    </div>
+
+    <!-- El problema: encontrar un acorde -->
+    <section class="ac-section" id="problema">
+      <div class="container">
+        <div class="ac-section-head">
+          <span class="ac-eyebrow">Ya lo viviste</span>
+          <h2>Encontrar un acorde siempre fue un problema</h2>
+          <p>Abres una pestaña, luego otra, y ninguna se parece a la canción.</p>
+        </div>
+        <div class="row row-cols-1 row-cols-md-3 g-3">
+          <div class="col"><div class="card h-100 ac-dolor-card"><div class="card-body d-grid gap-2 align-content-start">
+            <span class="ac-dolor-ico" aria-hidden="true">↑</span>
+            <h3 class="m-0">Estaba un tono arriba</h3>
+            <p class="m-0 text-body-secondary">Lo tocas y no calza con el disco. Ni con tu voz.</p>
+          </div></div></div>
+          <div class="col"><div class="card h-100 ac-dolor-card"><div class="card-body d-grid gap-2 align-content-start">
+            <span class="ac-dolor-ico" aria-hidden="true">≠</span>
+            <h3 class="m-0">No coincidía con el disco</h3>
+            <p class="m-0 text-body-secondary">Tres versiones, ninguna igual. ¿Cuál es la buena?</p>
+          </div></div></div>
+          <div class="col"><div class="card h-100 ac-dolor-card"><div class="card-body d-grid gap-2 align-content-start">
+            <span class="ac-dolor-ico" aria-hidden="true">?</span>
+            <h3 class="m-0">Era para quien ya sabe tocar</h3>
+            <p class="m-0 text-body-secondary">Acordes enredados, sin decirte por dónde partir.</p>
+          </div></div></div>
+        </div>
+        <p class="ac-dolor-cierre mb-0">Para eso está Acordia. <a href="#biblioteca">Busca tu canción</a>.</p>
+      </div>
+    </section>
+
+    <!-- Un tema, tres niveles -->
+    <section class="ac-section" id="niveles">
+      <div class="container">
+        <div class="ac-section-head">
+          <span class="ac-eyebrow">Un tema, tres versiones</span>
+          <h2>El mismo tema, a tu medida</h2>
+          <p>Tócalo como suena, empieza por una versión simplificada o ve a fondo con una guía. Revisado de oído por músicos, no copiado de otro sitio.</p>
+        </div>
+        <div class="row row-cols-1 row-cols-md-3 g-3">
+          <div class="col"><div class="card h-100"><div class="card-body d-grid gap-3 align-content-start">
+            <h3 class="h4 m-0">Original</h3>
+            <div class="ac-nivel-chords"><span class="ac-chip ac-chip-chord">Am7</span><span class="ac-chip ac-chip-chord">Fmaj7</span><span class="ac-chip ac-chip-chord">C/E</span><span class="ac-chip ac-chip-chord">G</span></div>
+            <p class="m-0 text-body-secondary">Los acordes reales del tema, con bajos, matices y compases partidos.</p>
+          </div></div></div>
+          <div class="col"><div class="card h-100"><div class="card-body d-grid gap-3 align-content-start">
+            <h3 class="h4 m-0">Simplificada</h3>
+            <div class="ac-nivel-chords"><span class="ac-chip ac-chip-chord">Am</span><span class="ac-chip ac-chip-chord">F</span><span class="ac-chip ac-chip-chord">C</span><span class="ac-chip ac-chip-chord">G</span></div>
+            <p class="m-0 text-body-secondary">Los acordes simples y la estructura, para tocarlo hoy.</p>
+          </div></div></div>
+          <div class="col"><div class="card h-100"><div class="card-body d-grid gap-3 align-content-start">
+            <h3 class="h4 m-0">A fondo</h3>
+            <div class="ac-nivel-chords"><span class="ac-chip">Tabs</span><span class="ac-chip">Arreglos</span><span class="ac-chip">Con tu guía</span></div>
+            <p class="m-0 text-body-secondary">Lo que nuestras guías tienen preparado para estudiar el tema en profundidad.</p>
+          </div></div></div>
         </div>
       </div>
     </section>
@@ -772,7 +772,7 @@
       var q = function (sel, r) { return (r || document).querySelector(sel); }, qa = function (sel) { return document.querySelectorAll(sel); };
       var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
       var chords = qa("[data-como-chord]");
-      chords.forEach(function (c) { c.addEventListener("click", function () { chords.forEach(function (o) { o.setAttribute("aria-pressed", String(o === c)); }); }); });
+      chords.forEach(function (c) { c.addEventListener("click", function () { chords.forEach(function (o) { o.setAttribute("aria-pressed", String(o === c)); }); qa(".ac-como-fret").forEach(function (f) { f.toggleAttribute("hidden", f.dataset.chord !== c.textContent.trim()); /* SVG no tiene la propiedad hidden */ }); }); });
       var mode = "normal", idx = 0;
       var notes = { normal: "Solo ves el nombre del acorde: la posición la pones tú.", study: "Ves la figura de la guitarra sobre cada compás mientras tocas." };
       function cur() { var v = q('[data-como-view="' + mode + '"] [data-como-cursor]'); return v ? v.children : []; }

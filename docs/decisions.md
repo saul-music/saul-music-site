@@ -996,3 +996,10 @@ La portada explica el camino en cinco pasos: conocer los acordes, tocar junto al
 ## S94 · El site sube a `acordia-render` 0.20.0: sin aviso de prototipo y Biblioteca plegable en escritorio (2026-11-19)
 
 Las páginas de canción ya no muestran «Prototipo en investigación» (RD50; los chips «Ejemplo» siguen). En escritorio la Biblioteca parte abierta y se puede plegar con «Ver solo los artistas» o con cada artista (RD51); celular no cambia. **Reemplaza** la prueba «en escritorio las cabeceras no son botones» por cuatro de escritorio (arranque abierto, plegar y volver, abrir uno y teclado, búsqueda sobre lo plegado) y una de celular (sin botón y con «Abrir todos · Cerrar todos»).
+
+## S95 · «Cómo funciona» bajo la Biblioteca y diagramas de guitarra reales (2026-11-19)
+
+- La sección `#como` pasa a ir justo debajo de la Biblioteca, antes de «¿Por qué Acordia?».
+- Los diagramas de la maqueta estaban dibujados a ojo (4 cuerdas, dedos sin sentido). Ahora son de 6 cuerdas con la forma real de Am, F, C y G, tomada de chords-db (`chords-guitar.json` de la librería), con × y ○ y los dedos correctos. En el paso 1, tocar un acorde cambia el diagrama (antes quedaba fijo en Am); el modo estudio usa las mismas formas en miniatura.
+- Los `*` de las variantes de forma no deben verse nunca en la Biblioteca: la corrección está en la librería (RD52, 0.20.1); el site la adopta en un PR aparte, cuando esté publicada.
+**Pruebas:** orden de secciones y `test_how_it_works_diagrams_are_real_six_string_shapes`.
