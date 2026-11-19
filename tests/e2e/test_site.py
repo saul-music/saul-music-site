@@ -355,13 +355,75 @@ def test_panels_are_visibly_separated_even_when_neighbours_share_a_tier(page: Pa
     assert no_horizontal_scroll(page)
 
 
-def test_on_desktop_every_artist_is_open_and_the_heads_are_not_buttons(page: Page, base_url: str):
+def test_on_desktop_every_artist_starts_open_and_the_bulk_links_are_hidden(
+    page: Page, base_url: str
+):
     open_library(page, base_url, DESKTOP)
     expect(page.locator(f"#biblioteca {CARDS}:visible")).to_have_count(
         page.locator(f"#biblioteca {CARDS}").count()
     )
-    expect(page.locator("#biblioteca .ac-artist-head[role=button]")).to_have_count(0)
+    heads = page.locator("#biblioteca .ac-artist-head")
+    for i in range(heads.count()):
+        expect(heads.nth(i)).to_have_attribute("aria-expanded", "true")
     expect(page.locator(".ac-lib-bulk")).to_be_hidden()
+    expect(page.locator(".ac-lib-fold")).to_have_text("Ver solo los artistas")
+
+
+def test_on_desktop_the_fold_button_shows_only_the_artists_and_brings_the_songs_back(
+    page: Page, base_url: str
+):
+    """RD51: un botón en la barra del buscador pliega todo y su texto dice qué pasará."""
+    open_library(page, base_url, DESKTOP)
+    fold = page.locator(".ac-lib-fold")
+    expect(fold).to_be_visible()
+    fold.click()
+    expect(page.locator(f"#biblioteca {CARDS}:visible")).to_have_count(0)
+    expect(page.locator("#biblioteca .ac-artist-head").first).to_be_visible()
+    expect(page.locator("#biblioteca .ac-artist-head[aria-expanded=true]")).to_have_count(0)
+    expect(fold).to_have_text("Mostrar todos los temas")
+    fold.click()
+    expect(page.locator(f"#biblioteca {CARDS}:visible")).to_have_count(
+        page.locator(f"#biblioteca {CARDS}").count()
+    )
+    expect(fold).to_have_text("Ver solo los artistas")
+    assert no_horizontal_scroll(page)
+
+
+def test_on_desktop_one_artist_opens_alone_and_the_keyboard_works(page: Page, base_url: str):
+    open_library(page, base_url, DESKTOP)
+    page.locator(".ac-lib-fold").click()
+    heads = page.locator("#biblioteca .ac-artist-head")
+    heads.nth(0).click()
+    expect(heads.nth(0)).to_have_attribute("aria-expanded", "true")
+    expect(heads.nth(1)).to_have_attribute("aria-expanded", "false")
+    assert (
+        page.locator("#biblioteca .ac-artist-group").nth(0).locator(f"{CARDS}:visible").count() >= 1
+    )
+    expect(page.locator(".ac-lib-fold")).to_have_text(
+        "Ver solo los artistas"
+    )  # ya no está todo plegado
+    heads.nth(1).focus()
+    page.keyboard.press("Enter")
+    expect(heads.nth(1)).to_have_attribute("aria-expanded", "true")
+    page.keyboard.press("Space")
+    expect(heads.nth(1)).to_have_attribute("aria-expanded", "false")
+
+
+def test_on_desktop_the_search_opens_the_folded_artists_with_matches(page: Page, base_url: str):
+    open_library(page, base_url, DESKTOP)
+    page.locator(".ac-lib-fold").click()
+    page.fill("#buscar-biblioteca", "los tres")
+    group = page.locator("#biblioteca .ac-artist-group:visible")
+    expect(group).to_have_count(1)
+    expect(group.locator(".ac-artist-head")).to_have_attribute("aria-expanded", "true")
+    expect(group.locator(f"{CARDS}:visible").first).to_be_visible()
+
+
+def test_on_mobile_there_is_no_fold_button_and_the_bulk_links_stay(page: Page, base_url: str):
+    open_library(page, base_url, PHONE)
+    expect(page.locator(".ac-lib-fold")).to_be_hidden()
+    expect(page.locator(".ac-lib-bulk")).to_be_visible()
+    expect(page.locator(f"#biblioteca {CARDS}:visible")).to_have_count(0)
 
 
 def test_on_mobile_artists_start_closed_and_a_tap_opens_one_without_closing_the_others(
