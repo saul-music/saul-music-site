@@ -1003,3 +1003,8 @@ Las páginas de canción ya no muestran «Prototipo en investigación» (RD50; l
 - Los diagramas de la maqueta estaban dibujados a ojo (4 cuerdas, dedos sin sentido). Ahora son de 6 cuerdas con la forma real de Am, F, C y G, tomada de chords-db (`chords-guitar.json` de la librería), con × y ○ y los dedos correctos. En el paso 1, tocar un acorde cambia el diagrama (antes quedaba fijo en Am); el modo estudio usa las mismas formas en miniatura.
 - Los `*` de las variantes de forma no deben verse nunca en la Biblioteca: la corrección está en la librería (RD52, 0.20.1); el site la adopta en un PR aparte, cuando esté publicada.
 **Pruebas:** orden de secciones y `test_how_it_works_diagrams_are_real_six_string_shapes`.
+
+## S96 · El site sube a `acordia-render` 0.20.1: sin `*` en la Biblioteca (2026-11-19)
+
+`acordia-render` 0.20.1 (RD52) quita el `*` de las variantes de forma de los chips de la Biblioteca; el site la adopta sin más cambios.
+**Pruebas:** `test_library_never_shows_the_shape_variant_asterisk`.
