@@ -984,3 +984,11 @@ pipeline (decisión C12 del control); lo existente se importó sin cambios. Se b
 el repo de imágenes, las cuentas, sus permisos y el proveedor WIF del sitio están allí. No quedan como respaldo, porque
 correr el script otra vez crearía permisos que Terraform no declara. El servicio de Cloud Run sigue en el pipeline de
 este repo. **Reemplaza en parte** S1 y lo que dice S9 sobre «lo crea `gcp.sh`».
+
+## S93 · «Cómo funciona» en cinco pasos, con el modo estudio y el normal (2026-11-19)
+
+La portada explica el camino en cinco pasos: conocer los acordes, tocar junto al tema, repetir lo que cuesta con el bucle, soltar las ayudas y pedir ayuda a un guía (con un plan de estudios marcado «Pronto», que todavía no existe). El paso 2 pone el énfasis en dos formas de estudiar: **modo normal** (se ve el nombre del acorde y la posición se recuerda) y **modo estudio** (pantalla completa con la figura de la guitarra sobre cada compás, sin memorizar), y el paso 4 sugiere volver al modo normal al soltar las ayudas.
+- Cada paso lleva una maqueta que usa las clases reales del reproductor (`btn`, `ac-bar`, `ac-loop-btn`, `ac-study-btn`, `ac-start-chip`), para que los colores sean los que verá quien toque. Los compases de la maqueta usan `is-now` y no `is-current`; el pulso de atención de `ac-study-btn` se apaga dentro de la maqueta porque agrandaba la página.
+- El oro es la estructura (arcos, «Paso N», botón principal) y el verde acompaña lo que sucede o se logra (íconos, tips, modo estudio, cierre). Solo el JS necesario: probar el bucle, la guitarra y los dos modos; nada suena.
+- Los chips «Ejemplo» y «Perfiles de ejemplo» se mantienen. El banner «Prototipo en investigación» sale con la librería 0.20.0 (RD50).
+**Pruebas:** `test_home_explains_how_it_works_in_five_steps`.
