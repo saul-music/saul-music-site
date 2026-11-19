@@ -164,21 +164,37 @@ def test_landing_leads_with_chords(client):
 
 
 def test_home_shows_library_before_the_advantages(client):
-    """La Biblioteca va primero; las ventajas de Acordia quedan debajo."""
+    """La Biblioteca va primero, «Cómo funciona» justo debajo y las ventajas de Acordia después."""
     html = client.get("/").text
     pos = {i: html.index(f'id="{i}"') for i in ("biblioteca", "problema", "niveles", "como")}
-    assert pos["biblioteca"] < pos["problema"] < pos["niveles"] < pos["como"]
+    assert pos["biblioteca"] < pos["como"] < pos["problema"] < pos["niveles"]
 
 
 def test_home_explains_how_it_works_in_five_steps(client):
     """«Cómo funciona»: cinco pasos y un cierre; el plan de estudios todavía es «Pronto»."""
     html = client.get("/").text
-    sec = html[html.index('id="como"') : html.index('id="barrios"')]
+    sec = html[html.index('id="como"') : html.index('class="container ac-porque"')]
     assert sec.count('class="ac-como-step"') == 5
     for n in range(1, 6):
         assert f"Paso {n}" in sec
     assert 'href="guias.html"' in sec and 'href="aprender.html"' in sec
     assert "ac-como-soon" in sec and "Prototipo en investigación" not in html
+
+
+def test_how_it_works_diagrams_are_real_six_string_shapes(client):
+    """Los diagramas de la maqueta son guitarras de 6 cuerdas con la forma real de cada acorde."""
+    import re
+
+    html = client.get("/").text
+    sec = html[html.index('id="como"') : html.index('class="container ac-porque"')]
+    figs = re.findall(r'<svg class="ac-como-fret" data-chord="(\w+)".*?</svg>', sec, re.S)
+    assert figs == ["Am", "F", "C", "G"]
+    am = re.search(r'<svg class="ac-como-fret" data-chord="Am".*?</svg>', sec, re.S).group(0)
+    assert am.count("<circle") == 3  # x02210: tres dedos (la cuerda al aire no lleva punto)
+    assert am.count("M") >= 1 and re.search(r"V\d+", am)
+    assert len(re.findall(r"M[\d.]+ 18V", am)) == 6  # seis cuerdas
+    assert [m for m in re.findall(r'class="num"[^>]*>(\d)<', am)] == ["2", "3", "1"]
+    assert len(re.findall(r'<svg class="ac-como-mini"', sec)) == 4
 
 
 def test_pages_have_no_plans_or_prices_from_acordia(client):
