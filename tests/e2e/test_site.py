@@ -137,10 +137,8 @@ def test_unpublished_song_is_404(page: Page, base_url: str):
 
 
 def open_all_if_closed(page: Page) -> None:
-    """En celular la Biblioteca parte cerrada (RD28): estas pruebas abren todos los artistas."""
-    bulk = page.get_by_role("button", name="Abrir todos")
-    if bulk.is_visible():
-        bulk.click()
+    """La Biblioteca parte comprimida (RD53): estas pruebas abren todos los artistas."""
+    page.locator(".ac-lib-fold").click()
 
 
 def test_library_card_opens_song(page: Page, base_url: str):
@@ -355,129 +353,78 @@ def test_panels_are_visibly_separated_even_when_neighbours_share_a_tier(page: Pa
     assert no_horizontal_scroll(page)
 
 
-def test_on_desktop_every_artist_starts_open_and_the_bulk_links_are_hidden(
-    page: Page, base_url: str
-):
-    open_library(page, base_url, DESKTOP)
-    expect(page.locator(f"#biblioteca {CARDS}:visible")).to_have_count(
-        page.locator(f"#biblioteca {CARDS}").count()
-    )
-    heads = page.locator("#biblioteca .ac-artist-head")
-    for i in range(heads.count()):
-        expect(heads.nth(i)).to_have_attribute("aria-expanded", "true")
-    expect(page.locator(".ac-lib-bulk")).to_be_hidden()
-    expect(page.locator(".ac-lib-fold")).to_have_text("Ver solo los artistas")
+SCREENS = pytest.mark.parametrize("viewport", [DESKTOP, PHONE], ids=["desktop", "phone"])
 
 
-def test_on_desktop_the_fold_button_shows_only_the_artists_and_brings_the_songs_back(
-    page: Page, base_url: str
-):
-    """RD51: un botón en la barra del buscador pliega todo y su texto dice qué pasará."""
-    open_library(page, base_url, DESKTOP)
-    fold = page.locator(".ac-lib-fold")
-    expect(fold).to_be_visible()
-    fold.click()
-    expect(page.locator(f"#biblioteca {CARDS}:visible")).to_have_count(0)
-    expect(page.locator("#biblioteca .ac-artist-head").first).to_be_visible()
-    expect(page.locator("#biblioteca .ac-artist-head[aria-expanded=true]")).to_have_count(0)
-    expect(fold).to_have_text("Mostrar todos los temas")
-    fold.click()
-    expect(page.locator(f"#biblioteca {CARDS}:visible")).to_have_count(
-        page.locator(f"#biblioteca {CARDS}").count()
-    )
-    expect(fold).to_have_text("Ver solo los artistas")
-    assert no_horizontal_scroll(page)
-
-
-def test_on_desktop_one_artist_opens_alone_and_the_keyboard_works(page: Page, base_url: str):
-    open_library(page, base_url, DESKTOP)
-    page.locator(".ac-lib-fold").click()
-    heads = page.locator("#biblioteca .ac-artist-head")
-    heads.nth(0).click()
-    expect(heads.nth(0)).to_have_attribute("aria-expanded", "true")
-    expect(heads.nth(1)).to_have_attribute("aria-expanded", "false")
-    assert (
-        page.locator("#biblioteca .ac-artist-group").nth(0).locator(f"{CARDS}:visible").count() >= 1
-    )
-    expect(page.locator(".ac-lib-fold")).to_have_text(
-        "Ver solo los artistas"
-    )  # ya no está todo plegado
-    heads.nth(1).focus()
-    page.keyboard.press("Enter")
-    expect(heads.nth(1)).to_have_attribute("aria-expanded", "true")
-    page.keyboard.press("Space")
-    expect(heads.nth(1)).to_have_attribute("aria-expanded", "false")
-
-
-def test_on_desktop_the_search_opens_the_folded_artists_with_matches(page: Page, base_url: str):
-    open_library(page, base_url, DESKTOP)
-    page.locator(".ac-lib-fold").click()
-    page.fill("#buscar-biblioteca", "los tres")
-    group = page.locator("#biblioteca .ac-artist-group:visible")
-    expect(group).to_have_count(1)
-    expect(group.locator(".ac-artist-head")).to_have_attribute("aria-expanded", "true")
-    expect(group.locator(f"{CARDS}:visible").first).to_be_visible()
-
-
-def test_on_mobile_there_is_no_fold_button_and_the_bulk_links_stay(page: Page, base_url: str):
-    open_library(page, base_url, PHONE)
-    expect(page.locator(".ac-lib-fold")).to_be_hidden()
-    expect(page.locator(".ac-lib-bulk")).to_be_visible()
-    expect(page.locator(f"#biblioteca {CARDS}:visible")).to_have_count(0)
-
-
-def test_on_mobile_artists_start_closed_and_a_tap_opens_one_without_closing_the_others(
-    page: Page, base_url: str
-):
-    open_library(page, base_url, PHONE)
+@SCREENS
+def test_every_artist_starts_compressed_on_any_screen(page: Page, base_url: str, viewport: dict):
+    """RD53: escritorio y celular son la misma experiencia: solo los artistas, comprimidos."""
+    open_library(page, base_url, viewport)
     heads = page.locator("#biblioteca .ac-artist-head")
     assert heads.count() >= 3
     expect(page.locator(f"#biblioteca {CARDS}:visible")).to_have_count(0)
-    expect(heads.first).to_have_attribute("role", "button")
-    expect(heads.first).to_have_attribute("aria-expanded", "false")
-    expect(heads.first).to_be_visible()  # cerrado, el artista se sigue viendo
+    for i in range(heads.count()):
+        expect(heads.nth(i)).to_have_attribute("role", "button")
+        expect(heads.nth(i)).to_have_attribute("aria-expanded", "false")
+    expect(heads.first).to_be_visible()
+    expect(page.locator(".ac-lib-fold")).to_have_text("Mostrar todos")
+    expect(page.locator(".ac-lib-bulk")).to_have_count(0)
+
+
+@SCREENS
+def test_the_button_shows_every_song_and_brings_back_only_the_artists(
+    page: Page, base_url: str, viewport: dict
+):
+    open_library(page, base_url, viewport)
+    fold = page.locator(".ac-lib-fold")
+    expect(fold).to_be_visible()
+    fold.click()
+    expect(page.locator(f"#biblioteca {CARDS}:visible")).to_have_count(
+        page.locator(f"#biblioteca {CARDS}").count()
+    )
+    expect(page.locator("#biblioteca .ac-artist-head[aria-expanded=false]")).to_have_count(0)
+    expect(fold).to_have_text("Solo artistas")
+    assert no_horizontal_scroll(page)
+    fold.click()
+    expect(page.locator(f"#biblioteca {CARDS}:visible")).to_have_count(0)
+    expect(fold).to_have_text("Mostrar todos")
+
+
+@SCREENS
+def test_one_artist_opens_without_closing_the_others_and_the_keyboard_works(
+    page: Page, base_url: str, viewport: dict
+):
+    open_library(page, base_url, viewport)
+    heads = page.locator("#biblioteca .ac-artist-head")
     heads.nth(0).click()
     expect(heads.nth(0)).to_have_attribute("aria-expanded", "true")
-    first_cards = page.locator("#biblioteca .ac-artist-group").nth(0).locator(f"{CARDS}:visible")
-    assert first_cards.count() >= 1
+    expect(heads.nth(1)).to_have_attribute("aria-expanded", "false")
+    group = page.locator("#biblioteca .ac-artist-group").nth(0)
+    assert group.locator(f"{CARDS}:visible").count() >= 1
     heads.nth(1).click()  # abrir otro no cierra el anterior
     expect(heads.nth(0)).to_have_attribute("aria-expanded", "true")
     expect(heads.nth(1)).to_have_attribute("aria-expanded", "true")
     heads.nth(0).click()  # y cerrar uno no toca al otro
     expect(heads.nth(0)).to_have_attribute("aria-expanded", "false")
     expect(heads.nth(1)).to_have_attribute("aria-expanded", "true")
+    heads.nth(2).focus()
+    page.keyboard.press("Enter")
+    expect(heads.nth(2)).to_have_attribute("aria-expanded", "true")
+    page.keyboard.press("Space")
+    expect(heads.nth(2)).to_have_attribute("aria-expanded", "false")
     assert no_horizontal_scroll(page)
 
 
-def test_on_mobile_a_head_is_a_comfortable_touch_target(page: Page, base_url: str):
+def test_a_head_is_a_comfortable_touch_target(page: Page, base_url: str):
     open_library(page, base_url, PHONE)
     heads = page.locator("#biblioteca .ac-artist-head")
     for i in range(heads.count()):
         assert heads.nth(i).bounding_box()["height"] >= 44
 
 
-def test_on_mobile_the_keyboard_opens_and_closes_an_artist(page: Page, base_url: str):
-    open_library(page, base_url, PHONE)
-    head = page.locator("#biblioteca .ac-artist-head").first
-    head.focus()
-    page.keyboard.press("Enter")
-    expect(head).to_have_attribute("aria-expanded", "true")
-    page.keyboard.press("Space")
-    expect(head).to_have_attribute("aria-expanded", "false")
-
-
-def test_on_mobile_open_all_and_close_all(page: Page, base_url: str):
-    open_library(page, base_url, PHONE)
-    page.get_by_role("button", name="Abrir todos").click()
-    expect(page.locator("#biblioteca .ac-artist-head[aria-expanded=false]")).to_have_count(0)
-    assert page.locator(f"#biblioteca {CARDS}:visible").count() > 0
-    assert no_horizontal_scroll(page)
-    page.get_by_role("button", name="Cerrar todos").click()
-    expect(page.locator(f"#biblioteca {CARDS}:visible")).to_have_count(0)
-
-
-def test_on_mobile_the_search_opens_only_the_artists_with_matches(page: Page, base_url: str):
-    open_library(page, base_url, PHONE)
+@SCREENS
+def test_the_search_opens_only_the_artists_with_matches(page: Page, base_url: str, viewport: dict):
+    open_library(page, base_url, viewport)
     page.fill("#buscar-biblioteca", "los tres")
     group = page.locator("#biblioteca .ac-artist-group:visible")
     expect(group).to_have_count(1)

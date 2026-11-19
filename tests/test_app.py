@@ -170,6 +170,22 @@ def test_home_shows_library_before_the_advantages(client):
     assert pos["biblioteca"] < pos["como"] < pos["problema"] < pos["niveles"]
 
 
+def test_home_has_a_divider_between_how_it_works_and_why_acordia(client):
+    html = client.get("/").text
+    divider = html.index('class="ac-divider"')
+    assert html.index('id="como"') < divider < html.index("¿Por qué Acordia?")
+
+
+def test_home_explains_the_three_difficulty_levels_with_example_chords(client):
+    html = client.get("/").text
+    block = html[html.index('id="dificultad"') : html.index('id="barrios"')]
+    for level in ("inicial", "medio", "avanzado"):
+        assert f'data-n="{level}"' in block
+    for chord in ("Am", "Am7", "C/E", "D9sus4", "A13", "E7b9", "G7#9"):
+        assert f'ac-chip-chord">{chord}<' in block
+    assert html.index('id="niveles"') < html.index('id="dificultad"') < html.index('id="barrios"')
+
+
 def test_home_explains_how_it_works_in_five_steps(client):
     """«Cómo funciona»: cinco pasos y un cierre; el plan de estudios todavía es «Pronto»."""
     html = client.get("/").text
