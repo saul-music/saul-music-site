@@ -1016,3 +1016,7 @@ Las páginas de canción ya no muestran «Prototipo en investigación» (RD50; l
 - **«¿Qué nivel elijo?»** (`#dificultad`, después de «Un tema, tres versiones»): tres tarjetas, Inicial (acordes mayores y menores, ritmo parejo), Medio (sextas, séptimas, novenas, inversiones, cambios de compás) y Avanzado (tensiones y alteraciones: 9sus4, 13, b9, #9), con acordes de ejemplo. Explica la dificultad del tema; no reemplaza las versiones Original / Simplificada / A fondo (C4).
 - Los bordes de la Biblioteca pasan a la línea neutra (eran los únicos amarillos en modo oscuro).
 **Pendiente:** verlo a ojo en iPhone y Android reales.
+
+## S98 · El contador de la Biblioteca muestra también los artistas (2026-11-19)
+
+«15 canciones · 8 artistas», con singular y siguiendo los filtros de barrio y nivel (cuenta los artistas con algún tema a la vista). Solo JS del site; el texto de la portada («N canciones disponibles») no cambia.

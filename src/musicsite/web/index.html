@@ -791,8 +791,8 @@
       });
     }
     function apply() {
-      var shown = 0, head = null, has = false;
-      function close() { if (head) head.classList.toggle("ac-fuera", !has); }
+      var shown = 0, artists = 0, head = null, has = false;
+      function close() { if (head) { head.classList.toggle("ac-fuera", !has); if (has) artists++; } }
       Array.prototype.forEach.call(lib.querySelectorAll(".row > .col, .row > .ac-artist-head"), function (el) {
         if (el.classList.contains("ac-artist-head")) { close(); head = el; has = false; return; }
         var d = data.filter(function (x) { return x.el === el; })[0];
@@ -802,7 +802,7 @@
       });
       close();
       if ((sel.barrio || sel.nivel) && window.AcordiaBiblioteca) window.AcordiaBiblioteca.openMatches();  // celular: abre los artistas con temas a la vista (RD28)
-      if (total) total.textContent = shown + (shown === 1 ? " canción" : " canciones");
+      if (total) total.textContent = shown + (shown === 1 ? " canción" : " canciones") + " · " + artists + (artists === 1 ? " artista" : " artistas");
     }
     build("barrio", uniq("barrio")); build("nivel", uniq("nivel"));
     box.hidden = false; apply();
