@@ -184,3 +184,5 @@ AAAA-MM-DD · paso · qué se hizo · qué quedó pendiente · decisiones nuevas
 2026-11-10 · acordes dentro de una mitad · el site sube a `acordia-render` 0.5.2 (RD21, S63): `D6/F#&Em9` suena completo · pendiente: oírlo en el celular real · S63
 2026-11-17 · sin repertorio inicial · las guías por artista alcanzan también los temas publicados desde el admin; la Biblioteca sin «Próximamente»; sube a `acordia-render` 0.10.0 (RD33, S76); 343 pruebas · pendiente: verificar en producción · S76
 2026-11-19 · infra en Terraform · se retiran `bootstrap/gcp.sh` y su README (la infra vive en un repo privado de infraestructura, C12) · S92
+2026-11-23 · API de preferencias, 3b (site S99, en PR) · `/api/me/preferences` (GET y PUT) sobre Firestore: solo grupo público (rechaza al tenant del equipo), campos validados, 2 KB, 30/min por persona, `no-store`; carga firebase-admin en la primera petición y no al arrancar; se activa con `FIREBASE_PROJECT_ID`; 409 tests; nadie puede usarla aún (registro cerrado) · pendiente: mezclar, verificar en producción, login del site (3e) · S99, C26, C38
+

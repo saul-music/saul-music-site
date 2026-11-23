@@ -1,0 +1,303 @@
+"""Cuentas del sitio (C26, S99): tokens, preferencias y límites. Todo sintético."""
+
+import json
+import logging
+
+import pytest
+from fastapi.testclient import TestClient
+
+from musicsite.accounts import (
+    MAX_BODY_BYTES,
+    MAX_TRACKED_PEOPLE,
+    Accounts,
+    InvalidPreferences,
+    RateLimiter,
+    accounts_from_env,
+    clean_preferences,
+    uid_from_claims,
+)
+from musicsite.app import create_app
+
+PUBLIC = {"uid": "uid1", "firebase": {"sign_in_provider": "google.com"}}
+OTHER = {"uid": "uid2", "firebase": {"sign_in_provider": "facebook.com"}}
+TEAM = {"uid": "uid3", "firebase": {"sign_in_provider": "password", "tenant": "equipo-x"}}
+TENANT_GOOGLE = {
+    "uid": "uid4",
+    "firebase": {"sign_in_provider": "google.com", "tenant": "equipo-x"},
+}
+TOKENS = {"p1": PUBLIC, "p2": OTHER, "team": TEAM, "tenant-google": TENANT_GOOGLE}
+
+
+class FakeVerifier:
+    def verify(self, token):
+        claims = TOKENS.get(token)
+        return uid_from_claims(claims) if claims else None
+
+
+class FakeStore:
+    def __init__(self):
+        self.docs = {}
+
+    def get(self, uid):
+        return dict(self.docs.get(uid, {}))
+
+    def put(self, uid, preferences):
+        self.docs[uid] = dict(preferences)
+
+
+@pytest.fixture
+def store():
+    return FakeStore()
+
+
+@pytest.fixture
+def client(store):
+    accounts = Accounts(FakeVerifier(), store, RateLimiter(limit=5, window=60))
+    return TestClient(create_app(accounts=accounts))
+
+
+def bearer(token="p1"):
+    return {"Authorization": f"Bearer {token}"}
+
+
+def put(client, preferences, token="p1", **kwargs):
+    return client.put(
+        "/api/me/preferences", headers=bearer(token), json={"preferences": preferences}, **kwargs
+    )
+
+
+# --- quién llama
+@pytest.mark.parametrize("claims", [PUBLIC, OTHER])
+def test_public_group_people_are_accepted(claims):
+    assert uid_from_claims(claims) == claims["uid"]
+
+
+@pytest.mark.parametrize(
+    "claims",
+    [
+        TEAM,
+        TENANT_GOOGLE,
+        {"uid": "u", "firebase": {"sign_in_provider": "password"}},
+        {"uid": "u", "firebase": {"sign_in_provider": "anonymous"}},
+        {"uid": "u", "firebase": {"sign_in_provider": "custom"}},
+        {"uid": "u", "firebase": {}},
+        {"uid": "u", "firebase": "google.com"},
+        {"uid": "u"},
+        {"firebase": {"sign_in_provider": "google.com"}},
+        {"uid": 7, "firebase": {"sign_in_provider": "google.com"}},
+        {"uid": "../otro", "firebase": {"sign_in_provider": "google.com"}},
+        {"uid": "", "firebase": {"sign_in_provider": "google.com"}},
+    ],
+)
+def test_everyone_else_is_rejected(claims):
+    assert uid_from_claims(claims) is None
+
+
+@pytest.mark.parametrize(
+    "headers", [{}, {"Authorization": "Bearer"}, {"Authorization": "Basic p1"}, bearer("malo")]
+)
+def test_no_valid_token_is_404_without_body(client, headers):
+    for call in (
+        client.get("/api/me/preferences", headers=headers),
+        client.put("/api/me/preferences", headers=headers, json={}),
+    ):
+        assert call.status_code == 404 and call.content == b""
+
+
+@pytest.mark.parametrize("token", ["team", "tenant-google"])
+def test_the_teams_tokens_do_not_open_the_site_api(client, store, token):
+    assert client.get("/api/me/preferences", headers=bearer(token)).status_code == 404
+    assert put(client, {"muted": True}, token).status_code == 404
+    assert store.docs == {}
+
+
+# --- preferencias
+def test_empty_at_first_and_reading_creates_nothing(client, store):
+    response = client.get("/api/me/preferences", headers=bearer())
+    assert response.status_code == 200 and response.json() == {"preferences": {}}
+    assert store.docs == {}
+
+
+def test_write_then_read_back(client, store):
+    prefs = {
+        "muted": True,
+        "countIn": False,
+        "instrument": "guitarra",
+        "studyMode": "vertical",
+        "theme": "oscuro",
+        "volMetronome": 0.5,
+    }
+    assert put(client, prefs).json() == {"preferences": prefs}
+    assert client.get("/api/me/preferences", headers=bearer()).json() == {"preferences": prefs}
+    assert store.docs == {"uid1": prefs}
+
+
+def test_write_replaces_and_empty_clears(client, store):
+    put(client, {"muted": True, "theme": "claro"})
+    put(client, {"muted": False})
+    assert store.docs["uid1"] == {"muted": False}
+    put(client, {})
+    assert store.docs["uid1"] == {}
+
+
+def test_people_never_see_each_others_data(client):
+    put(client, {"muted": True}, "p1")
+    put(client, {"theme": "claro"}, "p2")
+    assert client.get("/api/me/preferences", headers=bearer("p1")).json() == {
+        "preferences": {"muted": True}
+    }
+    assert client.get("/api/me/preferences", headers=bearer("p2")).json() == {
+        "preferences": {"theme": "claro"}
+    }
+
+
+def test_the_uid_comes_from_the_token_never_from_the_request(client, store):
+    client.put(
+        "/api/me/preferences?uid=uid2",
+        headers={**bearer("p1"), "X-Uid": "uid2"},
+        json={"preferences": {"muted": True}},
+    )
+    assert list(store.docs) == ["uid1"]
+
+
+@pytest.mark.parametrize(
+    "preferences",
+    [
+        {"correo": "a@b.cl"},
+        {"muted": "si"},
+        {"muted": 1},
+        {"countIn": None},
+        {"instrument": "bajo"},
+        {"instrument": ["guitarra"]},
+        {"studyMode": "Vertical"},
+        {"studyMode": "x" * 40},
+        {"theme": "<script>"},
+        {"volMetronome": 1.5},
+        {"volMetronome": -0.1},
+        {"volMetronome": True},
+        {"volMetronome": float("nan")},
+        {"volMetronome": "0.5"},
+        [],
+        "texto",
+        None,
+    ],
+)
+def test_invalid_preferences_are_422_and_not_stored(client, store, preferences):
+    body = json.dumps({"preferences": preferences}, allow_nan=True)
+    response = client.put(
+        "/api/me/preferences",
+        headers={**bearer(), "Content-Type": "application/json"},
+        content=body,
+    )
+    assert response.status_code == 422 and response.content == b""
+    assert store.docs == {}
+
+
+@pytest.mark.parametrize(
+    "raw", [b"", b"no es json", b"[]", b"null", b'{"otra": 1}', b'{"preferences": 3}']
+)
+def test_malformed_bodies_are_422(client, store, raw):
+    response = client.put(
+        "/api/me/preferences", headers={**bearer(), "Content-Type": "application/json"}, content=raw
+    )
+    assert response.status_code == 422 and store.docs == {}
+
+
+def test_oversized_body_is_rejected_before_parsing(client, store):
+    big = json.dumps({"preferences": {"theme": "a" * (MAX_BODY_BYTES + 10)}})
+    response = client.put(
+        "/api/me/preferences", headers={**bearer(), "Content-Type": "application/json"}, content=big
+    )
+    assert response.status_code == 413 and store.docs == {}
+
+
+def test_oversized_body_without_length_is_also_rejected(store):
+    with pytest.raises(InvalidPreferences):
+        from musicsite.accounts import parse_body
+
+        parse_body(b"x" * (MAX_BODY_BYTES + 1))
+
+
+# --- caché y frecuencia
+def test_responses_are_private_and_never_cached(client):
+    for response in (
+        client.get("/api/me/preferences", headers=bearer()),
+        put(client, {"muted": True}),
+    ):
+        assert response.headers["cache-control"] == "private, no-store"
+        assert "authorization" in response.headers["vary"].lower()
+
+
+def test_rate_limit_is_per_person(client):
+    codes = [client.get("/api/me/preferences", headers=bearer("p1")).status_code for _ in range(7)]
+    assert codes == [200] * 5 + [429] * 2
+    assert client.get("/api/me/preferences", headers=bearer("p2")).status_code == 200
+
+
+def test_rate_limit_recovers_after_the_window():
+    now = [0.0]
+    limiter = RateLimiter(limit=2, window=60, clock=lambda: now[0])
+    assert [limiter.allow("a") for _ in range(3)] == [True, True, False]
+    now[0] = 61
+    assert limiter.allow("a") is True
+
+
+def test_rate_limit_memory_is_bounded():
+    limiter = RateLimiter(limit=1, window=3600)
+    for i in range(MAX_TRACKED_PEOPLE + 50):
+        limiter.allow(f"u{i}")
+    assert len(limiter._hits) <= MAX_TRACKED_PEOPLE
+
+
+def test_invalid_tokens_are_not_counted_against_anyone(client):
+    for _ in range(10):
+        assert client.get("/api/me/preferences", headers=bearer("malo")).status_code == 404
+    assert client.get("/api/me/preferences", headers=bearer("p1")).status_code == 200
+
+
+# --- sin cuentas
+def test_without_accounts_the_api_does_not_exist():
+    client = TestClient(create_app())
+    assert client.get("/api/me/preferences", headers=bearer()).status_code == 404
+    put_status = client.put("/api/me/preferences", headers=bearer(), json={}).status_code
+    assert put_status == 405  # como cualquier otra ruta
+
+
+def test_accounts_need_a_project(monkeypatch):
+    assert accounts_from_env({}) is None
+    assert accounts_from_env({"FIREBASE_PROJECT_ID": "  "}) is None
+
+
+def test_the_site_still_serves_pages_with_accounts_on(client):
+    assert client.get("/").status_code == 200
+    assert client.get("/api/otra-cosa", headers=bearer()).status_code == 404
+
+
+def test_no_token_or_uid_reaches_the_logs(client, caplog):
+    with caplog.at_level(logging.DEBUG):
+        put(client, {"muted": True})
+        client.get("/api/me/preferences", headers=bearer("malo"))
+    assert "p1" not in caplog.text and "uid1" not in caplog.text
+
+
+def test_clean_preferences_keeps_only_valid_values():
+    assert clean_preferences({"volMetronome": 1, "muted": False}) == {
+        "volMetronome": 1.0,
+        "muted": False,
+    }
+
+
+def test_firebase_is_not_touched_until_the_first_request(monkeypatch):
+    import firebase_admin
+
+    calls = []
+    monkeypatch.setattr(firebase_admin, "initialize_app", lambda *a, **k: calls.append("init"))
+    monkeypatch.setattr(
+        firebase_admin, "get_app", lambda *a, **k: (_ for _ in ()).throw(ValueError())
+    )
+    accounts = accounts_from_env({"FIREBASE_PROJECT_ID": "proyecto"})
+    assert accounts is not None and calls == []  # arrancar no inicializa nada
+    assert (
+        accounts.verifier.verify("token") is None
+    )  # sin credenciales reales, "no"; la app se pidió aquí
+    assert calls == ["init"]

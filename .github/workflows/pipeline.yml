@@ -240,7 +240,7 @@ jobs:
             --service-account "$RUNTIME" \
             --add-volume "name=editorial,type=cloud-storage,bucket=${EDITORIAL_BUCKET},readonly=true" \
             --add-volume-mount volume=editorial,mount-path=/editorial \
-            --set-env-vars EDITORIAL_DIR=/editorial \
+            --set-env-vars "EDITORIAL_DIR=/editorial,FIREBASE_PROJECT_ID=${PROJECT_ID}" \
             --min-instances 0 --max-instances 2 --cpu 1 --memory 512Mi \
             --allow-unauthenticated --quiet
       - name: smoke (/ y /cancion.html y una página de canción dan 200; /docs y /dashboard/latest dan 404)
@@ -253,3 +253,4 @@ jobs:
           test "$(code /cancion-otra-era.html)" = "200"
           test "$(code /docs)" = "404"
           test "$(code /dashboard/latest)" = "404"
+          test "$(code /api/me/preferences)" = "404"
