@@ -9,6 +9,7 @@ from fastapi.testclient import TestClient
 from musicsite.accounts import (
     MAX_BODY_BYTES,
     MAX_TRACKED_PEOPLE,
+    NOTICE_VERSION,
     Accounts,
     InvalidPreferences,
     RateLimiter,
@@ -35,8 +36,9 @@ class FakeVerifier:
 
 
 class FakeStore:
-    def __init__(self):
+    def __init__(self, consents=None):
         self.docs = {}
+        self.consents = dict(consents or {})
 
     def get(self, uid):
         return dict(self.docs.get(uid, {}))
@@ -44,16 +46,34 @@ class FakeStore:
     def put(self, uid, preferences):
         self.docs[uid] = dict(preferences)
 
+    def get_consent(self, uid):
+        return self.consents.get(uid)
+
+    def put_consent(self, uid, version):
+        self.consents[uid] = version
+
 
 @pytest.fixture
 def store():
-    return FakeStore()
+    # Las personas de las pruebas de preferencias ya aceptaron el aviso vigente.
+    return FakeStore({"uid1": NOTICE_VERSION, "uid2": NOTICE_VERSION})
+
+
+def make_client(store):
+    accounts = Accounts(FakeVerifier(), store, RateLimiter(limit=5, window=60))
+    return TestClient(create_app(accounts=accounts))
 
 
 @pytest.fixture
 def client(store):
-    accounts = Accounts(FakeVerifier(), store, RateLimiter(limit=5, window=60))
-    return TestClient(create_app(accounts=accounts))
+    return make_client(store)
+
+
+@pytest.fixture
+def bare():
+    """Nadie ha aceptado nada."""
+    store = FakeStore()
+    return make_client(store), store
 
 
 def bearer(token="p1"):
@@ -301,3 +321,117 @@ def test_firebase_is_not_touched_until_the_first_request(monkeypatch):
         accounts.verifier.verify("token") is None
     )  # sin credenciales reales, "no"; la app se pidió aquí
     assert calls == ["init"]
+
+
+# --- consentimiento (C39)
+def accept(client, token="p1", **changes):
+    body = {"version": NOTICE_VERSION, "adult": True, **changes}
+    return client.put("/api/me/consent", headers=bearer(token), json=body)
+
+
+def test_nothing_is_read_or_stored_before_consenting(bare):
+    client, store = bare
+    assert client.get("/api/me/preferences", headers=bearer()).status_code == 403
+    assert put(client, {"muted": True}).status_code == 403
+    assert store.docs == {} and store.consents == {}
+
+
+def test_consent_state_starts_empty_and_reading_it_stores_nothing(bare):
+    client, store = bare
+    response = client.get("/api/me/consent", headers=bearer())
+    assert response.status_code == 200
+    assert response.json() == {"current": NOTICE_VERSION, "accepted": None}
+    assert store.consents == {}
+
+
+def test_accepting_unlocks_the_preferences(bare):
+    client, store = bare
+    assert accept(client).json() == {"current": NOTICE_VERSION, "accepted": NOTICE_VERSION}
+    assert store.consents == {"uid1": NOTICE_VERSION}
+    assert put(client, {"muted": True}).status_code == 200
+    assert client.get("/api/me/preferences", headers=bearer()).json() == {
+        "preferences": {"muted": True}
+    }
+
+
+def test_accepting_twice_is_harmless(bare):
+    client, store = bare
+    assert accept(client).status_code == 200 and accept(client).status_code == 200
+    assert store.consents == {"uid1": NOTICE_VERSION}
+
+
+@pytest.mark.parametrize(
+    "body",
+    [
+        {"version": NOTICE_VERSION, "adult": False},
+        {"version": NOTICE_VERSION},
+        {"adult": True},
+        {"version": NOTICE_VERSION, "adult": "true"},
+        {"version": NOTICE_VERSION, "adult": 1},
+        {"version": "2020-01-01-v1", "adult": True},
+        {"version": 1, "adult": True},
+        {"version": NOTICE_VERSION, "adult": True, "extra": 1},
+        [],
+        "texto",
+    ],
+)
+def test_consent_needs_the_current_version_and_the_over_14_box(bare, body):
+    client, store = bare
+    response = client.put("/api/me/consent", headers=bearer(), json=body)
+    assert response.status_code == 422 and response.content == b""
+    assert store.consents == {}
+
+
+def test_an_old_version_must_be_accepted_again():
+    store = FakeStore({"uid1": "2025-01-01-v1"})
+    client = make_client(store)
+    assert client.get("/api/me/consent", headers=bearer()).json()["accepted"] is None
+    assert client.get("/api/me/preferences", headers=bearer()).status_code == 403
+    assert accept(client).status_code == 200
+    assert client.get("/api/me/preferences", headers=bearer()).status_code == 200
+
+
+def test_consent_is_per_person(bare):
+    client, store = bare
+    accept(client, "p1")
+    assert client.get("/api/me/preferences", headers=bearer("p1")).status_code == 200
+    assert client.get("/api/me/preferences", headers=bearer("p2")).status_code == 403
+    assert store.consents == {"uid1": NOTICE_VERSION}
+
+
+@pytest.mark.parametrize("token", ["team", "tenant-google", "malo"])
+def test_the_team_and_invalid_tokens_cannot_consent(bare, token):
+    client, store = bare
+    assert accept(client, token).status_code == 404
+    assert client.get("/api/me/consent", headers=bearer(token)).status_code == 404
+    assert store.consents == {}
+
+
+def test_consent_responses_are_private_and_the_body_is_bounded(bare):
+    client, store = bare
+    assert (
+        client.get("/api/me/consent", headers=bearer()).headers["cache-control"]
+        == "private, no-store"
+    )
+    big = json.dumps({"version": "x" * (MAX_BODY_BYTES + 10), "adult": True})
+    response = client.put(
+        "/api/me/consent", headers={**bearer(), "Content-Type": "application/json"}, content=big
+    )
+    assert response.status_code == 413 and store.consents == {}
+
+
+# --- la página del aviso
+def test_the_public_notice_matches_the_version_the_server_asks_for(client):
+    page = client.get("/privacidad.html")
+    assert page.status_code == 200 and page.headers["content-type"].startswith("text/html")
+    assert NOTICE_VERSION in page.text
+    assert "contacto@saulapp.com" in page.text and "14 años o más" in page.text
+    assert "noindex" not in page.text
+
+
+@pytest.mark.parametrize(
+    "path",
+    ["/", "/guias.html", "/ser-guia.html", "/artistas.html", "/pedidos.html", "/aprender.html"],
+)
+def test_every_footer_links_to_the_notice(client, path):
+    assert 'href="privacidad.html"' in client.get(path).text, path

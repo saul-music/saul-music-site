@@ -90,6 +90,7 @@ def test_web_dir_has_only_fixed_site_files():
         "artistas.html",
         "pedidos.html",
         "pedidos.js",
+        "privacidad.html",
     }
     assert {p.name for p in WEB_DIR.iterdir()} == fixed
 

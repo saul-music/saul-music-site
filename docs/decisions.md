@@ -1038,3 +1038,17 @@ Las páginas de canción ya no muestran «Prototipo en investigación» (RD50; l
 - **Sin comprobar:** que `datastore.user` alcance para leer y escribir desde `musicsite-runtime`; que Hosting pase la cabecera `Authorization` a Cloud Run (un solo reporte de la comunidad dice que sí, ninguna página oficial; si no, el
   token iría en `__session`); y la API con un token real. Todo eso llega con el login del site (3e).
 
+## S100 · Consentimiento obligatorio y aviso de privacidad público (2026-11-23)
+
+**Etapa 3c (C39).** Antes de abrir el registro, el servidor exige que cada persona acepte el aviso, y el aviso es una página pública.
+
+- **`web/privacidad.html`**, con la versión `2026-11-23-v1`, igual al borrador aprobado (`docs/privacidad/aviso-v1.md` del control); enlazada como «Privacidad» en el pie de todas las páginas del sitio y de «Aprender». Responsable: Acordia (SAÚL
+  música) y `contacto@saulapp.com`. **Pendiente de revisión legal.** **No** incluye aún las páginas de canción que genera la librería `acordia_render`: su pie necesita una versión nueva de la librería (R1).
+- **`GET` y `PUT /api/me/consent`.** El `PUT` exige exactamente `version` (la vigente) y `adult: true` (la casilla de 14 años o más, C27; no se guarda la fecha de nacimiento); cualquier otra cosa es 422. La hora la pone Firestore. Guarda
+  `users/{uid}.consent = {version, adult, at}`. Repetir es inofensivo. Si el aviso sube de versión (`NOTICE_VERSION`), cada persona acepta de nuevo.
+- **Nada se lee ni se guarda sin consentimiento:** `/api/me/preferences` responde 403 hasta que la persona acepte la versión vigente.
+- Lo demás de S99 se mantiene: solo el grupo público (no el tenant del equipo), 2 KB, 30 peticiones por minuto, respuestas `private, no-store`.
+- **Un límite conocido:** Firebase crea la cuenta al iniciar sesión, **antes** de la pantalla de consentimiento. Quien pulse «No acepto» tendrá su cuenta borrada en el login (3e); quien cierre la pestaña sin elegir queda con una cuenta sin consentimiento, que
+  se limpiará con un script. Sin funciones de bloqueo no hay otra forma.
+- **Sin comprobar:** con una persona real y un token real (3e).
+
