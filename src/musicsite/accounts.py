@@ -26,7 +26,7 @@ from typing import Protocol
 PUBLIC_PROVIDERS = frozenset({"google.com", "facebook.com"})
 # Versión vigente del aviso de privacidad (`web/privacidad.html` y docs/privacidad del control).
 # Si cambia de forma importante, se sube y cada persona vuelve a aceptar.
-NOTICE_VERSION = "2026-11-23-v1"
+NOTICE_VERSION = "2026-11-23-v2"
 VERSION = re.compile(r"[0-9]{4}-[0-9]{2}-[0-9]{2}-v[0-9]{1,3}")
 MAX_BODY_BYTES = 2048
 RATE_LIMIT = 30  # peticiones por persona...

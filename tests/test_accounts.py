@@ -2,6 +2,7 @@
 
 import json
 import logging
+import re
 
 import pytest
 from fastapi.testclient import TestClient
@@ -435,3 +436,82 @@ def test_the_public_notice_matches_the_version_the_server_asks_for(client):
 )
 def test_every_footer_links_to_the_notice(client, path):
     assert 'href="privacidad.html"' in client.get(path).text, path
+
+
+# --- la página de entrada (S101, C40)
+from musicsite.app import HEADERS, LOGIN_CSP, WEB_DIR  # noqa: E402
+
+
+def login_client(key="llave-publica-de-prueba"):
+    return TestClient(create_app(firebase_api_key=key))
+
+
+def test_login_page_is_served_hidden_and_with_the_key_injected():
+    page = login_client('abc&"<x').get("/entrar.html")
+    assert page.status_code == 200 and page.headers["content-type"].startswith("text/html")
+    assert "__API_KEY__" not in page.text
+    assert 'content="abc&amp;&quot;&lt;x"' in page.text  # escapada: nunca rompe el HTML
+    assert 'name="robots" content="noindex, nofollow"' in page.text
+
+
+def test_without_a_key_the_page_still_loads_and_the_script_says_unavailable():
+    page = login_client("").get("/entrar.html")
+    assert page.status_code == 200 and 'name="firebase-api-key" content=""' in page.text
+
+
+def test_only_the_login_page_gets_the_wider_security_policy():
+    client = login_client()
+    login = client.get("/entrar.html").headers["content-security-policy"]
+    assert login == LOGIN_CSP
+    for host in (
+        "https://www.gstatic.com",
+        "https://apis.google.com",
+        "https://identitytoolkit.googleapis.com",
+        "https://securetoken.googleapis.com",
+    ):
+        assert host in login
+    assert (
+        "frame-ancestors 'none'" in login
+        and "base-uri 'none'" in login
+        and "form-action 'none'" in login
+    )
+    for path in ("/", "/privacidad.html", "/guias.html", "/entrar.js"):
+        policy = client.get(path).headers["content-security-policy"]
+        assert policy == HEADERS["Content-Security-Policy"], path
+        assert "gstatic.com/firebasejs" not in policy and "googleapis.com" not in policy.replace(
+            "fonts.googleapis.com", ""
+        )
+
+
+def test_login_page_is_not_linked_from_the_site(client):
+    for path in (
+        "/",
+        "/guias.html",
+        "/ser-guia.html",
+        "/artistas.html",
+        "/pedidos.html",
+        "/privacidad.html",
+        "/aprender.html",
+    ):
+        assert "entrar.html" not in client.get(path).text, path
+
+
+def test_login_script_is_pinned_and_safe():
+    source = (WEB_DIR / "entrar.js").read_text(encoding="utf-8")
+    versions = set(re.findall(r"firebasejs/([0-9.]+)/", source))
+    assert len(versions) == 1 and re.fullmatch(r"[0-9]+\.[0-9]+\.[0-9]+", versions.pop())
+    assert "latest" not in source
+    assert not re.search(r"\.innerHTML\s*=|insertAdjacentHTML|document\.write|eval\(", source)
+    assert (
+        "signInWithRedirect" in source
+        and "deleteUser" in source
+        and "authDomain: location.host" in source
+    )
+    assert "saulapp-music" not in source  # el sitio público no nombra el proyecto interno
+
+
+def test_login_script_is_served_as_javascript():
+    response = login_client().get("/entrar.js")
+    assert response.status_code == 200 and response.headers["content-type"].startswith(
+        "text/javascript"
+    )

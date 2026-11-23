@@ -10,6 +10,7 @@ que no hay recorrido de directorios.
 Sin /docs, /redoc ni /openapi.json.
 """
 
+import html
 import mimetypes
 import os
 from pathlib import Path
@@ -59,6 +60,18 @@ HEADERS = {
 }
 
 
+# La página de entrada (S101, C40) es la única que carga el SDK de Firebase desde el CDN de Google y
+# habla con Identity Toolkit: la política se amplía solo para ella. El resto conserva la suya.
+LOGIN_PAGE = "/entrar.html"
+_SCRIPTS = "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net"
+_LOGIN_SCRIPTS = _SCRIPTS + " https://www.gstatic.com https://apis.google.com"
+_LOGIN_EXTRA = (
+    "; connect-src 'self' https://identitytoolkit.googleapis.com https://securetoken.googleapis.com"
+    "; frame-src 'self' https://apis.google.com"
+)
+LOGIN_CSP = HEADERS["Content-Security-Policy"].replace(_SCRIPTS, _LOGIN_SCRIPTS) + _LOGIN_EXTRA
+
+
 def load_files(root: Path) -> dict[str, tuple[bytes, str]]:
     """Ruta pública -> (contenido, tipo). Solo archivos directos de `root`, sin ocultos."""
     files: dict[str, tuple[bytes, str]] = {}
@@ -80,6 +93,7 @@ def create_app(
     editorial: Path | None = None,
     refresh_seconds: float = 60,
     accounts: Accounts | None = None,
+    firebase_api_key: str = "",
 ) -> FastAPI:
     from musicsite import profes
     from musicsite.catalog import Catalog  # aquí y no arriba: profes importa este módulo
@@ -89,6 +103,16 @@ def create_app(
     # muestras) vienen de la librería; los del sitio (portada, guías, artistas…) tienen prioridad.
     # «Aprender» (S65): páginas y estilos armados una vez desde `aprender/`; los del sitio mandan.
     files = {**load_files(LIB_WEB_DIR), **learn.build_pages(), **load_files(root)}
+    if (
+        LOGIN_PAGE in files
+    ):  # la llave del navegador es pública, pero se inyecta para no fijarla en el repo (D56)
+        body, kind = files[LOGIN_PAGE]
+        files[LOGIN_PAGE] = (
+            body.decode()
+            .replace("__API_KEY__", html.escape(firebase_api_key, quote=True))
+            .encode(),
+            kind,
+        )
     index_html = files["/index.html"][0].decode() if "/index.html" in files else ""
     artists_html = files["/artistas.html"][0].decode() if "/artistas.html" in files else ""
     guides_html = files["/guias.html"][0].decode() if "/guias.html" in files else ""
@@ -108,6 +132,8 @@ def create_app(
         for name, value in HEADERS.items():
             if name == "Cache-Control" and name in response.headers:
                 continue  # las fotos con hash en el nombre fijan su propia caché larga
+            if name == "Content-Security-Policy" and request.url.path == LOGIN_PAGE:
+                value = LOGIN_CSP
             response.headers[name] = value
         return response
 
@@ -228,6 +254,7 @@ def main() -> int:
         editorial=Path(editorial) if editorial else None,
         refresh_seconds=refresh,
         accounts=accounts_from_env(dict(os.environ)),
+        firebase_api_key=os.environ.get("FIREBASE_API_KEY", ""),
     )
     # Sin registro de accesos: el sitio no guarda rastro de quién lo visita.
     uvicorn.run(app, host="0.0.0.0", port=port, access_log=False, log_level="warning")  # noqa: S104
