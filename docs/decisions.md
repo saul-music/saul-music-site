@@ -1081,3 +1081,18 @@ Las páginas de canción ya no muestran «Prototipo en investigación» (RD50; l
 - **Límite conocido:** un token ya emitido sigue siendo válido hasta una hora, así que tras borrar, esa misma persona podría volver a crear su documento con él. Solo afecta a su propia cuenta; `auth-cleanup-unconsented.sh` con `ORPHANS=1` lo limpia.
 - **Sin comprobar:** con proveedores reales (la sesión antigua solo aparece con el tiempo), en iPhone y Android reales, y el borrado de punta a punta en producción.
 
+## S103 · Avance de Aprende y aviso v3 (2026-11-23)
+
+**Decisión del usuario (C44).** Aprende guarda por persona qué lecciones completó y con qué resultado.
+
+- **`GET` y `PUT /api/me/progress`**, con las mismas reglas que las preferencias: sesión del grupo público (el tenant del equipo recibe 404), **consentimiento vigente** (403 sin él), 2 KB, límite de frecuencia y `private, no-store`.
+- **El `PUT` exige exactamente** `path`, `lesson` (ambos *slug* de minúsculas y guiones), `points` (entero de 0 a 100) y `stars` (entero de 0 a 3). Cualquier otra cosa es 422. Se guarda **el mejor resultado de cada lección** y cuántas veces se jugó (`plays`); el servidor responde con ese mejor resultado.
+- **Dónde:** `users/{uid}.progress.{ruta}.{lección} = {points, stars, plays}`, fusionado (no pisa preferencias ni consentimiento).
+- **Topes:** 20 rutas y 200 lecciones por persona (422 al pasarlos), para que el documento no crezca sin fin. Mejorar una lección existente siempre se puede.
+- **Lo que el servidor no puede saber:** que el puntaje sea honesto. El navegador reporta su resultado; es una medalla personal, no un ranking (C25, sin ranking). Si algún día hubiera ranking, habría que validar en el servidor.
+- **Exportar y borrar (S102) cubren el avance:** el JSON descargable trae `stored.progress` y borrar la cuenta borra todo el documento.
+- **Aviso de privacidad v3 (`2026-11-23-v3`):** nombra el avance (lecciones completadas, puntos, estrellas y veces jugadas). Quien aceptó la v2 acepta de nuevo al volver a entrar (hoy solo hay cuentas de prueba).
+- **Retorno desde la página de entrada:** `entrar.html?volver=/aprende/…` regresa a Aprende al terminar. Solo acepta rutas `/aprende/…` del mismo sitio (nunca una dirección completa, `//`, ni `..`), para que no sea una redirección abierta.
+- **Pruebas:** unitarias (API, validación, mejor resultado, aislamiento, topes, forma de lo guardado, fusión en Firestore con un doble) y el filtro de `volver` con casos hostiles.
+- **Sin comprobar:** con la app de Aprende real (la construye el repo de los juegos) y con cuentas reales en producción.
+

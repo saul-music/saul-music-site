@@ -34,6 +34,7 @@ from musicsite.accounts import (
     accounts_from_env,
     clean_consent,
     clean_preferences,
+    clean_result,
     parse_body,
 )
 
@@ -225,6 +226,27 @@ def _register_me(app: FastAPI, accounts: Accounts) -> None:
             raise HTTPException(422) from error
         accounts.store.put_consent(uid, version)
         return consent_state(uid)
+
+    @app.get("/api/me/progress", include_in_schema=False)
+    def read_progress(request: Request) -> Response:
+        uid = consenting(request)
+        return JSONResponse({"progress": accounts.store.get_progress(uid)}, headers=PRIVATE)
+
+    @app.put("/api/me/progress", include_in_schema=False)
+    async def write_progress(request: Request) -> Response:
+        """El resultado de una lección de Aprende (S103): se guarda el mejor de cada una."""
+        uid = consenting(request)
+        length = request.headers.get("content-length", "")
+        if length.isdigit() and int(length) > MAX_BODY:
+            raise HTTPException(413)
+        try:
+            path, lesson, points, stars = clean_result(parse_body(await request.body()))
+        except InvalidPreferences as error:
+            raise HTTPException(422) from error
+        best = accounts.store.put_result(uid, path, lesson, points, stars)
+        if best is None:
+            raise HTTPException(422)
+        return JSONResponse({"path": path, "lesson": lesson, **best}, headers=PRIVATE)
 
     @app.get("/api/me/export", include_in_schema=False)
     def export_data(request: Request) -> Response:

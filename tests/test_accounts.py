@@ -16,7 +16,9 @@ from musicsite.accounts import (
     RateLimiter,
     accounts_from_env,
     clean_preferences,
+    clean_progress,
     identity_from_claims,
+    merge_result,
     uid_from_claims,
 )
 from musicsite.app import create_app
@@ -50,6 +52,7 @@ class FakeStore:
     def __init__(self, consents=None):
         self.docs = {}
         self.consents = dict(consents or {})
+        self.progress = {}
 
     def get(self, uid):
         return dict(self.docs.get(uid, {}))
@@ -63,16 +66,28 @@ class FakeStore:
     def put_consent(self, uid, version):
         self.consents[uid] = version
 
+    def get_progress(self, uid):
+        return json.loads(json.dumps(self.progress.get(uid, {})))
+
+    def put_result(self, uid, path, lesson, points, stars):
+        mine = self.progress.setdefault(uid, {})
+        merged = merge_result(mine, path, lesson, points, stars)
+        if merged is not None:
+            mine.setdefault(path, {})[lesson] = merged
+        return merged
+
     def export(self, uid):
         consent = self.consents.get(uid)
         return {
             "consent": {"version": consent, "adult": True, "at": None} if consent else None,
             "preferences": dict(self.docs.get(uid, {})),
+            "progress": self.get_progress(uid),
         }
 
     def delete(self, uid):
         self.docs.pop(uid, None)
         self.consents.pop(uid, None)
+        self.progress.pop(uid, None)
 
 
 @pytest.fixture
@@ -565,7 +580,7 @@ def test_export_works_without_ever_consenting_and_stores_nothing(bare):
     client, store = bare
     response = client.get("/api/me/export", headers=bearer())
     assert response.status_code == 200
-    assert response.json()["stored"] == {"consent": None, "preferences": {}}
+    assert response.json()["stored"] == {"consent": None, "preferences": {}, "progress": {}}
     assert store.docs == {} and store.consents == {}
 
 
@@ -664,6 +679,16 @@ class FakeFirestore:
         self.deleted.append(self.uid)
         self.docs.pop(self.uid, None)
 
+    def set(self, data, merge=False):
+        def deep(into, new):
+            for key, value in new.items():
+                if isinstance(value, dict) and isinstance(into.get(key), dict):
+                    deep(into[key], value)
+                else:
+                    into[key] = value
+
+        deep(self.docs.setdefault(self.uid, {}), data)
+
 
 def firestore_store(docs):
     from musicsite.accounts import FirestoreUserStore
@@ -689,12 +714,13 @@ def test_firestore_export_reads_the_document_and_makes_the_time_text():
     assert store.export("u") == {
         "consent": {"version": NOTICE_VERSION, "adult": True, "at": "2026-11-23T07:00:00+00:00"},
         "preferences": {"muted": True},
+        "progress": {},
     }
 
 
 def test_firestore_export_of_nobody_is_empty_and_creates_nothing():
     store, _ = firestore_store({})
-    assert store.export("nadie") == {"consent": None, "preferences": {}}
+    assert store.export("nadie") == {"consent": None, "preferences": {}, "progress": {}}
     assert store._db.docs == {}
 
 
@@ -719,3 +745,149 @@ def test_the_login_page_offers_both_rights_and_a_confirmation():
     assert (
         'id="borrar-confirmar" class="d-grid gap-2" hidden' in page
     )  # nunca se borra de un solo clic
+
+
+# --- avance de Aprende (S103, C44)
+def result(path="basico", lesson="do-es-c", points=80, stars=2):
+    return {"path": path, "lesson": lesson, "points": points, "stars": stars}
+
+
+def post_result(client, token="p1", **changes):
+    return client.put("/api/me/progress", headers=bearer(token), json={**result(), **changes})
+
+
+def test_progress_needs_consent_like_everything_else(bare):
+    client, store = bare
+    assert client.get("/api/me/progress", headers=bearer()).status_code == 403
+    assert post_result(client).status_code == 403
+    assert store.progress == {}
+
+
+def test_a_new_lesson_is_stored_and_read_back(client):
+    assert client.get("/api/me/progress", headers=bearer()).json() == {"progress": {}}
+    response = post_result(client)
+    assert response.status_code == 200
+    assert response.json() == {
+        "path": "basico",
+        "lesson": "do-es-c",
+        "points": 80,
+        "stars": 2,
+        "plays": 1,
+    }
+    assert client.get("/api/me/progress", headers=bearer()).json() == {
+        "progress": {"basico": {"do-es-c": {"points": 80, "stars": 2, "plays": 1}}}
+    }
+
+
+def test_only_the_best_result_is_kept_and_plays_are_counted(client):
+    post_result(client, points=80, stars=2)
+    worse = post_result(client, points=40, stars=1).json()
+    better = post_result(client, points=100, stars=3).json()
+    assert (worse["points"], worse["stars"], worse["plays"]) == (80, 2, 2)
+    assert (better["points"], better["stars"], better["plays"]) == (100, 3, 3)
+
+
+def test_progress_is_per_person_and_per_lesson(client):
+    post_result(client, token="p1")
+    post_result(client, token="p2", lesson="pulso", points=10, stars=0)
+    assert set(
+        client.get("/api/me/progress", headers=bearer("p1")).json()["progress"]["basico"]
+    ) == {"do-es-c"}
+    assert set(
+        client.get("/api/me/progress", headers=bearer("p2")).json()["progress"]["basico"]
+    ) == {"pulso"}
+
+
+@pytest.mark.parametrize(
+    "changes",
+    [
+        {"points": 101},
+        {"points": -1},
+        {"points": 80.5},
+        {"points": True},
+        {"points": "80"},
+        {"stars": 4},
+        {"stars": -1},
+        {"path": "Basico"},
+        {"path": "../x"},
+        {"lesson": ""},
+        {"lesson": "a" * 40},
+        {"lesson": ["x"]},
+    ],
+)
+def test_invalid_results_are_422_and_store_nothing(client, store, changes):
+    assert post_result(client, **changes).status_code == 422
+    assert store.progress == {}
+
+
+@pytest.mark.parametrize("body", [{}, {"path": "basico"}, {**result(), "extra": 1}, [1], "x"])
+def test_malformed_progress_bodies_are_422(client, body):
+    response = client.put("/api/me/progress", headers=bearer(), json=body)
+    assert response.status_code == 422
+
+
+@pytest.mark.parametrize("token", ["malo", "team", "tenant-google"])
+def test_progress_is_404_without_a_public_session(client, token):
+    assert client.get("/api/me/progress", headers=bearer(token)).status_code == 404
+    assert post_result(client, token=token).status_code == 404
+
+
+def test_progress_responses_are_private(client):
+    headers = post_result(client).headers
+    assert headers["cache-control"] == "private, no-store"
+
+
+def test_export_and_delete_cover_the_progress(client, store):
+    post_result(client)
+    assert client.get("/api/me/export", headers=bearer()).json()["stored"]["progress"] == {
+        "basico": {"do-es-c": {"points": 80, "stars": 2, "plays": 1}}
+    }
+    client.delete("/api/me", headers=bearer())
+    assert "uid1" not in store.progress
+
+
+def test_progress_has_caps_so_a_document_cannot_grow_forever():
+    full = {f"ruta{i}": {"a": {"points": 1, "stars": 0, "plays": 1}} for i in range(20)}
+    assert merge_result(full, "otra", "a", 1, 0) is None  # una ruta de más
+    assert (
+        merge_result(full, "ruta0", "b", 1, 0) is not None
+    )  # una lección nueva en una ruta existente
+    lots = {"basico": {f"l{i}": {"points": 1, "stars": 0, "plays": 1} for i in range(200)}}
+    assert merge_result(lots, "basico", "nueva", 1, 0) is None
+    assert (
+        merge_result(lots, "basico", "l0", 5, 0)["plays"] == 2
+    )  # mejorar una existente siempre se puede
+
+
+def test_clean_progress_ignores_anything_that_is_not_the_expected_shape():
+    raw = {
+        "basico": {
+            "bien": {"points": 10, "stars": 1, "plays": 2},
+            "mal": {"points": 999, "stars": 1, "plays": 2},
+            "peor": "x",
+            "Mayuscula": {"points": 1, "stars": 1, "plays": 1},
+        },
+        "Otra": {"a": {"points": 1, "stars": 1, "plays": 1}},
+        "texto": "x",
+    }
+    assert clean_progress(raw) == {"basico": {"bien": {"points": 10, "stars": 1, "plays": 2}}}
+    assert clean_progress(None) == {} and clean_progress([1]) == {}
+
+
+def test_firestore_progress_is_merged_not_replaced():
+    store, _ = firestore_store({"u": {"preferences": {"muted": True}}})
+    store.put_result("u", "basico", "do-es-c", 80, 2)
+    store.put_result("u", "basico", "pulso", 50, 1)
+    store.put_result("u", "basico", "do-es-c", 60, 1)  # peor: se conserva el mejor
+    assert store.get_progress("u")["basico"] == {
+        "do-es-c": {"points": 80, "stars": 2, "plays": 2},
+        "pulso": {"points": 50, "stars": 1, "plays": 1},
+    }
+    assert store._db.docs["u"]["preferences"] == {"muted": True}  # no pisa lo demás
+
+
+def test_the_login_page_only_returns_to_aprende_paths():
+    source = (WEB_DIR / "entrar.js").read_text(encoding="utf-8")
+    assert "volver" in source and "location.replace(returnTo())" in source
+    assert r"/^\/aprende\/" in source  # solo rutas de Aprende, nunca una dirección completa
+    assert 'target.includes("..")' in source
