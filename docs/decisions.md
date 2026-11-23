@@ -1020,3 +1020,21 @@ Las páginas de canción ya no muestran «Prototipo en investigación» (RD50; l
 ## S98 · El contador de la Biblioteca muestra también los artistas (2026-11-19)
 
 «15 canciones · 8 artistas», con singular y siguiendo los filtros de barrio y nivel (cuenta los artistas con algún tema a la vista). Solo JS del site; el texto de la portada («N canciones disponibles») no cambia.
+
+## S99 · `/api/me/preferences`: las primeras cuentas del sitio, sin datos reales (2026-11-23)
+
+**Etapa 3b (C26, C38).** El sitio gana una API para las preferencias del reproductor de cada persona, sobre Firestore (infra I15). **Nadie puede usarla todavía:** el registro público está cerrado y no hay cuentas.
+
+- **Quién llama:** `Authorization: Bearer <ID token de Firebase>`. Solo del **grupo público** (Google y Facebook). **Un token del tenant del equipo es válido para el proyecto y se rechaza**, igual que cualquier otro proveedor.
+  Sin token válido, 404 sin cuerpo (como el admin); el UID sale siempre del token, nunca de la petición.
+- **Qué guarda:** `users/{uid}` con un mapa `preferences` y `updatedAt`. **Ni correo ni nombre.** Leer no crea nada: el documento nace al primer `PUT`.
+- **Campos conocidos y validados** (hoy los que el reproductor guarda en cada navegador): `muted`, `countIn`, `instrument`, `studyMode`, `theme`, `volMetronome`. Un campo desconocido o un valor inválido es 422, no se descarta en silencio;
+  `PUT` reemplaza todo el mapa; máximo 2 KB (413) y 30 peticiones por minuto por persona (429, en la memoria de cada instancia: frena el abuso, no es una cuota exacta).
+- **Respuestas `private, no-store` y `Vary: Authorization`:** el caché compartido de Hosting (C20) no debe guardar nada de una persona.
+- **No encarece el arranque en frío:** `firebase-admin` y el cliente de Firestore se cargan en la primera petición de una persona, no al arrancar (comprobado).
+- **Dependencia nueva:** `firebase-admin` (la misma de research).
+- **Se activa con `FIREBASE_PROJECT_ID`** en el despliegue; sin ella, la API no existe. El smoke del pipeline comprueba que sin token da 404.
+- **Un error propio que las pruebas atraparon:** un instrumento enviado como lista provocaba un error interno en vez de 422.
+- **Sin comprobar:** que `datastore.user` alcance para leer y escribir desde `musicsite-runtime`; que Hosting pase la cabecera `Authorization` a Cloud Run (un solo reporte de la comunidad dice que sí, ninguna página oficial; si no, el
+  token iría en `__session`); y la API con un token real. Todo eso llega con el login del site (3e).
+

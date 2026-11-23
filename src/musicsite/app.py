@@ -18,9 +18,20 @@ import uvicorn
 from acordia_render import guides
 from acordia_render.songpages import WEB_DIR as LIB_WEB_DIR
 from fastapi import FastAPI, Request, Response
+from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException
 
 from musicsite import learn
+from musicsite.accounts import (
+    MAX_BODY_BYTES as MAX_BODY,
+)
+from musicsite.accounts import (
+    Accounts,
+    InvalidPreferences,
+    accounts_from_env,
+    clean_preferences,
+    parse_body,
+)
 
 WEB_DIR = Path(__file__).parent / "web"
 SONGS_DIR = Path(__file__).parent / "songs"
@@ -66,6 +77,7 @@ def create_app(
     songs: Path | None = SONGS_DIR,
     editorial: Path | None = None,
     refresh_seconds: float = 60,
+    accounts: Accounts | None = None,
 ) -> FastAPI:
     from musicsite import profes
     from musicsite.catalog import Catalog  # aquí y no arriba: profes importa este módulo
@@ -101,6 +113,9 @@ def create_app(
     async def empty_error(_: Request, exc: HTTPException) -> Response:
         return Response(status_code=exc.status_code)  # sin cuerpo: no revela nada
 
+    if accounts is not None:
+        _register_me(app, accounts)
+
     @app.api_route("/{name:path}", methods=["GET", "HEAD"], include_in_schema=False)
     def page(name: str) -> Response:
         path = "/" + name
@@ -132,11 +147,52 @@ def create_app(
     return app
 
 
+# Lo de una persona nunca va al caché compartido de Hosting (C20): `private, no-store` y `Vary`.
+PRIVATE = {"Cache-Control": "private, no-store", "Vary": "Authorization"}
+
+
+def _register_me(app: FastAPI, accounts: Accounts) -> None:
+    """`/api/me/preferences` (S99). Sin sesión del grupo público, 404 sin cuerpo como el resto."""
+
+    def caller(request: Request) -> str:
+        scheme, _, token = request.headers.get("authorization", "").partition(" ")
+        uid = accounts.verifier.verify(token) if scheme.lower() == "bearer" and token else None
+        if uid is None:
+            raise HTTPException(404)
+        if not accounts.limiter.allow(uid):
+            raise HTTPException(429)
+        return uid
+
+    @app.get("/api/me/preferences", include_in_schema=False)
+    def read_preferences(request: Request) -> Response:
+        uid = caller(request)
+        return JSONResponse({"preferences": accounts.store.get(uid)}, headers=PRIVATE)
+
+    @app.put("/api/me/preferences", include_in_schema=False)
+    async def write_preferences(request: Request) -> Response:
+        uid = caller(request)
+        length = request.headers.get("content-length", "")
+        if length.isdigit() and int(length) > MAX_BODY:
+            raise HTTPException(413)
+        try:
+            body = parse_body(await request.body())
+            payload = body.get("preferences") if isinstance(body, dict) else None
+            preferences = clean_preferences(payload)
+        except InvalidPreferences as error:
+            raise HTTPException(422) from error
+        accounts.store.put(uid, preferences)
+        return JSONResponse({"preferences": preferences}, headers=PRIVATE)
+
+
 def main() -> int:
     port = int(os.environ.get("PORT", "8080"))
     editorial = os.environ.get("EDITORIAL_DIR", "")
     refresh = float(os.environ.get("EDITORIAL_REFRESH_SECONDS", "60"))
-    app = create_app(editorial=Path(editorial) if editorial else None, refresh_seconds=refresh)
+    app = create_app(
+        editorial=Path(editorial) if editorial else None,
+        refresh_seconds=refresh,
+        accounts=accounts_from_env(dict(os.environ)),
+    )
     # Sin registro de accesos: el sitio no guarda rastro de quién lo visita.
     uvicorn.run(app, host="0.0.0.0", port=port, access_log=False, log_level="warning")  # noqa: S104
     return 0
