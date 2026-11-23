@@ -339,6 +339,7 @@ def test_my_account_lists_favorites_with_real_titles_and_removes_them(page: Page
     store.favorites = {SONG, OTHER}
     prepare(page, url)
     page.goto(f"{url}/mi-acordia.html")
+    page.click("#s-favoritos")  # «Tus temas» empieza plegado
     favs = page.locator("#favoritos")
     expect(favs).to_contain_text("Cámara lenta · Javiera Mena")
     page.get_by_role("button", name="Quitar Cámara lenta · Javiera Mena de favoritos").click()
@@ -350,6 +351,7 @@ def test_my_account_lists_repertoires_and_creates_one_and_opens_it(page: Page, u
     store.repertoires = {"abc123": {"name": "Mi lista", "songs": [SONG]}}
     prepare(page, url)
     page.goto(f"{url}/mi-acordia.html")
+    page.click("#s-repertorios")
     expect(page.locator("#repertorios")).to_contain_text("Mi lista")
     expect(page.locator("#repertorios")).to_contain_text("1 tema")
     page.fill("#nr-nombre", "Otro")

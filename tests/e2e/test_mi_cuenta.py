@@ -184,7 +184,10 @@ def test_it_shows_where_to_continue_and_the_progress_with_real_titles(page: Page
     assert page.get_attribute("#continuar a >> nth=1", "href") == "cancion-camara-lenta.html"
     avance = page.locator("#avance")
     expect(avance).to_contain_text("Básico")
-    expect(avance).to_contain_text("1/2 lecciones · 3/6 estrellas · 90 puntos")
+    expect(avance).to_contain_text("50%")
+    expect(page.locator("#cifras")).to_have_text(
+        "1/2 lecciones · 3/6 estrellas · 90 puntos"
+    )  # una sola vez, no repetido
     expect(avance.locator(".ac-lesson-card", has_text="Do es C")).to_contain_text("90 pts")
     expect(avance.locator(".ac-lesson-card", has_text="Pulso")).to_contain_text("Sin jugar")
 
@@ -193,7 +196,7 @@ def test_with_nothing_yet_it_invites_to_start(page: Page, account_url, store):
     store.cont, store.progress = {}, {}
     open_page(page, account_url)
     expect(page.locator("#continuar")).to_contain_text("Tu primera lección en Aprende")
-    expect(page.locator("#avance")).to_contain_text("0/2 lecciones")
+    expect(page.locator("#cifras")).to_contain_text("0/2 lecciones")
 
 
 def test_the_form_only_appears_once_the_data_is_loaded(page: Page, account_url, store):
@@ -379,3 +382,96 @@ def test_with_no_progress_the_bars_are_empty_and_no_badge_is_lit(page: Page, acc
     assert page.locator("#insignias .is-on").count() == 0
     assert page.locator("#insignias .is-off").count() == 6  # las seis, apagadas: ya se dibujaron
     assert page.locator('[aria-label="Avance de Básico"]').get_attribute("aria-valuenow") == "0"
+
+
+# --- el Resumen liviano (S107): una acción principal, insignias pequeñas, temas plegados
+def test_today_has_exactly_one_main_action_and_the_other_is_a_quiet_link(page: Page, account_url):
+    open_page(page, account_url)
+    expect(page.locator("#contenido")).to_be_visible()
+    assert page.locator("#continuar .btn-primary").count() == 1  # una sola acción principal
+    assert page.get_attribute("#continuar .btn-primary", "href") == "/aprende/#/basico/pulso"
+    expect(page.locator("#continuar .btn-primary")).to_have_text("Seguir")
+    expect(page.locator("#continuar .ac-tambien")).to_contain_text("Cámara lenta · Javiera Mena")
+
+
+def test_today_without_a_lesson_offers_the_last_song_and_without_anything_offers_to_start(
+    page: Page, account_url, store
+):
+    store.cont = {"song": "camara-lenta"}
+    open_page(page, account_url)
+    expect(page.locator("#continuar .btn-primary")).to_have_text("Abrir")
+    assert page.locator("#continuar .ac-tambien").count() == 0
+    store.cont = {}
+    page.reload()
+    expect(page.locator("#continuar .btn-primary")).to_have_text("Empezar")
+
+
+def test_badges_are_small_in_one_row_with_a_counter_and_a_description_each(page: Page, account_url):
+    open_page(page, account_url)
+    expect(page.locator("#contenido")).to_be_visible()
+    badges = page.locator("#insignias .ac-badge")
+    assert badges.count() == 6
+    boxes = [badges.nth(i).bounding_box() for i in range(6)]
+    assert all(b["width"] <= 44 and b["height"] <= 44 for b in boxes)  # pequeñas
+    assert len({round(b["y"]) for b in boxes}) == 1  # una sola fila
+    expect(page.locator("#insignias-cuenta")).to_have_text("3 de 6")
+    assert badges.nth(0).get_attribute("data-tip") == "Primera lección · ¡lograda!"
+    assert badges.nth(3).get_attribute("data-tip") == "Ruta completa · Juega todas las lecciones"
+    assert (
+        badges.nth(0).get_attribute("tabindex") == "0"
+    )  # se pueden enfocar: la descripción sale también con el teclado
+
+
+def test_badges_still_fit_in_one_row_on_a_phone(page: Page, account_url):
+    page.set_viewport_size({"width": 360, "height": 740})
+    open_page(page, account_url)
+    expect(page.locator("#contenido")).to_be_visible()
+    boxes = [page.locator("#insignias .ac-badge").nth(i).bounding_box() for i in range(6)]
+    assert len({round(b["y"]) for b in boxes}) == 1
+    assert max(b["x"] + b["width"] for b in boxes) <= 360
+
+
+def test_my_topics_start_folded_with_their_counts_and_open_on_demand(page: Page, account_url):
+    open_page(page, account_url)
+    expect(page.locator("#contenido")).to_be_visible()
+    for blocks in ("#d-favoritos", "#d-repertorios"):
+        assert page.get_attribute(blocks, "open") is None
+    expect(page.locator("#s-favoritos")).to_have_text("Favoritos (0)")
+    expect(page.locator("#s-repertorios")).to_have_text("Repertorios (0)")
+    expect(page.locator("#favoritos")).to_be_hidden()
+    page.click("#s-favoritos")
+    expect(page.locator("#favoritos")).to_be_visible()
+
+
+def test_the_progress_numbers_appear_once_and_the_blocks_are_in_the_expected_order(
+    page: Page, account_url
+):
+    open_page(page, account_url)
+    expect(page.locator("#contenido")).to_be_visible()
+    titles = page.locator(
+        "#panel-resumen .ac-bloque > h2"
+    ).all_text_contents()  # sin la mayúscula del estilo
+    assert titles == ["Hoy", "Tu progreso", "Tus temas"]
+    assert page.locator("#panel-resumen").inner_text().count("90 puntos") == 1
+
+
+def test_save_profile_is_a_gold_action_not_the_green_of_progress(page: Page, account_url):
+    open_page(page, account_url)
+    settings(page)
+    assert "btn-primary" in page.get_attribute("#perfil button[type=submit]", "class")
+    assert "btn-jade" not in page.get_attribute("#perfil button[type=submit]", "class")
+
+
+def test_on_a_phone_the_start_button_of_an_unplayed_lesson_is_complete_and_inside_the_screen(
+    page: Page, account_url
+):
+    page.set_viewport_size({"width": 360, "height": 740})
+    open_page(page, account_url)
+    expect(page.locator("#contenido")).to_be_visible()
+    button = page.locator(".ac-lesson-card", has_text="Pulso").locator(".btn-primary")
+    box = button.bounding_box()
+    assert box["x"] >= 0 and box["x"] + box["width"] <= 360  # dentro de la pantalla
+    assert button.inner_text() == "Empezar"
+    assert button.evaluate(
+        "el => el.scrollWidth <= el.clientWidth + 1"
+    )  # el texto cabe entero: no queda recortado

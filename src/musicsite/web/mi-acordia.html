@@ -27,29 +27,43 @@
     .ac-tabs [aria-selected="true"] { background: var(--bs-primary); color: var(--bs-body-bg); border-color: var(--bs-primary); }
     .ac-chips { display: flex; flex-wrap: wrap; gap: .5rem; margin: 0; padding: 0; list-style: none; }
     .ac-chips li { border: 1px solid var(--bs-border-color); border-radius: 999px; padding: .15rem .8rem; font-size: .9rem; }
-    .ac-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(8.5rem, 1fr)); gap: .75rem; margin: 0; padding: 0; list-style: none; }
-    .ac-stat { border: 1px solid var(--bs-border-color); border-radius: .75rem; padding: .8rem 1rem; display: grid; gap: .1rem; }
-    .ac-stat b { font-size: 1.7rem; line-height: 1.1; }
-    .ac-stat span { font-size: .85rem; color: var(--bs-secondary-color); }
-    .ac-cta { display: grid; gap: .5rem; grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); }
-    .ac-cta a { display: grid; gap: .1rem; border: 2px solid var(--bs-primary); border-radius: .75rem; padding: .9rem 1.1rem; text-decoration: none; color: inherit; }
-    .ac-cta a:hover { background: color-mix(in srgb, var(--bs-primary) 12%, transparent); }
-    .ac-cta small { color: var(--bs-secondary-color); }
-    .ac-cta strong { font-size: 1.15rem; }
-    .ac-two { display: grid; grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr)); gap: 1rem; }
-    .ac-badges { display: grid; grid-template-columns: repeat(auto-fit, minmax(8.5rem, 1fr)); gap: .6rem; margin: 0; padding: 0; list-style: none; }
-    .ac-badge { display: grid; justify-items: center; gap: .15rem; text-align: center; border: 1px solid var(--bs-border-color); border-radius: .75rem; padding: .7rem .5rem; }
-    .ac-badge i { font-style: normal; font-size: 1.7rem; }
-    .ac-badge small { color: var(--bs-secondary-color); }
-    .ac-badge.is-off { opacity: .45; filter: grayscale(1); }
-    .ac-badge.is-on { border-color: var(--bs-warning); }
-    .ac-path-card { display: grid; gap: .75rem; }
-    .ac-lesson-grid { display: grid; gap: .6rem; grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr)); }
-    .ac-lesson-card { display: grid; gap: .3rem; border: 1px solid var(--bs-border-color); border-radius: .75rem; padding: .75rem .9rem; text-decoration: none; color: inherit; }
+    /* Un color por significado: dorado = acciones; jade = progreso y logros; amarillo = estrellas; rojo = peligro; lo demás, neutro. */
+    .ac-bloque { display: grid; gap: .75rem; }
+    .ac-bloque > h2 { font-size: .8rem; letter-spacing: .12em; text-transform: uppercase; color: var(--bs-secondary-color); margin: 0; }
+    .ac-hoy { display: flex; flex-wrap: wrap; gap: .6rem 1.25rem; align-items: center; justify-content: space-between; border: 1px solid var(--bs-border-color); border-radius: .75rem; padding: 1rem 1.25rem; }
+    .ac-hoy strong { font-size: 1.2rem; }
+    .ac-hoy small { display: block; color: var(--bs-secondary-color); }
+    .ac-tambien { font-size: .9rem; margin: 0; }
+    .ac-progreso-cabecera { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: .6rem 1.5rem; }
+    .ac-cifras { margin: 0; font-weight: 600; }
+    .ac-insignias { display: flex; align-items: center; gap: .6rem; }
+    .ac-insignias small { color: var(--bs-secondary-color); white-space: nowrap; }
+    .ac-badges { display: flex; gap: .45rem; margin: 0; padding: 0; list-style: none; }
+    .ac-badge { position: relative; width: 2.4rem; height: 2.4rem; border-radius: 50%; display: grid; place-items: center; font-size: 1.05rem; cursor: help;
+      border: 2px dashed var(--bs-border-color); color: var(--bs-secondary-color); }
+    .ac-badge.is-on { border: 2px solid var(--bs-success); background: var(--bs-success); color: var(--bs-body-bg); }
+    .ac-badge .ac-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+    .ac-badge:hover::after, .ac-badge:focus::after { content: attr(data-tip); position: absolute; bottom: calc(100% + .45rem); left: 50%; transform: translateX(-50%);
+      white-space: nowrap; background: var(--bs-body-bg); color: var(--bs-body-color); border: 1px solid var(--bs-border-color); border-radius: .4rem;
+      padding: .25rem .6rem; font-size: .8rem; z-index: 5; }
+    .ac-badge:first-child:hover::after, .ac-badge:first-child:focus::after, .ac-badge:nth-child(2):hover::after, .ac-badge:nth-child(2):focus::after { left: 0; transform: none; }
+    .ac-badge:nth-last-child(-n+2):hover::after, .ac-badge:nth-last-child(-n+2):focus::after { left: auto; right: 0; transform: none; }
+    .ac-path-card { display: grid; gap: .6rem; }
+    .ac-path-head { display: flex; justify-content: space-between; align-items: baseline; gap: .5rem; }
+    .ac-lesson-list { display: grid; gap: .35rem; }
+    .ac-lesson-card { display: grid; grid-template-columns: 1.4rem minmax(7rem, 1.2fr) 4.2rem minmax(5rem, 1fr) auto; align-items: center; gap: .6rem; padding: .45rem .6rem;
+      border: 1px solid var(--bs-border-color); border-radius: .5rem; text-decoration: none; color: inherit; }
     .ac-lesson-card:hover { border-color: var(--bs-primary); }
-    .ac-lesson-card.is-played { border-color: var(--bs-success); }
-    .ac-lesson-head { display: flex; justify-content: space-between; gap: .5rem; align-items: baseline; }
-    .ac-lesson-card .progress { height: .45rem; }
+    .ac-lesson-card .progress { height: .4rem; }
+    .ac-lesson-card .ac-n { color: var(--bs-secondary-color); }
+    .ac-lesson-card .ac-pts { font-size: .85rem; color: var(--bs-secondary-color); white-space: nowrap; }
+    @media (max-width: 575.98px) {
+      .ac-lesson-card { grid-template-columns: 1.4rem 1fr auto; }
+      .ac-lesson-card .progress { grid-column: 2 / -1; }
+      .ac-lesson-card > :last-child { grid-column: 2 / -1; justify-self: start; } /* «Empezar» y los puntos, en su propia línea */
+    }
+    details.ac-card > summary { cursor: pointer; font-weight: 600; }
+    details.ac-card[open] > summary { margin-bottom: .75rem; }
     .ac-danger { border-color: var(--bs-danger); }
   </style>
 </head>
@@ -126,41 +140,44 @@
 
           <div id="panel-resumen" class="d-grid gap-4" role="tabpanel" aria-labelledby="tab-resumen">
 
-            <section class="d-grid gap-2" aria-labelledby="h-continuar">
-              <h2 id="h-continuar" class="h5 m-0">Continuar</h2>
-              <div id="continuar" class="ac-cta"></div>
+            <section class="ac-bloque" aria-labelledby="h-hoy">
+              <h2 id="h-hoy">Hoy</h2>
+              <div id="continuar" class="d-grid gap-2"></div>
             </section>
 
-            <ul id="cifras" class="ac-stats" aria-label="Tus cifras"></ul>
-
-            <section class="d-grid gap-2" aria-labelledby="h-insignias">
-              <h2 id="h-insignias" class="h5 m-0">Tus insignias</h2>
-              <ul id="insignias" class="ac-badges"></ul>
-            </section>
-
-            <section class="d-grid gap-2" aria-labelledby="h-avance">
-              <h2 id="h-avance" class="h5 m-0">Tu avance en Aprende</h2>
+            <section class="ac-bloque" aria-labelledby="h-progreso">
+              <h2 id="h-progreso">Tu progreso</h2>
+              <div class="ac-progreso-cabecera">
+                <p id="cifras" class="ac-cifras"></p>
+                <div class="ac-insignias">
+                  <ul id="insignias" class="ac-badges" aria-label="Tus insignias"></ul>
+                  <small id="insignias-cuenta"></small>
+                </div>
+              </div>
               <div id="avance" class="d-grid gap-3"></div>
             </section>
 
-            <div class="ac-two">
-              <section class="ac-card d-grid gap-2 align-content-start" aria-labelledby="h-favoritos">
-                <h2 id="h-favoritos">Tus favoritos</h2>
+            <section class="ac-bloque" aria-labelledby="h-temas">
+              <h2 id="h-temas">Tus temas</h2>
+              <details id="d-favoritos" class="ac-card">
+                <summary id="s-favoritos">Favoritos</summary>
                 <ul id="favoritos" class="ac-lessons"></ul>
-              </section>
-              <section class="ac-card d-grid gap-3 align-content-start" aria-labelledby="h-repertorios">
-                <h2 id="h-repertorios">Tus repertorios</h2>
-                <ul id="repertorios" class="ac-lessons"></ul>
-                <form id="nuevo-repertorio" class="d-flex flex-wrap gap-2 align-items-end">
-                  <div class="flex-grow-1">
-                    <label class="form-label small" for="nr-nombre">Nuevo repertorio</label>
-                    <input id="nr-nombre" class="form-control form-control-sm" type="text" maxlength="60" required>
-                  </div>
-                  <button class="btn btn-sm btn-outline-primary" type="submit">Crear</button>
-                </form>
-                <p class="small m-0 text-body-secondary">Agrega temas con el botón «＋ Repertorio» de cada tema.</p>
-              </section>
-            </div>
+              </details>
+              <details id="d-repertorios" class="ac-card">
+                <summary id="s-repertorios">Repertorios</summary>
+                <div class="d-grid gap-3">
+                  <ul id="repertorios" class="ac-lessons"></ul>
+                  <form id="nuevo-repertorio" class="d-flex flex-wrap gap-2 align-items-end">
+                    <div class="flex-grow-1">
+                      <label class="form-label small" for="nr-nombre">Nuevo repertorio</label>
+                      <input id="nr-nombre" class="form-control form-control-sm" type="text" maxlength="60" required>
+                    </div>
+                    <button class="btn btn-sm btn-outline-primary" type="submit">Crear</button>
+                  </form>
+                  <p class="small m-0 text-body-secondary">Agrega temas con el botón «＋ Repertorio» de cada tema.</p>
+                </div>
+              </details>
+            </section>
           </div>
 
           <div id="panel-configuracion" class="d-grid gap-4" role="tabpanel" aria-labelledby="tab-configuracion" hidden>
@@ -187,7 +204,7 @@
                 </div>
               </div>
               <div class="d-flex flex-wrap align-items-center gap-3">
-                <button class="btn btn-jade" type="submit">Guardar perfil</button>
+                <button class="btn btn-primary" type="submit">Guardar perfil</button>
                 <span id="perfil-estado" class="small" role="status"></span>
               </div>
             </form>
