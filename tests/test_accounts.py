@@ -15,7 +15,9 @@ from musicsite.accounts import (
     InvalidPreferences,
     RateLimiter,
     accounts_from_env,
+    clean_continue,
     clean_preferences,
+    clean_profile,
     clean_progress,
     identity_from_claims,
     merge_result,
@@ -53,6 +55,8 @@ class FakeStore:
         self.docs = {}
         self.consents = dict(consents or {})
         self.progress = {}
+        self.profiles = {}
+        self.continues = {}
 
     def get(self, uid):
         return dict(self.docs.get(uid, {}))
@@ -65,6 +69,18 @@ class FakeStore:
 
     def put_consent(self, uid, version):
         self.consents[uid] = version
+
+    def get_profile(self, uid):
+        return dict(self.profiles.get(uid, {}))
+
+    def put_profile(self, uid, profile):
+        self.profiles[uid] = dict(profile)
+
+    def get_continue(self, uid):
+        return json.loads(json.dumps(self.continues.get(uid, {})))
+
+    def put_continue(self, uid, value):
+        self.continues.setdefault(uid, {}).update(value)
 
     def get_progress(self, uid):
         return json.loads(json.dumps(self.progress.get(uid, {})))
@@ -82,12 +98,16 @@ class FakeStore:
             "consent": {"version": consent, "adult": True, "at": None} if consent else None,
             "preferences": dict(self.docs.get(uid, {})),
             "progress": self.get_progress(uid),
+            "profile": self.get_profile(uid),
+            "continue": self.get_continue(uid),
         }
 
     def delete(self, uid):
         self.docs.pop(uid, None)
         self.consents.pop(uid, None)
         self.progress.pop(uid, None)
+        self.profiles.pop(uid, None)
+        self.continues.pop(uid, None)
 
 
 @pytest.fixture
@@ -468,7 +488,7 @@ def test_the_public_notice_matches_the_version_the_server_asks_for(client):
 
 @pytest.mark.parametrize(
     "path",
-    ["/", "/guias.html", "/ser-guia.html", "/artistas.html", "/pedidos.html", "/aprender.html"],
+    ["/", "/guias.html", "/ser-guia.html", "/artistas.html", "/pedidos.html", "/mi-acordia.html"],
 )
 def test_every_footer_links_to_the_notice(client, path):
     assert 'href="privacidad.html"' in client.get(path).text, path
@@ -519,17 +539,22 @@ def test_only_the_login_page_gets_the_wider_security_policy():
         )
 
 
-def test_login_page_is_not_linked_from_the_site(client):
-    for path in (
+def test_my_account_is_linked_from_the_menu_and_the_footer_and_the_login_page_only_from_there(
+    client,
+):
+    pages = (
         "/",
         "/guias.html",
         "/ser-guia.html",
         "/artistas.html",
         "/pedidos.html",
         "/privacidad.html",
-        "/aprender.html",
-    ):
-        assert "entrar.html" not in client.get(path).text, path
+    )
+    for path in pages:
+        html = client.get(path).text
+        assert 'href="mi-acordia.html">Mi cuenta</a>' in html, path
+        assert 'href="/aprende/">Aprende</a>' in html, path
+        assert "entrar.html" not in html, path  # a la página de entrada se llega desde «Mi cuenta»
 
 
 def test_login_script_is_pinned_and_safe():
@@ -580,7 +605,13 @@ def test_export_works_without_ever_consenting_and_stores_nothing(bare):
     client, store = bare
     response = client.get("/api/me/export", headers=bearer())
     assert response.status_code == 200
-    assert response.json()["stored"] == {"consent": None, "preferences": {}, "progress": {}}
+    assert response.json()["stored"] == {
+        "consent": None,
+        "preferences": {},
+        "progress": {},
+        "profile": {},
+        "continue": {},
+    }
     assert store.docs == {} and store.consents == {}
 
 
@@ -687,7 +718,12 @@ class FakeFirestore:
                 else:
                     into[key] = value
 
-        deep(self.docs.setdefault(self.uid, {}), data)
+        doc = self.docs.setdefault(self.uid, {})
+        if isinstance(merge, list):  # merge=["campo"]: esos campos se reemplazan enteros
+            for field in merge:
+                doc[field] = data[field]
+        else:
+            deep(doc, data)
 
 
 def firestore_store(docs):
@@ -715,12 +751,20 @@ def test_firestore_export_reads_the_document_and_makes_the_time_text():
         "consent": {"version": NOTICE_VERSION, "adult": True, "at": "2026-11-23T07:00:00+00:00"},
         "preferences": {"muted": True},
         "progress": {},
+        "profile": {},
+        "continue": {},
     }
 
 
 def test_firestore_export_of_nobody_is_empty_and_creates_nothing():
     store, _ = firestore_store({})
-    assert store.export("nadie") == {"consent": None, "preferences": {}, "progress": {}}
+    assert store.export("nadie") == {
+        "consent": None,
+        "preferences": {},
+        "progress": {},
+        "profile": {},
+        "continue": {},
+    }
     assert store._db.docs == {}
 
 
@@ -886,8 +930,271 @@ def test_firestore_progress_is_merged_not_replaced():
     assert store._db.docs["u"]["preferences"] == {"muted": True}  # no pisa lo demás
 
 
-def test_the_login_page_only_returns_to_aprende_paths():
+def _return_pattern():
+    """El regex de `returnTo` de entrar.js, tomado del propio archivo: se prueba lo que corre."""
     source = (WEB_DIR / "entrar.js").read_text(encoding="utf-8")
     assert "volver" in source and "location.replace(returnTo())" in source
-    assert r"/^\/aprende\/" in source  # solo rutas de Aprende, nunca una dirección completa
-    assert 'target.includes("..")' in source
+    found = re.search(r"const allowed = /(.+)/;", source)
+    assert found, "no se encontró el regex de retorno"
+    return re.compile(found.group(1)), 'target.includes("..")' in source
+
+
+@pytest.mark.parametrize(
+    "target",
+    [
+        "/aprende/",
+        "/aprende/#/basico/pulso",
+        "/mi-acordia.html",
+        "/repertorio.html",
+        "/repertorio.html?id=abc123",
+    ],
+)
+def test_the_login_page_returns_to_our_own_pages(target):
+    pattern, _ = _return_pattern()
+    assert pattern.fullmatch(target)
+
+
+@pytest.mark.parametrize(
+    "target",
+    [
+        "",
+        "//evil.example",
+        "https://evil.example",
+        "javascript:alert(1)",
+        "/aprendex/",
+        "/mi-acordia.html.evil",
+        "/mi-acordia.htmlx",
+        "/mi-acordia.html?x=1",
+        "/repertorio.html?id=<script>",
+        "/repertorio.html/../x",
+        "/entrar.html",
+        "\\evil.example",
+    ],
+)
+def test_the_login_page_never_returns_anywhere_else(target):
+    pattern, rejects_parent = _return_pattern()
+    assert rejects_parent
+    assert not pattern.fullmatch(target)
+
+
+# --- perfil y «continuar» (S104, C30)
+def put_profile(client, body, token="p1"):
+    return client.put("/api/me/profile", headers=bearer(token), json=body)
+
+
+def put_continue(client, body, token="p1"):
+    return client.put("/api/me/continue", headers=bearer(token), json=body)
+
+
+def test_profile_needs_consent_and_starts_empty(bare):
+    client, store = bare
+    assert client.get("/api/me/profile", headers=bearer()).status_code == 403
+    assert put_profile(client, {"name": "Ana"}).status_code == 403
+    assert store.profiles == {}
+
+
+def test_profile_is_saved_read_back_and_replaced_whole(client, store):
+    assert client.get("/api/me/profile", headers=bearer()).json() == {"profile": {}}
+    full = {"name": "  Ana   María ", "instrument": "guitarra", "level": "medio"}
+    assert put_profile(client, full).json() == {
+        "profile": {"name": "Ana María", "instrument": "guitarra", "level": "medio"}
+    }
+    # un PUT con menos campos borra los que faltan: reemplaza, no mezcla
+    assert put_profile(client, {"level": "inicial"}).json() == {"profile": {"level": "inicial"}}
+    assert client.get("/api/me/profile", headers=bearer()).json() == {
+        "profile": {"level": "inicial"}
+    }
+    assert put_profile(client, {}).json() == {"profile": {}}
+
+
+def test_profile_empty_values_clear_the_field(client):
+    put_profile(client, {"name": "Ana", "instrument": "bajo"})
+    assert put_profile(client, {"name": "   ", "instrument": "", "level": None}).json() == {
+        "profile": {}
+    }
+
+
+@pytest.mark.parametrize(
+    "body",
+    [
+        {"name": "x" * 41},
+        {"name": "<script>alert(1)</script>"},
+        {"name": "Ana\u0000"},
+        {"name": "Ana\nPérez" + "\x07"},
+        {"name": 5},
+        {"name": ["Ana"]},
+        {"instrument": "tuba"},
+        {"instrument": ["guitarra"]},
+        {"level": "experto"},
+        {"level": 1},
+        {"email": "a@example.test"},
+        {"name": "Ana", "foto": "https://example.test/x.png"},
+        [1],
+        "x",
+    ],
+)
+def test_invalid_profiles_are_422_and_store_nothing(client, store, body):
+    assert put_profile(client, body).status_code == 422
+    assert store.profiles == {}
+
+
+def test_profile_names_keep_accents_and_ordinary_punctuation():
+    assert clean_profile({"name": "María-José O'Brien Ñandú"}) == {
+        "name": "María-José O'Brien Ñandú"
+    }
+
+
+def test_profile_is_private_per_person_and_404_without_a_public_session(client, store):
+    put_profile(client, {"name": "Ana"}, token="p1")
+    assert client.get("/api/me/profile", headers=bearer("p2")).json() == {"profile": {}}
+    for token in ("malo", "team", "tenant-google"):
+        assert client.get("/api/me/profile", headers=bearer(token)).status_code == 404
+        assert put_profile(client, {"name": "X"}, token=token).status_code == 404
+    assert (
+        client.get("/api/me/profile", headers=bearer("p1")).headers["cache-control"]
+        == "private, no-store"
+    )
+
+
+def test_continue_keeps_the_last_lesson_and_the_last_song_apart(client):
+    assert client.get("/api/me/continue", headers=bearer()).json() == {"continue": {}}
+    assert put_continue(client, {"song": "camara-lenta"}).json() == {
+        "continue": {"song": "camara-lenta"}
+    }
+    both = put_continue(client, {"lesson": {"path": "basico", "lesson": "pulso"}}).json()
+    assert both == {
+        "continue": {"song": "camara-lenta", "lesson": {"path": "basico", "lesson": "pulso"}}
+    }
+    again = put_continue(client, {"song": "2022"}).json()[
+        "continue"
+    ]  # cambia el tema y conserva la lección
+    assert again == {"song": "2022", "lesson": {"path": "basico", "lesson": "pulso"}}
+
+
+@pytest.mark.parametrize(
+    "body",
+    [
+        {},
+        {"song": "a", "lesson": {"path": "basico", "lesson": "pulso"}},
+        {"song": "Camara Lenta"},
+        {"song": "../x"},
+        {"song": "a" * 61},
+        {"song": 7},
+        {"lesson": {"path": "basico"}},
+        {"lesson": {"path": "basico", "lesson": "Pulso"}},
+        {"lesson": {"path": "basico", "lesson": "pulso", "extra": 1}},
+        {"lesson": "pulso"},
+        {"otro": "x"},
+        [1],
+    ],
+)
+def test_invalid_continue_bodies_are_422(client, store, body):
+    assert put_continue(client, body).status_code == 422
+    assert store.continues == {}
+
+
+def test_continue_needs_consent_and_a_public_session(bare):
+    client, store = bare
+    assert client.get("/api/me/continue", headers=bearer()).status_code == 403
+    assert put_continue(client, {"song": "a"}).status_code == 403
+    assert put_continue(client, {"song": "a"}, token="team").status_code == 404
+    assert store.continues == {}
+
+
+def test_export_and_delete_cover_the_profile_and_the_last_seen(client, store):
+    put_profile(client, {"name": "Ana", "level": "medio"})
+    put_continue(client, {"song": "camara-lenta"})
+    stored = client.get("/api/me/export", headers=bearer()).json()["stored"]
+    assert stored["profile"] == {"name": "Ana", "level": "medio"}
+    assert stored["continue"] == {"song": "camara-lenta"}
+    client.delete("/api/me", headers=bearer())
+    assert "uid1" not in store.profiles and "uid1" not in store.continues
+
+
+def test_clean_continue_returns_only_the_shape_it_expects():
+    assert clean_continue({"song": "a-b"}) == {"song": "a-b"}
+
+
+def test_firestore_profile_is_replaced_and_continue_is_merged():
+    store, _ = firestore_store({"u": {"preferences": {"muted": True}}})
+    store.put_profile("u", {"name": "Ana", "level": "medio"})
+    store.put_profile("u", {"instrument": "bajo"})  # reemplaza: el nombre y el nivel ya no están
+    assert store.get_profile("u") == {"instrument": "bajo"}
+    store.put_continue("u", {"song": "a"})
+    store.put_continue("u", {"lesson": {"path": "basico", "lesson": "pulso"}})
+    assert store.get_continue("u") == {"song": "a", "lesson": {"path": "basico", "lesson": "pulso"}}
+    assert store._db.docs["u"]["preferences"] == {"muted": True}  # no pisa lo demás
+
+
+def test_firestore_ignores_a_corrupted_profile_or_continue():
+    store, _ = firestore_store(
+        {"u": {"profile": {"name": 5, "x": 1}, "continue": {"song": "MAL", "lesson": 3}}}
+    )
+    assert store.get_profile("u") == {}
+    assert store.get_continue("u") == {}
+
+
+# --- Mi cuenta, redirecciones de «Aprender» y ajustes de las páginas de canción (S104, C28, C45)
+@pytest.mark.parametrize(
+    "path",
+    [
+        "/aprender.html",
+        "/aprender.css",
+        "/aprender-basicos-clave-americana.html",
+        "/aprender-acordes-intervalos.html",
+    ],
+)
+def test_the_retired_learn_pages_redirect_permanently_to_aprende(client, path):
+    response = client.get(path, follow_redirects=False)
+    assert response.status_code == 301 and response.headers["location"] == "/aprende/"
+
+
+def test_other_pages_that_look_alike_are_not_redirected(client):
+    for path in ("/aprender", "/aprendex.html", "/aprender-.js", "/aprende.html"):
+        assert client.get(path, follow_redirects=False).status_code == 404, path
+
+
+def test_my_account_page_gets_the_key_the_wider_policy_and_stays_out_of_the_index(client):
+    from musicsite.app import create_app
+
+    page = TestClient(create_app(firebase_api_key="clave-de-prueba")).get("/mi-acordia.html")
+    assert page.status_code == 200 and 'content="clave-de-prueba"' in page.text
+    assert (
+        "__API_KEY__" not in page.text and 'name="robots" content="noindex, nofollow"' in page.text
+    )
+    assert page.headers["content-security-policy"] == LOGIN_CSP
+    assert client.get("/privacidad.html").headers["content-security-policy"] != LOGIN_CSP
+
+
+def test_my_account_script_is_pinned_safe_and_deletes_our_data_before_the_account():
+    source = (WEB_DIR / "mi-acordia.js").read_text(encoding="utf-8")
+    versions = set(re.findall(r"firebasejs/([0-9.]+)/", source))
+    assert len(versions) == 1 and re.fullmatch(r"[0-9]+\.[0-9]+\.[0-9]+", versions.pop())
+    assert not re.search(r"\.innerHTML\s*=|insertAdjacentHTML|document\.write|eval\(", source)
+    delete_call = source.index('api("", { method: "DELETE" })')
+    assert delete_call < source.index("deleteUser(auth.currentUser)", delete_call)
+    assert "requires-recent-login" in source
+
+
+def test_song_pages_get_the_account_links_and_the_theory_button_goes_to_aprende():
+    from musicsite.songpage import decorate
+
+    page = (
+        '<ul><li class="nav-item">'
+        '<a class="nav-link" href="pedidos.html">Pide una canción</a></li></ul>'
+        '<nav>\n          <a href="guias.html">Guías</a>'
+        '<a href="pedidos.html">Pide una canción</a>\n        </nav>'
+        '<a class="btn" href="aprender.html" target="_blank">Aprende teoría</a>'
+    ).encode()
+    out = decorate(page).decode()
+    assert out.count('href="mi-acordia.html">Mi cuenta</a>') == 2  # menú y pie
+    assert out.count('href="/aprende/">Aprende</a>') == 2
+    assert 'href="aprender.html"' not in out and 'class="btn" href="/aprende/"' in out
+    assert (
+        decorate(b"<p>otra cosa</p>") == b"<p>otra cosa</p>"
+    )  # sin esos fragmentos, no cambia nada
+
+
+def test_a_served_song_page_has_the_links(client):
+    page = client.get("/cancion-camara-lenta.html").text
+    assert 'href="mi-acordia.html">Mi cuenta</a>' in page and "aprender.html" not in page

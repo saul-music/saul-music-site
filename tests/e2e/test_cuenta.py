@@ -70,6 +70,18 @@ class Store:
     def put_consent(self, uid, version):
         self.consents[uid] = version
 
+    def get_profile(self, uid):
+        return {}
+
+    def put_profile(self, uid, profile):
+        pass
+
+    def get_continue(self, uid):
+        return {}
+
+    def put_continue(self, uid, value):
+        pass
+
     def get_progress(self, uid):
         return {}
 
@@ -82,6 +94,8 @@ class Store:
             "consent": {"version": consent, "adult": True, "at": None} if consent else None,
             "preferences": dict(self.docs.get(uid, {})),
             "progress": {},
+            "profile": {},
+            "continue": {},
         }
 
     def delete(self, uid):

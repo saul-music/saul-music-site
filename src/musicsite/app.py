@@ -23,7 +23,7 @@ from fastapi import FastAPI, Request, Response
 from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException
 
-from musicsite import learn
+from musicsite import songpage
 from musicsite.accounts import (
     MAX_BODY_BYTES as MAX_BODY,
 )
@@ -33,7 +33,9 @@ from musicsite.accounts import (
     InvalidPreferences,
     accounts_from_env,
     clean_consent,
+    clean_continue,
     clean_preferences,
+    clean_profile,
     clean_result,
     parse_body,
 )
@@ -62,9 +64,12 @@ HEADERS = {
 }
 
 
-# La página de entrada (S101, C40) es la única que carga el SDK de Firebase desde el CDN de Google y
-# habla con Identity Toolkit: la política se amplía solo para ella. El resto conserva la suya.
-LOGIN_PAGE = "/entrar.html"
+# La página de entrada (S101, C40) y «Mi cuenta» (S104) son las únicas que cargan el SDK de
+# Firebase desde el CDN de Google y hablan con Identity Toolkit: la política se amplía solo para
+# ellas. El resto conserva la suya.
+ACCOUNT_PAGES = ("/entrar.html", "/mi-acordia.html")
+# «Aprender» (S65, S66) se retiró (C28): estas direcciones redirigen a Aprende (`/aprende/`).
+RETIRED_LEARN = ("/aprender.html", "/aprender.css")
 _SCRIPTS = "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net"
 _LOGIN_SCRIPTS = _SCRIPTS + " https://www.gstatic.com https://apis.google.com"
 _LOGIN_EXTRA = (
@@ -104,17 +109,18 @@ def create_app(
     # Los archivos de la página de canción (style.css, acordia.js, guitarra.js, la tipografía y las
     # muestras) vienen de la librería; los del sitio (portada, guías, artistas…) tienen prioridad.
     # «Aprender» (S65): páginas y estilos armados una vez desde `aprender/`; los del sitio mandan.
-    files = {**load_files(LIB_WEB_DIR), **learn.build_pages(), **load_files(root)}
-    if (
-        LOGIN_PAGE in files
-    ):  # la llave del navegador es pública, pero se inyecta para no fijarla en el repo (D56)
-        body, kind = files[LOGIN_PAGE]
-        files[LOGIN_PAGE] = (
-            body.decode()
-            .replace("__API_KEY__", html.escape(firebase_api_key, quote=True))
-            .encode(),
-            kind,
-        )
+    files = {**load_files(LIB_WEB_DIR), **load_files(root)}
+    for account_page in ACCOUNT_PAGES:
+        if (
+            account_page in files
+        ):  # la llave del navegador es pública, pero se inyecta para no fijarla en el repo (D56)
+            body, kind = files[account_page]
+            files[account_page] = (
+                body.decode()
+                .replace("__API_KEY__", html.escape(firebase_api_key, quote=True))
+                .encode(),
+                kind,
+            )
     index_html = files["/index.html"][0].decode() if "/index.html" in files else ""
     artists_html = files["/artistas.html"][0].decode() if "/artistas.html" in files else ""
     guides_html = files["/guias.html"][0].decode() if "/guias.html" in files else ""
@@ -134,7 +140,7 @@ def create_app(
         for name, value in HEADERS.items():
             if name == "Cache-Control" and name in response.headers:
                 continue  # las fotos con hash en el nombre fijan su propia caché larga
-            if name == "Content-Security-Policy" and request.url.path == LOGIN_PAGE:
+            if name == "Content-Security-Policy" and request.url.path in ACCOUNT_PAGES:
                 value = LOGIN_CSP
             response.headers[name] = value
         return response
@@ -149,6 +155,8 @@ def create_app(
     @app.api_route("/{name:path}", methods=["GET", "HEAD"], include_in_schema=False)
     def page(name: str) -> Response:
         path = "/" + name
+        if path in RETIRED_LEARN or (path.startswith("/aprender-") and path.endswith(".html")):
+            return Response(status_code=301, headers={"Location": "/aprende/"})  # C28
         state = catalog.current()
         if path in ("/", "/index.html") and state.index is not None:
             return Response(state.index, media_type=TYPES[".html"])
@@ -165,7 +173,7 @@ def create_app(
             )
         song = state.pages.get(path)
         if song is not None:
-            return Response(song, media_type=TYPES[".html"])
+            return Response(songpage.decorate(song), media_type=TYPES[".html"])
         entry = files.get(path)
         if entry is None:
             return Response(status_code=404)
@@ -247,6 +255,46 @@ def _register_me(app: FastAPI, accounts: Accounts) -> None:
         if best is None:
             raise HTTPException(422)
         return JSONResponse({"path": path, "lesson": lesson, **best}, headers=PRIVATE)
+
+    @app.get("/api/me/profile", include_in_schema=False)
+    def read_profile(request: Request) -> Response:
+        return JSONResponse(
+            {"profile": accounts.store.get_profile(consenting(request))}, headers=PRIVATE
+        )
+
+    @app.put("/api/me/profile", include_in_schema=False)
+    async def write_profile(request: Request) -> Response:
+        """El perfil (S104): nombre, instrumento y nivel, opcionales. Reemplaza el perfil entero."""
+        uid = consenting(request)
+        length = request.headers.get("content-length", "")
+        if length.isdigit() and int(length) > MAX_BODY:
+            raise HTTPException(413)
+        try:
+            profile = clean_profile(parse_body(await request.body()))
+        except InvalidPreferences as error:
+            raise HTTPException(422) from error
+        accounts.store.put_profile(uid, profile)
+        return JSONResponse({"profile": profile}, headers=PRIVATE)
+
+    @app.get("/api/me/continue", include_in_schema=False)
+    def read_continue(request: Request) -> Response:
+        return JSONResponse(
+            {"continue": accounts.store.get_continue(consenting(request))}, headers=PRIVATE
+        )
+
+    @app.put("/api/me/continue", include_in_schema=False)
+    async def write_continue(request: Request) -> Response:
+        """Lo último que la persona vio (S104): una lección o un tema. Lo otro se conserva."""
+        uid = consenting(request)
+        length = request.headers.get("content-length", "")
+        if length.isdigit() and int(length) > MAX_BODY:
+            raise HTTPException(413)
+        try:
+            value = clean_continue(parse_body(await request.body()))
+        except InvalidPreferences as error:
+            raise HTTPException(422) from error
+        accounts.store.put_continue(uid, value)
+        return JSONResponse({"continue": accounts.store.get_continue(uid)}, headers=PRIVATE)
 
     @app.get("/api/me/export", include_in_schema=False)
     def export_data(request: Request) -> Response:
