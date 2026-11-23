@@ -100,6 +100,24 @@
             <div id="avance" class="d-grid gap-3"></div>
           </section>
 
+          <section class="ac-card d-grid gap-2" aria-labelledby="h-favoritos">
+            <h2 id="h-favoritos">Tus favoritos</h2>
+            <ul id="favoritos" class="ac-lessons"></ul>
+          </section>
+
+          <section class="ac-card d-grid gap-3" aria-labelledby="h-repertorios">
+            <h2 id="h-repertorios">Tus repertorios</h2>
+            <ul id="repertorios" class="ac-lessons"></ul>
+            <form id="nuevo-repertorio" class="d-flex flex-wrap gap-2 align-items-end">
+              <div class="flex-grow-1">
+                <label class="form-label" for="nr-nombre">Nuevo repertorio</label>
+                <input id="nr-nombre" class="form-control" type="text" maxlength="60" required>
+              </div>
+              <button class="btn btn-outline-primary" type="submit">Crear</button>
+            </form>
+            <p class="small m-0 text-body-secondary">Agrega temas con el botón «＋ Repertorio» de cada tema. Tus preferencias del reproductor (sonido, cuenta inicial, volumen, tema) se guardan solas en tu cuenta cuando usas un tema con tu sesión iniciada.</p>
+          </section>
+
           <form id="perfil" class="ac-card d-grid gap-3" aria-labelledby="h-perfil">
             <h2 id="h-perfil">Tu perfil</h2>
             <p class="small m-0 text-body-secondary">Es opcional y solo lo ves tú. El nombre puede ser el que quieras, no tiene que ser el real.</p>
