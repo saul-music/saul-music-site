@@ -16,11 +16,17 @@ from musicsite.accounts import (
     RateLimiter,
     accounts_from_env,
     clean_preferences,
+    identity_from_claims,
     uid_from_claims,
 )
 from musicsite.app import create_app
 
-PUBLIC = {"uid": "uid1", "firebase": {"sign_in_provider": "google.com"}}
+PUBLIC = {
+    "uid": "uid1",
+    "email": "persona.sintetica@example.test",
+    "name": "Persona Sintética",
+    "firebase": {"sign_in_provider": "google.com"},
+}
 OTHER = {"uid": "uid2", "firebase": {"sign_in_provider": "facebook.com"}}
 TEAM = {"uid": "uid3", "firebase": {"sign_in_provider": "password", "tenant": "equipo-x"}}
 TENANT_GOOGLE = {
@@ -34,6 +40,10 @@ class FakeVerifier:
     def verify(self, token):
         claims = TOKENS.get(token)
         return uid_from_claims(claims) if claims else None
+
+    def identity(self, token):
+        claims = TOKENS.get(token)
+        return identity_from_claims(claims) if claims else None
 
 
 class FakeStore:
@@ -52,6 +62,17 @@ class FakeStore:
 
     def put_consent(self, uid, version):
         self.consents[uid] = version
+
+    def export(self, uid):
+        consent = self.consents.get(uid)
+        return {
+            "consent": {"version": consent, "adult": True, "at": None} if consent else None,
+            "preferences": dict(self.docs.get(uid, {})),
+        }
+
+    def delete(self, uid):
+        self.docs.pop(uid, None)
+        self.consents.pop(uid, None)
 
 
 @pytest.fixture
@@ -515,3 +536,186 @@ def test_login_script_is_served_as_javascript():
     assert response.status_code == 200 and response.headers["content-type"].startswith(
         "text/javascript"
     )
+
+
+# --- exportar y borrar (S102)
+def test_export_gives_everything_stored_plus_what_firebase_knows(client, store):
+    put(client, {"muted": True})
+    response = client.get("/api/me/export", headers=bearer())
+    assert response.status_code == 200
+    body = response.json()
+    assert body["stored"]["preferences"] == {"muted": True}
+    assert body["stored"]["consent"]["version"] == NOTICE_VERSION
+    assert body["firebaseAuthentication"] == {
+        "provider": "google.com",
+        "email": "persona.sintetica@example.test",
+        "name": "Persona Sintética",
+    }
+    assert set(body) == {"generatedAt", "stored", "firebaseAuthentication", "note"}
+
+
+def test_export_is_a_private_download(client):
+    headers = client.get("/api/me/export", headers=bearer()).headers
+    assert headers["cache-control"] == "private, no-store"
+    assert headers["vary"] == "Authorization"
+    assert headers["content-disposition"] == 'attachment; filename="acordia-mis-datos.json"'
+
+
+def test_export_works_without_ever_consenting_and_stores_nothing(bare):
+    client, store = bare
+    response = client.get("/api/me/export", headers=bearer())
+    assert response.status_code == 200
+    assert response.json()["stored"] == {"consent": None, "preferences": {}}
+    assert store.docs == {} and store.consents == {}
+
+
+def test_export_never_includes_the_token_or_anyone_elses_data(client, store):
+    put(client, {"muted": True}, token="p2")
+    text = client.get("/api/me/export", headers=bearer("p1")).text
+    assert "p1" not in json.loads(text)["note"] and '"muted": true' not in text.lower()
+    assert "uid2" not in text
+
+
+def test_delete_removes_the_document_and_the_consent(client, store):
+    put(client, {"muted": True})
+    assert client.delete("/api/me", headers=bearer()).status_code == 204
+    assert "uid1" not in store.docs and "uid1" not in store.consents
+    assert client.get("/api/me/consent", headers=bearer()).json()["accepted"] is None
+    assert client.get("/api/me/preferences", headers=bearer()).status_code == 403
+
+
+def test_delete_is_idempotent_and_needs_no_consent(bare):
+    client, _ = bare
+    assert client.delete("/api/me", headers=bearer()).status_code == 204
+    assert client.delete("/api/me", headers=bearer()).status_code == 204
+
+
+def test_delete_only_touches_the_callers_data(client, store):
+    put(client, {"muted": True}, token="p2")
+    client.delete("/api/me", headers=bearer("p1"))
+    assert store.docs.get("uid2") == {"muted": True} and "uid2" in store.consents
+
+
+@pytest.mark.parametrize("token", ["malo", "team", "tenant-google"])
+def test_export_and_delete_are_404_without_a_public_session(client, store, token):
+    headers = bearer(token)
+    assert client.get("/api/me/export", headers=headers).status_code == 404
+    assert client.delete("/api/me", headers=headers).status_code == 404
+    assert "uid1" in store.consents  # nadie borró nada
+
+
+def test_export_and_delete_without_authorization_are_404(client):
+    assert client.get("/api/me/export").status_code == 404
+    assert client.delete("/api/me").status_code == 404
+
+
+def test_export_and_delete_share_the_rate_limit(client):
+    for _ in range(5):
+        client.get("/api/me/export", headers=bearer())
+    assert client.get("/api/me/export", headers=bearer()).status_code == 429
+    assert client.delete("/api/me", headers=bearer()).status_code == 429
+
+
+def test_identity_keeps_only_known_short_text_fields():
+    claims = {
+        "uid": "uid1",
+        "email": "a@example.test",
+        "name": "x" * 1000,
+        "picture": 5,  # no es texto: se ignora
+        "phone_number": "+000",  # no se pide: no sale
+        "firebase": {"sign_in_provider": "facebook.com"},
+    }
+    found = identity_from_claims(claims)
+    assert found["provider"] == "facebook.com" and found["email"] == "a@example.test"
+    assert len(found["name"]) == 300 and "picture" not in found and "phone_number" not in found
+
+
+def test_identity_is_none_for_the_team():
+    assert identity_from_claims(TEAM) is None and identity_from_claims(TENANT_GOOGLE) is None
+
+
+class FakeSnapshot:
+    def __init__(self, data):
+        self.exists = data is not None
+        self._data = data
+
+    def to_dict(self):
+        return self._data
+
+
+class FakeFirestore:
+    """Una colección `users` en memoria, con la misma forma que el cliente real."""
+
+    def __init__(self, docs):
+        self.docs, self.deleted = docs, []
+
+    def collection(self, name):
+        assert name == "users"
+        return self
+
+    def document(self, uid):
+        self.uid = uid
+        return self
+
+    def get(self):
+        return FakeSnapshot(self.docs.get(self.uid))
+
+    def delete(self):
+        self.deleted.append(self.uid)
+        self.docs.pop(self.uid, None)
+
+
+def firestore_store(docs):
+    from musicsite.accounts import FirestoreUserStore
+
+    store = FirestoreUserStore(app=None)
+    store._db = FakeFirestore(docs)
+    return store, None
+
+
+def test_firestore_export_reads_the_document_and_makes_the_time_text():
+    from datetime import UTC, datetime
+
+    when = datetime(2026, 11, 23, 7, 0, tzinfo=UTC)
+    store, _ = firestore_store(
+        {
+            "u": {
+                "consent": {"version": NOTICE_VERSION, "adult": True, "at": when},
+                "preferences": {"muted": True},
+                "updatedAt": when,
+            }
+        }
+    )
+    assert store.export("u") == {
+        "consent": {"version": NOTICE_VERSION, "adult": True, "at": "2026-11-23T07:00:00+00:00"},
+        "preferences": {"muted": True},
+    }
+
+
+def test_firestore_export_of_nobody_is_empty_and_creates_nothing():
+    store, _ = firestore_store({})
+    assert store.export("nadie") == {"consent": None, "preferences": {}}
+    assert store._db.docs == {}
+
+
+def test_firestore_delete_removes_the_document_and_repeating_is_harmless():
+    store, _ = firestore_store({"u": {"preferences": {}}})
+    store.delete("u")
+    store.delete("u")
+    assert store._db.docs == {} and store._db.deleted == ["u", "u"]
+
+
+def test_the_login_script_deletes_our_data_before_the_firebase_account():
+    script = (WEB_DIR / "entrar.js").read_text()
+    delete_call = script.index('api("", { method: "DELETE" })')
+    assert delete_call < script.index("deleteUser(auth.currentUser)", delete_call)
+    assert "requires-recent-login" in script
+
+
+def test_the_login_page_offers_both_rights_and_a_confirmation():
+    page = (WEB_DIR / "entrar.html").read_text()
+    for element in ("descargar", "borrar", "borrar-confirmar", "borrar-si", "borrar-no"):
+        assert f'id="{element}"' in page
+    assert (
+        'id="borrar-confirmar" class="d-grid gap-2" hidden' in page
+    )  # nunca se borra de un solo clic

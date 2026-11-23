@@ -1066,3 +1066,18 @@ Las páginas de canción ya no muestran «Prototipo en investigación» (RD50; l
 - **Aviso de privacidad, versión `2026-11-23-v2`:** agrega que la página de entrada carga el inicio de sesión desde servidores de Google, que reciben la IP. Como nadie había aceptado la v1, no obliga a nadie a aceptar de nuevo.
 - **Sin comprobar** (solo se ve en `web.app` con un navegador): el retorno de Google y Facebook, el iframe de Firebase bajo esta política, que Hosting pase `Authorization`, que `datastore.user` alcance y que la llave restringida por dirección no bloquee al SDK.
 
+## S102 · Exportar y borrar la cuenta (2026-11-23)
+
+**Etapa 3d (C43).** El derecho de acceso, portabilidad y supresión (Ley 21.719) se ejerce desde la página de entrada, sin escribir un correo. La ley rige el 2026-12-01.
+
+- **`GET /api/me/export`:** un JSON descargable (`Content-Disposition: attachment`, `private, no-store`) con `stored` (consentimiento: versión, 14+ y hora; preferencias) y `firebaseAuthentication` (correo, nombre, foto y proveedor, **tomados del token** ya verificado: no se consulta a Firebase ni hace falta un permiso nuevo, y no se guardan en ninguna parte). Rotula cuál es cuál.
+- **`DELETE /api/me`:** borra el documento `users/{uid}` (consentimiento y preferencias). Idempotente (204 también si no había nada).
+- **Ninguno de los dos exige consentimiento:** quien nunca aceptó también puede ver y borrar lo que haya. Sí exigen una sesión del grupo público (el tenant del equipo y los tokens falsos reciben 404) y comparten el límite de frecuencia.
+- **La cuenta de Firebase Authentication la elimina el navegador** (`deleteUser`), como ya hace «No acepto»: es lo que evita un permiso nuevo de IAM para `musicsite-runtime`. **El orden es la clave:** primero se borra lo nuestro y después la cuenta; si el navegador falla a la mitad, la persona queda sin consentimiento y `auth-cleanup-unconsented.sh` (infra I17) la recoge.
+- **Sesión antigua:** Firebase exige una sesión reciente para eliminar la cuenta. Si falla con `requires-recent-login`, ya se borró lo nuestro, se cierra la sesión y el mensaje dice cómo terminar (volver a entrar y elegir «No acepto: eliminar mi cuenta», que elimina la cuenta recién creada).
+- **Pantalla:** en «Sesión iniciada», sección «Tus datos» con «Descargar mis datos» y «Eliminar mi cuenta y mis datos»; este último **siempre pide confirmación** (un clic no borra nada).
+- **Aviso de privacidad:** el párrafo de derechos menciona los dos botones y mantiene el correo para lo demás. **No sube la versión** (`2026-11-23-v2`): agrega una vía y no cambia qué datos se tratan, así que nadie tiene que aceptar de nuevo.
+- **Pruebas:** unitarias (API, almacén de Firestore con doble, identidad, límites, aislamiento entre personas, orden en el script) y de navegador (`tests/e2e/test_cuenta.py`, con el SDK de Firebase simulado: descargar, cancelar, confirmar, sesión antigua) en Chromium, Firefox, WebKit e iPhone 14 emulado.
+- **Límite conocido:** un token ya emitido sigue siendo válido hasta una hora, así que tras borrar, esa misma persona podría volver a crear su documento con él. Solo afecta a su propia cuenta; `auth-cleanup-unconsented.sh` con `ORPHANS=1` lo limpia.
+- **Sin comprobar:** con proveedores reales (la sesión antigua solo aparece con el tiempo), en iPhone y Android reales, y el borrado de punta a punta en producción.
+
