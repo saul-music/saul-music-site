@@ -221,6 +221,47 @@ def test_repertoire_panel_creates_adds_and_removes(page: Page, url, store):
     assert store.repertoires[rid]["songs"] == [SONG]
 
 
+def test_with_repertoires_choosing_one_comes_first_and_creating_is_secondary(
+    page: Page, url, store
+):
+    store.repertoires = {"abc123": {"name": "Para ensayar", "songs": []}}
+    prepare(page, url)
+    page.goto(f"{url}/cancion-{SONG}.html")
+    page.get_by_role("button", name="Repertorio").click()
+    expect(page.get_by_label("Para ensayar")).to_be_visible()  # lo principal: elegir uno
+    expect(page.get_by_label("Nombre del repertorio nuevo")).to_be_hidden()  # crear queda escondido
+    page.get_by_role("button", name="Crear un repertorio nuevo").click()
+    expect(page.get_by_label("Nombre del repertorio nuevo")).to_be_visible()
+    expect(page.get_by_role("button", name="Crear un repertorio nuevo")).to_be_hidden()
+    page.get_by_label("Para ensayar").check()
+    expect(page.get_by_text("Agregado a «Para ensayar».")).to_be_visible()
+    assert store.repertoires["abc123"]["songs"] == [SONG]
+
+
+def test_with_no_repertoires_creating_the_first_is_the_main_action(page: Page, url, store):
+    prepare(page, url)
+    page.goto(f"{url}/cancion-{SONG}.html")
+    page.get_by_role("button", name="Repertorio").click()
+    expect(
+        page.get_by_text("Aún no tienes repertorios: crea el primero con este tema.")
+    ).to_be_visible()
+    expect(page.get_by_label("Nombre del repertorio nuevo")).to_be_visible()
+    expect(page.get_by_role("button", name="Crear un repertorio nuevo")).to_be_hidden()
+
+
+def test_after_creating_the_first_one_the_list_shows_it_chosen_and_hides_the_form(
+    page: Page, url, store
+):
+    prepare(page, url)
+    page.goto(f"{url}/cancion-{SONG}.html")
+    page.get_by_role("button", name="Repertorio").click()
+    page.get_by_label("Nombre del repertorio nuevo").fill("Primero")
+    page.get_by_role("button", name="Crear con este tema").click()
+    expect(page.get_by_label("Primero")).to_be_checked()
+    expect(page.get_by_label("Nombre del repertorio nuevo")).to_be_hidden()
+    expect(page.get_by_role("button", name="Crear un repertorio nuevo")).to_be_visible()
+
+
 def test_a_hostile_repertoire_name_is_refused_with_a_message(page: Page, url, store):
     prepare(page, url)
     page.goto(f"{url}/cancion-{SONG}.html")

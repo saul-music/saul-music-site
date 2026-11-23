@@ -125,10 +125,17 @@ async function addButtons(api) {
   const list = h("div", { class: "d-grid gap-1" });
   const nameInput = h("input", { class: "form-control form-control-sm", type: "text", maxlength: "60", placeholder: "Nombre del repertorio nuevo", "aria-label": "Nombre del repertorio nuevo" });
   const createBtn = h("button", { type: "button", class: "btn btn-sm btn-outline-primary" }, "Crear con este tema");
-  panel.append(h("strong", {}, "Tus repertorios"), list, h("div", { class: "d-flex gap-2" }, nameInput, createBtn), note, h("a", { href: "mi-acordia.html", class: "small" }, "Ver mi cuenta"));
+  const createBox = h("div", { class: "d-flex gap-2" }, nameInput, createBtn);
+  // Si ya hay repertorios, lo principal es elegir uno: crear uno nuevo es una acción secundaria, que se abre a pedido.
+  const newToggle = h("button", { type: "button", class: "btn btn-link btn-sm p-0 text-start" }, "＋ Crear un repertorio nuevo");
+  panel.append(h("strong", {}, "Tus repertorios"), list, newToggle, createBox, note, h("a", { href: "mi-acordia.html", class: "small" }, "Ver mi cuenta"));
 
   let repertoires = [];
+  let creating = false;
+  newToggle.addEventListener("click", () => { creating = true; paintList(); nameInput.focus(); });
   const paintList = () => {
+    createBox.hidden = repertoires.length > 0 && !creating; // sin repertorios, crear el primero es lo principal
+    newToggle.hidden = repertoires.length === 0 || creating;
     list.replaceChildren(...(repertoires.length ? repertoires.map((r) => {
       const box = h("input", { type: "checkbox", class: "form-check-input", id: `rep-${r.id}` });
       box.checked = r.songs.includes(slug);
@@ -145,7 +152,7 @@ async function addButtons(api) {
       });
       return h("div", { class: "form-check" }, box, h("label", { class: "form-check-label", for: `rep-${r.id}` }, r.name),
         " ", h("a", { href: `repertorio.html?id=${r.id}`, class: "small" }, "abrir"));
-    }) : [h("span", { class: "small text-body-secondary" }, "Aún no tienes repertorios.")]));
+    }) : [h("span", { class: "small text-body-secondary" }, "Aún no tienes repertorios: crea el primero con este tema.")]));
   };
   repBtn.addEventListener("click", async () => {
     panel.hidden = !panel.hidden;
@@ -160,6 +167,7 @@ async function addButtons(api) {
     try {
       const made = await api(`repertoires/${newId()}`, { method: "PUT", body: JSON.stringify({ name, songs: [slug] }) });
       repertoires.push(made);
+      creating = false;
       nameInput.value = "";
       note.textContent = `Creaste «${made.name}» con este tema.`;
       paintList();
