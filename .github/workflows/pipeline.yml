@@ -233,6 +233,8 @@ jobs:
           service_account: ${{ env.DEPLOYER }}
       - uses: google-github-actions/setup-gcloud@aa5489c8933f4cc7a4f7d45035b3b1440c9c10db # v3.0.1
       - name: desplegar el sitio (público; lee solo el bucket editorial, montado de solo lectura)
+        env:
+          FIREBASE_SITE_API_KEY: ${{ vars.FIREBASE_SITE_API_KEY }}
         run: |
           gcloud run deploy "$SERVICE" \
             --project "$PROJECT_ID" --region "$REGION" \
@@ -240,7 +242,7 @@ jobs:
             --service-account "$RUNTIME" \
             --add-volume "name=editorial,type=cloud-storage,bucket=${EDITORIAL_BUCKET},readonly=true" \
             --add-volume-mount volume=editorial,mount-path=/editorial \
-            --set-env-vars "EDITORIAL_DIR=/editorial,FIREBASE_PROJECT_ID=${PROJECT_ID}" \
+            --set-env-vars "EDITORIAL_DIR=/editorial,FIREBASE_PROJECT_ID=${PROJECT_ID},FIREBASE_API_KEY=${FIREBASE_SITE_API_KEY}" \
             --min-instances 0 --max-instances 2 --cpu 1 --memory 512Mi \
             --allow-unauthenticated --quiet
       - name: smoke (/ y /cancion.html y una página de canción dan 200; /docs y /dashboard/latest dan 404)
@@ -254,3 +256,4 @@ jobs:
           test "$(code /docs)" = "404"
           test "$(code /dashboard/latest)" = "404"
           test "$(code /api/me/preferences)" = "404"
+          test "$(code /entrar.html)" = "200"

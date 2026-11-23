@@ -1052,3 +1052,17 @@ Las páginas de canción ya no muestran «Prototipo en investigación» (RD50; l
   se limpiará con un script. Sin funciones de bloqueo no hay otra forma.
 - **Sin comprobar:** con una persona real y un token real (3e).
 
+## S101 · Página de entrada con Google y Facebook (2026-11-23)
+
+**Etapa 3e (C39, C40, infra I16).** `entrar.html` y `entrar.js`: **no están enlazadas desde ninguna página** y llevan `noindex`; hasta abrir el registro es una página de prueba.
+
+- **Flujo:** botones de Google y Facebook por **redirección** (`signInWithRedirect`, más fiable en celular que la ventana emergente) con `authDomain = location.host`, que funciona solo en la dirección `web.app` del sitio (C20); en otra dirección avisa y no
+  inicia nada. Tras entrar: `GET /api/me/consent`; si no aceptó la versión vigente, pantalla con las dos casillas **sin marcar** y el botón deshabilitado hasta marcarlas; **«No acepto» elimina la cuenta** (`deleteUser`); aceptada, panel de prueba
+  que lee y guarda una preferencia. No muestra correo ni nombre.
+- **SDK 13.4.0 desde `www.gstatic.com`, versión fija (C40).** Una prueba en un navegador real mostró que carga sin violaciones de la política. Un test comprueba que la versión sea una sola y fija.
+- **La política de seguridad se amplía solo para esa página** (`gstatic`, `apis.google.com`, Identity Toolkit y Secure Token, y marcos de `apis.google.com`); el resto del sitio conserva la suya, y un test lo vigila.
+- **La llave** viene de `FIREBASE_API_KEY` (la variable `FIREBASE_SITE_API_KEY` del repo, que define `firebase.sh`, I16) y se inyecta al servir la página, escapada; sin llave, la página dice que el acceso no está disponible.
+- **El contenido público no nombra el proyecto interno** (regla de las pruebas del sitio): el script no lleva `projectId` ni la dirección del proyecto.
+- **Aviso de privacidad, versión `2026-11-23-v2`:** agrega que la página de entrada carga el inicio de sesión desde servidores de Google, que reciben la IP. Como nadie había aceptado la v1, no obliga a nadie a aceptar de nuevo.
+- **Sin comprobar** (solo se ve en `web.app` con un navegador): el retorno de Google y Facebook, el iframe de Firebase bajo esta política, que Hosting pase `Authorization`, que `datastore.user` alcance y que la llave restringida por dirección no bloquee al SDK.
+
