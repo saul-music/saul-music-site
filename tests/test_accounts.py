@@ -9,6 +9,9 @@ from fastapi.testclient import TestClient
 
 from musicsite.accounts import (
     MAX_BODY_BYTES,
+    MAX_FAVORITES,
+    MAX_REPERTOIRES,
+    MAX_SONGS_PER_REPERTOIRE,
     MAX_TRACKED_PEOPLE,
     NOTICE_VERSION,
     Accounts,
@@ -16,9 +19,11 @@ from musicsite.accounts import (
     RateLimiter,
     accounts_from_env,
     clean_continue,
+    clean_favorite,
     clean_preferences,
     clean_profile,
     clean_progress,
+    clean_repertoire,
     identity_from_claims,
     merge_result,
     uid_from_claims,
@@ -57,6 +62,8 @@ class FakeStore:
         self.progress = {}
         self.profiles = {}
         self.continues = {}
+        self.favorites = {}
+        self.repertoires = {}
 
     def get(self, uid):
         return dict(self.docs.get(uid, {}))
@@ -82,6 +89,29 @@ class FakeStore:
     def put_continue(self, uid, value):
         self.continues.setdefault(uid, {}).update(value)
 
+    def get_favorites(self, uid):
+        return sorted(self.favorites.get(uid, set()))
+
+    def put_favorite(self, uid, song, favorite):
+        mine = self.favorites.setdefault(uid, set())
+        if favorite and song not in mine and len(mine) >= MAX_FAVORITES:
+            return None
+        mine.add(song) if favorite else mine.discard(song)
+        return sorted(mine)
+
+    def get_repertoires(self, uid):
+        return json.loads(json.dumps(self.repertoires.get(uid, {})))
+
+    def put_repertoire(self, uid, rid, value):
+        mine = self.repertoires.setdefault(uid, {})
+        if rid not in mine and len(mine) >= MAX_REPERTOIRES:
+            return False
+        mine[rid] = json.loads(json.dumps(value))
+        return True
+
+    def delete_repertoire(self, uid, rid):
+        self.repertoires.get(uid, {}).pop(rid, None)
+
     def get_progress(self, uid):
         return json.loads(json.dumps(self.progress.get(uid, {})))
 
@@ -100,6 +130,8 @@ class FakeStore:
             "progress": self.get_progress(uid),
             "profile": self.get_profile(uid),
             "continue": self.get_continue(uid),
+            "favorites": self.get_favorites(uid),
+            "repertoires": self.get_repertoires(uid),
         }
 
     def delete(self, uid):
@@ -108,6 +140,8 @@ class FakeStore:
         self.progress.pop(uid, None)
         self.profiles.pop(uid, None)
         self.continues.pop(uid, None)
+        self.favorites.pop(uid, None)
+        self.repertoires.pop(uid, None)
 
 
 @pytest.fixture
@@ -611,6 +645,8 @@ def test_export_works_without_ever_consenting_and_stores_nothing(bare):
         "progress": {},
         "profile": {},
         "continue": {},
+        "favorites": [],
+        "repertoires": {},
     }
     assert store.docs == {} and store.consents == {}
 
@@ -711,9 +747,13 @@ class FakeFirestore:
         self.docs.pop(self.uid, None)
 
     def set(self, data, merge=False):
+        from google.cloud.firestore import DELETE_FIELD
+
         def deep(into, new):
             for key, value in new.items():
-                if isinstance(value, dict) and isinstance(into.get(key), dict):
+                if value is DELETE_FIELD:
+                    into.pop(key, None)
+                elif isinstance(value, dict) and isinstance(into.get(key), dict):
                     deep(into[key], value)
                 else:
                     into[key] = value
@@ -753,6 +793,8 @@ def test_firestore_export_reads_the_document_and_makes_the_time_text():
         "progress": {},
         "profile": {},
         "continue": {},
+        "favorites": [],
+        "repertoires": {},
     }
 
 
@@ -764,6 +806,8 @@ def test_firestore_export_of_nobody_is_empty_and_creates_nothing():
         "progress": {},
         "profile": {},
         "continue": {},
+        "favorites": [],
+        "repertoires": {},
     }
     assert store._db.docs == {}
 
@@ -1198,3 +1242,337 @@ def test_song_pages_get_the_account_links_and_the_theory_button_goes_to_aprende(
 def test_a_served_song_page_has_the_links(client):
     page = client.get("/cancion-camara-lenta.html").text
     assert 'href="mi-acordia.html">Mi cuenta</a>' in page and "aprender.html" not in page
+
+
+# --- favoritos y repertorios (S105, C30)
+SONG_A, SONG_B, SONG_C = "camara-lenta", "2022", "moizefala"  # temas de respaldo, publicados
+
+
+@pytest.fixture
+def big(store):
+    """Un cliente con un límite de frecuencia amplio: estas pruebas hacen muchas llamadas."""
+    accounts = Accounts(FakeVerifier(), store, RateLimiter(limit=1000, window=60))
+    return TestClient(create_app(accounts=accounts))
+
+
+def fav(big, song, favorite=True, token="p1"):
+    return big.put(
+        "/api/me/favorites", headers=bearer(token), json={"song": song, "favorite": favorite}
+    )
+
+
+def rep(big, rid, name="Para ensayar", songs=(SONG_A,), token="p1"):
+    return big.put(
+        f"/api/me/repertoires/{rid}",
+        headers=bearer(token),
+        json={"name": name, "songs": list(songs)},
+    )
+
+
+def test_favorites_need_consent_and_start_empty(bare):
+    big, store = bare
+    assert big.get("/api/me/favorites", headers=bearer()).status_code == 403
+    assert fav(big, SONG_A).status_code == 403
+    assert store.favorites == {}
+
+
+def test_favorites_are_marked_listed_sorted_and_unmarked(big):
+    assert big.get("/api/me/favorites", headers=bearer()).json() == {"favorites": []}
+    assert fav(big, SONG_C).json() == {"favorites": [SONG_C]}
+    assert fav(big, SONG_A).json() == {"favorites": [SONG_A, SONG_C]}
+    assert fav(big, SONG_A).json() == {"favorites": [SONG_A, SONG_C]}  # repetir no duplica
+    assert fav(big, SONG_C, favorite=False).json() == {"favorites": [SONG_A]}
+    assert fav(big, SONG_C, favorite=False).json() == {"favorites": [SONG_A]}  # ni falla
+    assert big.get("/api/me/favorites", headers=bearer()).json() == {"favorites": [SONG_A]}
+
+
+def test_only_published_songs_can_be_marked_but_any_can_be_unmarked(big, store):
+    assert fav(big, "no-existe").status_code == 422
+    store.favorites["uid1"] = {"ya-retirado"}
+    assert fav(big, "ya-retirado", favorite=False).json() == {"favorites": []}
+
+
+@pytest.mark.parametrize(
+    "body",
+    [
+        {},
+        {"song": SONG_A},
+        {"favorite": True},
+        {"song": SONG_A, "favorite": "si"},
+        {"song": SONG_A, "favorite": 1},
+        {"song": "Camara Lenta", "favorite": True},
+        {"song": "../x", "favorite": True},
+        {"song": ["a"], "favorite": True},
+        {"song": SONG_A, "favorite": True, "extra": 1},
+        [1],
+    ],
+)
+def test_invalid_favorite_bodies_are_422(big, store, body):
+    assert big.put("/api/me/favorites", headers=bearer(), json=body).status_code == 422
+    assert store.favorites == {}
+
+
+def test_the_favorites_cap_is_422_and_unmarking_still_works():
+    store, _ = firestore_store({"u": {}})
+    for i in range(MAX_FAVORITES):
+        assert store.put_favorite("u", f"tema-{i}", True) is not None
+    assert store.put_favorite("u", "uno-mas", True) is None  # pasa el tope
+    assert (
+        len(store.put_favorite("u", "tema-0", True)) == MAX_FAVORITES
+    )  # uno que ya estaba, no cuenta
+    assert len(store.put_favorite("u", "tema-0", False)) == MAX_FAVORITES - 1
+    assert store.put_favorite("u", "uno-mas", True) is not None  # ahora cabe
+
+
+def test_favorites_are_per_person_and_404_without_a_public_session(big):
+    fav(big, SONG_A, token="p1")
+    assert big.get("/api/me/favorites", headers=bearer("p2")).json() == {"favorites": []}
+    for token in ("malo", "team", "tenant-google"):
+        assert big.get("/api/me/favorites", headers=bearer(token)).status_code == 404
+        assert fav(big, SONG_A, token=token).status_code == 404
+
+
+def test_a_repertoire_is_created_listed_replaced_and_deleted(big):
+    assert big.get("/api/me/repertoires", headers=bearer()).json() == {"repertoires": []}
+    made = rep(big, "abc123", "  Para   ensayar ", [SONG_B, SONG_A])
+    assert made.json() == {
+        "id": "abc123",
+        "name": "Para ensayar",
+        "songs": [SONG_B, SONG_A],
+    }  # el orden se conserva
+    rep(big, "zzz999", "Algo")
+    names = [
+        r["name"] for r in big.get("/api/me/repertoires", headers=bearer()).json()["repertoires"]
+    ]
+    assert names == ["Algo", "Para ensayar"]  # por nombre
+    assert rep(big, "abc123", "Para ensayar", [SONG_A]).json()["songs"] == [SONG_A]  # reemplaza
+    assert big.delete("/api/me/repertoires/abc123", headers=bearer()).status_code == 204
+    assert (
+        big.delete("/api/me/repertoires/abc123", headers=bearer()).status_code == 204
+    )  # idempotente
+    assert [
+        r["id"] for r in big.get("/api/me/repertoires", headers=bearer()).json()["repertoires"]
+    ] == ["zzz999"]
+
+
+@pytest.mark.parametrize("rid", ["ABC123", "abc", "a" * 21, "abc 123", "../abc123", "abc_123"])
+def test_repertoire_ids_are_validated(big, store, rid):
+    # 404/405 cuando la ruta normalizada ni existe para ese método; 422 cuando llega y se valida
+    assert rep(big, rid).status_code in (404, 405, 422)
+    assert big.delete(f"/api/me/repertoires/{rid}", headers=bearer()).status_code in (404, 405, 422)
+    assert store.repertoires == {}
+
+
+@pytest.mark.parametrize(
+    "body",
+    [
+        {},
+        {"name": "A"},
+        {"songs": []},
+        {"name": "", "songs": []},
+        {"name": "   ", "songs": []},
+        {"name": "x" * 61, "songs": []},
+        {"name": "<b>hola</b>", "songs": []},
+        {"name": 5, "songs": []},
+        {"name": "Ok", "songs": "camara-lenta"},
+        {"name": "Ok", "songs": [SONG_A, SONG_A]},
+        {"name": "Ok", "songs": ["no-existe"]},
+        {"name": "Ok", "songs": ["Mal Slug"]},
+        {"name": "Ok", "songs": [1]},
+        {"name": "Ok", "songs": [], "extra": 1},
+        [1],
+    ],
+)
+def test_invalid_repertoires_are_422_and_store_nothing(big, store, body):
+    response = big.put("/api/me/repertoires/abc123", headers=bearer(), json=body)
+    assert response.status_code == 422
+    assert store.repertoires == {}
+
+
+def test_a_repertoire_keeps_songs_that_are_no_longer_published_but_cannot_add_new_unknown_ones(
+    big, store
+):
+    store.repertoires["uid1"] = {"abc123": {"name": "Viejo", "songs": ["ya-retirado", SONG_A]}}
+    assert rep(big, "abc123", "Viejo", [SONG_A, "ya-retirado"]).status_code == 200  # reordenar
+    assert rep(big, "abc123", "Viejo", [SONG_A, "ya-retirado", "inventado"]).status_code == 422
+
+
+def test_a_repertoire_can_be_big_but_not_over_the_cap_or_the_body_limit(big, store):
+    many = [f"t{i}" for i in range(MAX_SONGS_PER_REPERTOIRE + 1)]
+    assert (
+        big.put(
+            "/api/me/repertoires/abc123", headers=bearer(), json={"name": "x", "songs": many}
+        ).status_code
+        == 422
+    )
+    huge = {"name": "x", "songs": ["a" * 59] * 400}
+    assert big.put("/api/me/repertoires/abc123", headers=bearer(), json=huge).status_code == 413
+    assert store.repertoires == {}
+
+
+def test_the_repertoires_cap_is_422_but_replacing_one_still_works(big, store):
+    for i in range(MAX_REPERTOIRES):
+        assert rep(big, f"rep{i:03d}x", f"R{i}").status_code == 200
+    assert rep(big, "otronuevo", "Uno más").status_code == 422
+    assert rep(big, "rep000x"[:7] + "", "Renombrado").status_code in (200, 422)
+    assert rep(big, "rep001x", "Renombrado").status_code == 200
+    assert big.delete("/api/me/repertoires/rep001x", headers=bearer()).status_code == 204
+    assert rep(big, "otronuevo", "Ahora sí").status_code == 200
+
+
+def test_repertoires_are_private_and_404_without_a_public_session(big):
+    rep(big, "abc123", token="p1")
+    assert big.get("/api/me/repertoires", headers=bearer("p2")).json() == {"repertoires": []}
+    assert big.delete("/api/me/repertoires/abc123", headers=bearer("p2")).status_code == 204
+    assert (
+        len(big.get("/api/me/repertoires", headers=bearer("p1")).json()["repertoires"]) == 1
+    )  # no lo borró
+    for token in ("malo", "team", "tenant-google"):
+        assert big.get("/api/me/repertoires", headers=bearer(token)).status_code == 404
+        assert rep(big, "abc123", token=token).status_code == 404
+
+
+def test_export_and_delete_cover_favorites_and_repertoires(big, store):
+    fav(big, SONG_A)
+    rep(big, "abc123", "Mi lista", [SONG_A])
+    stored = big.get("/api/me/export", headers=bearer()).json()["stored"]
+    assert stored["favorites"] == [SONG_A]
+    assert stored["repertoires"] == {"abc123": {"name": "Mi lista", "songs": [SONG_A]}}
+    big.delete("/api/me", headers=bearer())
+    assert "uid1" not in store.favorites and "uid1" not in store.repertoires
+
+
+def test_clean_functions_for_favorites_and_repertoires():
+    assert clean_favorite({"song": "a-b", "favorite": False}) == ("a-b", False)
+    assert clean_repertoire({"name": " X  Y ", "songs": ["a", "b"]}) == {
+        "name": "X Y",
+        "songs": ["a", "b"],
+    }
+
+
+def test_firestore_favorites_and_repertoires_are_merged_and_deleted_without_touching_the_rest():
+    store, _ = firestore_store({"u": {"preferences": {"muted": True}}})
+    store.put_favorite("u", "a", True)
+    store.put_favorite("u", "b", True)
+    store.put_favorite("u", "a", False)
+    assert store.get_favorites("u") == ["b"]
+    assert store.put_repertoire("u", "abc123", {"name": "Uno", "songs": ["x", "y"]})
+    assert store.put_repertoire(
+        "u", "abc123", {"name": "Uno", "songs": ["y"]}
+    )  # reemplaza la lista
+    assert store.get_repertoires("u") == {"abc123": {"name": "Uno", "songs": ["y"]}}
+    store.delete_repertoire("u", "abc123")
+    assert store.get_repertoires("u") == {}
+    assert store._db.docs["u"]["preferences"] == {"muted": True}
+
+
+def test_firestore_ignores_damaged_favorites_and_repertoires():
+    store, _ = firestore_store(
+        {
+            "u": {
+                "favorites": {"ok": True, "Mal": True, "x": False, "y": "si"},
+                "repertoires": {
+                    "abc123": {"name": "Bien", "songs": ["a"]},
+                    "ABC": {"name": "mal id", "songs": []},
+                    "def456": {"name": 5, "songs": []},
+                    "ghi789": "no es un mapa",
+                },
+            }
+        }
+    )
+    assert store.get_favorites("u") == ["ok"]
+    assert store.get_repertoires("u") == {"abc123": {"name": "Bien", "songs": ["a"]}}
+
+
+# --- tema dentro de un iframe, cuenta en los temas y listado público (S105, C31)
+def test_embed_mode_hides_the_site_chrome_and_allows_only_our_own_frames(client):
+    from musicsite.app import EMBED_CSP
+
+    page = client.get("/cancion-camara-lenta.html?embed=1")
+    assert page.status_code == 200
+    assert ".navbar,.ac-footer" in page.text and "cuenta-tema.js" not in page.text
+    assert page.headers["content-security-policy"] == EMBED_CSP
+    assert "frame-ancestors 'self'" in EMBED_CSP and "frame-ancestors 'none'" not in EMBED_CSP
+    assert (
+        "frame-ancestors 'none'"
+        in client.get("/cancion-camara-lenta.html").headers["content-security-policy"]
+    )
+
+
+def test_only_the_exact_embed_value_enables_embed_mode(client):
+    for query in ("?embed=0", "?embed=true", "?embed=", "?embed=1x"):
+        page = client.get("/cancion-camara-lenta.html" + query)
+        assert ".navbar,.ac-footer" not in page.text, query
+        assert "frame-ancestors 'none'" in page.headers["content-security-policy"], query
+
+
+def test_song_pages_get_the_account_script_and_policy_only_when_accounts_are_on():
+    from musicsite.app import LOGIN_CSP, create_app
+
+    on = TestClient(create_app(firebase_api_key="clave-de-prueba")).get(
+        "/cancion-camara-lenta.html"
+    )
+    assert (
+        'src="cuenta-tema.js"' in on.text
+        and 'name="firebase-api-key" content="clave-de-prueba"' in on.text
+    )
+    assert on.headers["content-security-policy"] == LOGIN_CSP
+    off = TestClient(create_app()).get("/cancion-camara-lenta.html")
+    assert "cuenta-tema.js" not in off.text and "firebase-api-key" not in off.text
+    assert off.headers["content-security-policy"] == HEADERS["Content-Security-Policy"]
+
+
+def test_the_key_is_escaped_in_song_pages():
+    from musicsite.songpage import decorate
+
+    out = decorate(
+        b"<html><head></head><body></body></html>", api_key='"><script>x</script>'
+    ).decode()
+    assert "<script>x</script>" not in out and "&quot;&gt;&lt;script&gt;" in out
+
+
+def test_the_public_song_listing_has_titles_and_artists_and_nothing_else(client):
+    response = client.get("/songs.json")
+    assert (
+        response.status_code == 200 and response.headers["cache-control"] == "public, max-age=300"
+    )
+    songs = response.json()
+    by_slug = {s["slug"]: s for s in songs}
+    assert by_slug["camara-lenta"] == {
+        "slug": "camara-lenta",
+        "title": "Cámara lenta",
+        "artist": "Javiera Mena",
+    }
+    assert all(set(s) == {"slug", "title", "artist"} for s in songs)
+    assert songs == sorted(songs, key=lambda s: (s["artist"].casefold(), s["title"].casefold()))
+
+
+@pytest.mark.parametrize("script", ["cuenta-tema.js", "repertorio.js"])
+def test_the_new_account_scripts_are_pinned_safe_and_only_talk_to_our_api(script):
+    source = (WEB_DIR / script).read_text(encoding="utf-8")
+    versions = set(re.findall(r"firebasejs/([0-9.]+)", source))
+    assert len(versions) == 1 and re.fullmatch(r"[0-9]+\.[0-9]+\.[0-9]+", versions.pop())
+    assert not re.search(r"\.innerHTML\s*=|insertAdjacentHTML|document\.write|eval\(", source)
+    assert "latest" not in source
+    # solo hablan con /api/me/*, /songs.json y las páginas del propio sitio
+    assert not re.search(r"fetch\(\s*[\"'`]https?:", source)
+
+
+def test_the_song_script_only_loads_firebase_when_there_is_a_session_hint():
+    source = (WEB_DIR / "cuenta-tema.js").read_text(encoding="utf-8")
+    gate = source.index("if (!read(HINT) || !apiKey) return;")
+    assert gate < source.index("import(/* @vite-ignore */")  # la puerta va antes de cargar Firebase
+    assert "acordia-prefs-aplicadas" in source  # una sola recarga por sesión: sin bucles
+
+
+def test_the_repertoire_player_only_embeds_our_own_song_pages():
+    lines = (WEB_DIR / "repertorio.js").read_text(encoding="utf-8").splitlines()
+    code = "\n".join(
+        line for line in lines if not line.lstrip().startswith("//")
+    )  # sin comentarios
+    assert code.count("?embed=1") == 1 and "`cancion-${songs[at]}.html?embed=1`" in code
+
+
+def test_the_notice_says_song_pages_load_firebase_only_with_a_session(client):
+    text = client.get("/privacidad.html").text
+    assert "si no tienes sesión, las páginas de los temas no hacen ninguna llamada a Google" in text

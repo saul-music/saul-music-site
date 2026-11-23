@@ -86,6 +86,21 @@ class Store:
     def put_continue(self, uid, value):
         self.cont.update(value)
 
+    def get_favorites(self, uid):
+        return []
+
+    def put_favorite(self, uid, song, favorite):
+        return []
+
+    def get_repertoires(self, uid):
+        return {}
+
+    def put_repertoire(self, uid, rid, value):
+        return True
+
+    def delete_repertoire(self, uid, rid):
+        pass
+
     def get_progress(self, uid):
         return clean_progress(self.progress)
 
@@ -102,6 +117,8 @@ class Store:
             "progress": self.progress,
             "profile": self.profile,
             "continue": self.cont,
+            "favorites": [],
+            "repertoires": {},
         }
 
     def delete(self, uid):
@@ -161,7 +178,9 @@ def test_it_shows_where_to_continue_and_the_progress_with_real_titles(page: Page
     expect(page.locator("#contenido")).to_be_visible()
     expect(page.locator("#continuar")).to_contain_text("Pulso")
     assert page.get_attribute("#continuar a >> nth=0", "href") == "/aprende/#/basico/pulso"
-    expect(page.locator("#continuar")).to_contain_text("Camara lenta")
+    expect(page.locator("#continuar")).to_contain_text(
+        "Cámara lenta · Javiera Mena"
+    )  # título real, de /songs.json
     assert page.get_attribute("#continuar a >> nth=1", "href") == "cancion-camara-lenta.html"
     avance = page.locator("#avance")
     expect(avance).to_contain_text("Básico · 1/2 lecciones · 3/6 estrellas · 90 puntos")

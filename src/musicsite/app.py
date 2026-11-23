@@ -13,6 +13,7 @@ Sin /docs, /redoc ni /openapi.json.
 import html
 import mimetypes
 import os
+from collections.abc import Callable
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -25,19 +26,23 @@ from starlette.exceptions import HTTPException
 
 from musicsite import songpage
 from musicsite.accounts import (
-    MAX_BODY_BYTES as MAX_BODY,
-)
-from musicsite.accounts import (
+    MAX_BODY_BIG,
     NOTICE_VERSION,
     Accounts,
     InvalidPreferences,
     accounts_from_env,
     clean_consent,
     clean_continue,
+    clean_favorite,
     clean_preferences,
     clean_profile,
+    clean_repertoire,
+    clean_repertoire_id,
     clean_result,
     parse_body,
+)
+from musicsite.accounts import (
+    MAX_BODY_BYTES as MAX_BODY,
 )
 
 WEB_DIR = Path(__file__).parent / "web"
@@ -67,7 +72,7 @@ HEADERS = {
 # La página de entrada (S101, C40) y «Mi cuenta» (S104) son las únicas que cargan el SDK de
 # Firebase desde el CDN de Google y hablan con Identity Toolkit: la política se amplía solo para
 # ellas. El resto conserva la suya.
-ACCOUNT_PAGES = ("/entrar.html", "/mi-acordia.html")
+ACCOUNT_PAGES = ("/entrar.html", "/mi-acordia.html", "/repertorio.html")
 # «Aprender» (S65, S66) se retiró (C28): estas direcciones redirigen a Aprende (`/aprende/`).
 RETIRED_LEARN = ("/aprender.html", "/aprender.css")
 _SCRIPTS = "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net"
@@ -77,6 +82,10 @@ _LOGIN_EXTRA = (
     "; frame-src 'self' https://apis.google.com"
 )
 LOGIN_CSP = HEADERS["Content-Security-Policy"].replace(_SCRIPTS, _LOGIN_SCRIPTS) + _LOGIN_EXTRA
+# El tema dentro de un iframe del repertorio (C31): la misma política, enmarcable por el sitio.
+EMBED_CSP = HEADERS["Content-Security-Policy"].replace(
+    "frame-ancestors 'none'", "frame-ancestors 'self'"
+)
 
 
 def load_files(root: Path) -> dict[str, tuple[bytes, str]]:
@@ -140,8 +149,11 @@ def create_app(
         for name, value in HEADERS.items():
             if name == "Cache-Control" and name in response.headers:
                 continue  # las fotos con hash en el nombre fijan su propia caché larga
-            if name == "Content-Security-Policy" and request.url.path in ACCOUNT_PAGES:
-                value = LOGIN_CSP
+            if name == "Content-Security-Policy":
+                if name in response.headers:
+                    continue  # las páginas de tema fijan la suya (iframe y cuenta)
+                if request.url.path in ACCOUNT_PAGES:
+                    value = LOGIN_CSP
             response.headers[name] = value
         return response
 
@@ -149,11 +161,14 @@ def create_app(
     async def empty_error(_: Request, exc: HTTPException) -> Response:
         return Response(status_code=exc.status_code)  # sin cuerpo: no revela nada
 
+    def known_song(slug: str) -> bool:
+        return f"/cancion-{slug}.html" in catalog.current().pages
+
     if accounts is not None:
-        _register_me(app, accounts)
+        _register_me(app, accounts, known_song)
 
     @app.api_route("/{name:path}", methods=["GET", "HEAD"], include_in_schema=False)
-    def page(name: str) -> Response:
+    def page(name: str, request: Request) -> Response:
         path = "/" + name
         if path in RETIRED_LEARN or (path.startswith("/aprender-") and path.endswith(".html")):
             return Response(status_code=301, headers={"Location": "/aprende/"})  # C28
@@ -171,9 +186,25 @@ def create_app(
                 media_type="image/jpeg",
                 headers={"Cache-Control": "public, max-age=31536000, immutable"},
             )
+        if (
+            path == "/songs.json"
+        ):  # los temas publicados (título y artista): datos que ya son públicos
+            return JSONResponse(
+                songpage.listing(state.pages), headers={"Cache-Control": "public, max-age=300"}
+            )
         song = state.pages.get(path)
         if song is not None:
-            return Response(songpage.decorate(song), media_type=TYPES[".html"])
+            embed = request.query_params.get("embed") == "1"
+            # Solo en modo embed lo enmarca el propio sitio (C31); con cuenta, la política ampliada.
+            csp = (
+                EMBED_CSP
+                if embed
+                else (LOGIN_CSP if firebase_api_key else HEADERS["Content-Security-Policy"])
+            )
+            body = songpage.decorate(song, api_key=firebase_api_key, embed=embed)
+            return Response(
+                body, media_type=TYPES[".html"], headers={"Content-Security-Policy": csp}
+            )
         entry = files.get(path)
         if entry is None:
             return Response(status_code=404)
@@ -189,7 +220,7 @@ def create_app(
 PRIVATE = {"Cache-Control": "private, no-store", "Vary": "Authorization"}
 
 
-def _register_me(app: FastAPI, accounts: Accounts) -> None:
+def _register_me(app: FastAPI, accounts: Accounts, known_song: Callable[[str], bool]) -> None:
     """`/api/me/preferences` (S99). Sin sesión del grupo público, 404 sin cuerpo como el resto."""
 
     def caller(request: Request) -> str:
@@ -295,6 +326,70 @@ def _register_me(app: FastAPI, accounts: Accounts) -> None:
             raise HTTPException(422) from error
         accounts.store.put_continue(uid, value)
         return JSONResponse({"continue": accounts.store.get_continue(uid)}, headers=PRIVATE)
+
+    @app.get("/api/me/favorites", include_in_schema=False)
+    def read_favorites(request: Request) -> Response:
+        return JSONResponse(
+            {"favorites": accounts.store.get_favorites(consenting(request))}, headers=PRIVATE
+        )
+
+    @app.put("/api/me/favorites", include_in_schema=False)
+    async def write_favorite(request: Request) -> Response:
+        """Marca o desmarca un tema favorito (S105). Solo temas publicados; hasta 300."""
+        uid = consenting(request)
+        length = request.headers.get("content-length", "")
+        if length.isdigit() and int(length) > MAX_BODY:
+            raise HTTPException(413)
+        try:
+            song, favorite = clean_favorite(parse_body(await request.body()))
+        except InvalidPreferences as error:
+            raise HTTPException(422) from error
+        if favorite and not known_song(song):
+            raise HTTPException(422)  # desmarcar un tema que ya no existe siempre se puede
+        favorites = accounts.store.put_favorite(uid, song, favorite)
+        if favorites is None:
+            raise HTTPException(422)
+        return JSONResponse({"favorites": favorites}, headers=PRIVATE)
+
+    def repertoire_list(uid: str) -> list[dict]:
+        mine = accounts.store.get_repertoires(uid)
+        rows = [{"id": rid, **value} for rid, value in mine.items()]
+        return sorted(rows, key=lambda r: (r["name"].casefold(), r["id"]))
+
+    @app.get("/api/me/repertoires", include_in_schema=False)
+    def read_repertoires(request: Request) -> Response:
+        return JSONResponse({"repertoires": repertoire_list(consenting(request))}, headers=PRIVATE)
+
+    @app.put("/api/me/repertoires/{rid}", include_in_schema=False)
+    async def write_repertoire(rid: str, request: Request) -> Response:
+        """Crea o reemplaza un repertorio privado (S105): nombre y temas publicados, en orden."""
+        uid = consenting(request)
+        length = request.headers.get("content-length", "")
+        if length.isdigit() and int(length) > MAX_BODY_BIG:
+            raise HTTPException(413)
+        try:
+            rid = clean_repertoire_id(rid)
+            value = clean_repertoire(parse_body(await request.body(), MAX_BODY_BIG))
+        except InvalidPreferences as error:
+            raise HTTPException(422) from error
+        current = accounts.store.get_repertoires(uid).get(rid, {"songs": []})["songs"]
+        if any(s not in current and not known_song(s) for s in value["songs"]):
+            raise HTTPException(
+                422
+            )  # un tema nuevo debe existir; los que ya estaban se pueden conservar
+        if not accounts.store.put_repertoire(uid, rid, value):
+            raise HTTPException(422)
+        return JSONResponse({"id": rid, **value}, headers=PRIVATE)
+
+    @app.delete("/api/me/repertoires/{rid}", include_in_schema=False)
+    def delete_repertoire(rid: str, request: Request) -> Response:
+        uid = consenting(request)
+        try:
+            rid = clean_repertoire_id(rid)
+        except InvalidPreferences as error:
+            raise HTTPException(422) from error
+        accounts.store.delete_repertoire(uid, rid)
+        return Response(status_code=204, headers=PRIVATE)
 
     @app.get("/api/me/export", include_in_schema=False)
     def export_data(request: Request) -> Response:

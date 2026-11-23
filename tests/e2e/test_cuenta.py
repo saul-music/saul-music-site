@@ -82,6 +82,21 @@ class Store:
     def put_continue(self, uid, value):
         pass
 
+    def get_favorites(self, uid):
+        return []
+
+    def put_favorite(self, uid, song, favorite):
+        return []
+
+    def get_repertoires(self, uid):
+        return {}
+
+    def put_repertoire(self, uid, rid, value):
+        return True
+
+    def delete_repertoire(self, uid, rid):
+        pass
+
     def get_progress(self, uid):
         return {}
 

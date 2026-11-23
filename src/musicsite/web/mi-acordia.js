@@ -18,6 +18,8 @@ const hint = (on) => { try { on ? localStorage.setItem(SESSION_HINT, "1") : loca
 const stars = (n) => h("span", { class: "ac-stars", role: "img", "aria-label": `${n} de 3 estrellas` }, "★".repeat(n) + "☆".repeat(3 - n));
 const prettySong = (slug) => slug.replace(/-/g, " ").replace(/^./, (c) => c.toUpperCase());
 
+let titles = {};
+const titleOf = (slug) => titles[slug] ?? prettySong(slug);
 let auth = null;
 let leaving = false; // al borrar o cerrar sesión, el aviso de «sin sesión» no debe pisar el mensaje propio
 async function api(path, options = {}) {
@@ -39,7 +41,7 @@ function renderContinue(cont, catalog) {
       h("a", { href: `/aprende/#/${cont.lesson.path}/${cont.lesson.lesson}` }, "Seguir →")));
   }
   if (cont.song) {
-    items.push(h("li", {}, h("span", {}, "Tu último tema: ", h("strong", {}, prettySong(cont.song))),
+    items.push(h("li", {}, h("span", {}, "Tu último tema: ", h("strong", {}, titleOf(cont.song))),
       h("a", { href: `cancion-${cont.song}.html` }, "Abrir →")));
   }
   $("continuar").replaceChildren(...(items.length ? items : [h("li", {}, h("span", {}, "Aún no hay nada para continuar. Empieza en "), h("a", { href: "/aprende/" }, "Aprende"), h("span", {}, " o abre un tema de la Biblioteca."))]));
@@ -68,14 +70,41 @@ function fillProfile(profile) {
   $("saludo").textContent = profile.name ? `Hola, ${profile.name}` : "Tu cuenta";
 }
 
+function renderFavorites(favorites) {
+  $("favoritos").replaceChildren(...(favorites.length ? favorites.map((slug) => {
+    const remove = h("button", { type: "button", class: "btn btn-sm btn-outline-secondary", "aria-label": `Quitar ${titleOf(slug)} de favoritos` }, "Quitar");
+    remove.addEventListener("click", async () => {
+      fail("");
+      try {
+        const saved = await (await api("favorites", { method: "PUT", body: JSON.stringify({ song: slug, favorite: false }) })).json();
+        renderFavorites(saved.favorites);
+      } catch { fail("No se pudo quitar. Intenta de nuevo."); }
+    });
+    return h("li", {}, h("a", { href: `cancion-${slug}.html` }, titleOf(slug)), remove);
+  }) : [h("li", {}, h("span", { class: "text-body-secondary" }, "Aún no tienes favoritos. Márcalos con «♡ Favorito» en cada tema."))]));
+}
+
+function renderRepertoires(reps) {
+  $("repertorios").replaceChildren(...(reps.length ? reps.map((r) =>
+    h("li", {}, h("a", { href: `repertorio.html?id=${r.id}` }, r.name),
+      h("span", { class: "text-body-secondary" }, `${r.songs.length} ${r.songs.length === 1 ? "tema" : "temas"}`)))
+    : [h("li", {}, h("span", { class: "text-body-secondary" }, "Aún no tienes repertorios."))]));
+}
+
 async function loadAll() {
-  const [profile, cont, progress, catalog] = await Promise.all([
+  const [profile, cont, progress, catalog, favorites, reps, songs] = await Promise.all([
     api("profile").then((r) => r.json()).then((b) => b.profile),
     api("continue").then((r) => r.json()).then((b) => b.continue),
     api("progress").then((r) => r.json()).then((b) => b.progress),
     // Aprende publica la lista de sus rutas y lecciones; si no está, se muestra solo lo que hay guardado.
     fetch("/aprende/lessons.json").then((r) => (r.ok ? r.json() : [])).catch(() => []),
+    api("favorites").then((r) => r.json()).then((b) => b.favorites),
+    api("repertoires").then((r) => r.json()).then((b) => b.repertoires),
+    fetch("/songs.json").then((r) => (r.ok ? r.json() : [])).catch(() => []),
   ]);
+  titles = Object.fromEntries(songs.map((s) => [s.slug, s.artist ? `${s.title} · ${s.artist}` : s.title]));
+  renderFavorites(favorites);
+  renderRepertoires(reps);
   fillProfile(profile);
   renderContinue(cont, catalog);
   renderProgress(progress, catalog);
@@ -93,6 +122,17 @@ function wire() {
       $("perfil-estado").textContent = "Guardado.";
     } catch (error) {
       $("perfil-estado").textContent = error.status === 422 ? "Revisa el nombre: hasta 40 letras, sin < ni >." : "No se pudo guardar. Intenta de nuevo.";
+    }
+  });
+  $("nuevo-repertorio").addEventListener("submit", async (event) => {
+    event.preventDefault();
+    fail("");
+    const id = Array.from(crypto.getRandomValues(new Uint8Array(6)), (b) => (b % 36).toString(36)).join("") + "x";
+    try {
+      await api(`repertoires/${id}`, { method: "PUT", body: JSON.stringify({ name: $("nr-nombre").value, songs: [] }) });
+      location.href = `repertorio.html?id=${id}`;
+    } catch (error) {
+      fail(error.status === 422 ? "Revisa el nombre (hasta 60 letras, sin < ni >) o el máximo de 20 repertorios." : "No se pudo crear. Intenta de nuevo.");
     }
   });
   $("descargar").addEventListener("click", async () => {

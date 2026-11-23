@@ -45,6 +45,13 @@ MAX_STARS = 3
 PROFILE_INSTRUMENTS = frozenset({"guitarra", "teclado", "bajo", "otro"})
 LEVELS = frozenset({"inicial", "medio", "avanzado"})  # los mismos `nivel` de los temas (C32)
 MAX_NAME = 40
+# Favoritos y repertorios (S105, C30): solo identificadores de temas y el nombre del repertorio.
+MAX_FAVORITES = 300
+MAX_REPERTOIRES = 20
+MAX_SONGS_PER_REPERTOIRE = 100
+MAX_REPERTOIRE_NAME = 60
+MAX_BODY_BIG = 8192  # un repertorio de 100 temas no cabe en 2 KB
+REPERTOIRE_ID = re.compile(r"[a-z0-9]{6,20}")
 NAME_CHARS = re.compile(
     r"[^\x00-\x1f\x7f<>]+"
 )  # sin controles ni `<` `>`: se muestra como texto, nunca como HTML
@@ -139,6 +146,67 @@ def clean_profile(raw: object) -> dict:
         if not isinstance(value, str) or value not in allowed:
             raise InvalidPreferences(f"{key} no permitido")
         out[key] = value
+    return out
+
+
+def clean_favorite(raw: object) -> tuple[str, bool]:
+    """Cuerpo de `PUT /api/me/favorites`: `song` (un tema) y `favorite` (verdadero o falso)."""
+    if not isinstance(raw, dict) or set(raw) != {"song", "favorite"}:
+        raise InvalidPreferences("cuerpo inválido")
+    song, favorite = raw["song"], raw["favorite"]
+    if not isinstance(song, str) or not SONG_SLUG.fullmatch(song) or not isinstance(favorite, bool):
+        raise InvalidPreferences("cuerpo inválido")
+    return song, favorite
+
+
+def clean_repertoire_id(value: object) -> str:
+    if not isinstance(value, str) or not REPERTOIRE_ID.fullmatch(value):
+        raise InvalidPreferences("identificador no permitido")
+    return value
+
+
+def clean_repertoire(raw: object) -> dict:
+    """Cuerpo de `PUT /api/me/repertoires/<id>`: `name` (hasta 60) y `songs` (sin repetidos)."""
+    if not isinstance(raw, dict) or set(raw) != {"name", "songs"}:
+        raise InvalidPreferences("cuerpo inválido")
+    name, songs = raw["name"], raw["songs"]
+    if not isinstance(name, str):
+        raise InvalidPreferences("el nombre debe ser texto")
+    name = " ".join(name.split())
+    if not name or len(name) > MAX_REPERTOIRE_NAME or not NAME_CHARS.fullmatch(name):
+        raise InvalidPreferences("nombre no permitido")
+    if not isinstance(songs, list) or len(songs) > MAX_SONGS_PER_REPERTOIRE:
+        raise InvalidPreferences("lista de temas no permitida")
+    if not all(isinstance(s, str) and SONG_SLUG.fullmatch(s) for s in songs) or len(
+        set(songs)
+    ) != len(songs):
+        raise InvalidPreferences("temas no permitidos o repetidos")
+    return {"name": name, "songs": list(songs)}
+
+
+def clean_favorites_stored(raw: object) -> list[str]:
+    """Lo guardado (un mapa tema -> verdadero), devuelto como lista ordenada de temas válidos."""
+    if not isinstance(raw, dict):
+        return []
+    return sorted(
+        s for s, on in raw.items() if on is True and isinstance(s, str) and SONG_SLUG.fullmatch(s)
+    )
+
+
+def clean_repertoires_stored(raw: object) -> dict:
+    """Lo guardado, solo con su forma (un repertorio dañado se ignora; los demás siguen)."""
+    out: dict = {}
+    if not isinstance(raw, dict):
+        return out
+    for rid, value in raw.items():
+        try:
+            out[clean_repertoire_id(rid)] = clean_repertoire(
+                {"name": value.get("name"), "songs": value.get("songs")}
+                if isinstance(value, dict)
+                else None
+            )
+        except InvalidPreferences:
+            continue
     return out
 
 
@@ -256,6 +324,24 @@ class UserStore(Protocol):
     def put_continue(self, uid: str, value: dict) -> None:
         """Guarda la última lección o el último tema (uno por llamada; lo otro se conserva)."""
         ...
+
+    def get_favorites(self, uid: str) -> list[str]:
+        """Los temas favoritos, ordenados."""
+        ...
+
+    def put_favorite(self, uid: str, song: str, favorite: bool) -> list[str] | None:
+        """Marca o desmarca un favorito y devuelve la lista; `None` si pasaría el tope."""
+        ...
+
+    def get_repertoires(self, uid: str) -> dict:
+        """Los repertorios: identificador -> {name, songs}."""
+        ...
+
+    def put_repertoire(self, uid: str, rid: str, value: dict) -> bool:
+        """Crea o reemplaza un repertorio; `False` si pasaría el tope de repertorios."""
+        ...
+
+    def delete_repertoire(self, uid: str, rid: str) -> None: ...
 
     def get_progress(self, uid: str) -> dict:
         """El avance de la persona en Aprende: ruta -> lección -> {points, stars, plays}."""
@@ -418,6 +504,38 @@ class FirestoreUserStore:
             merge=["profile", "updatedAt"],
         )
 
+    def get_favorites(self, uid: str) -> list[str]:
+        return clean_favorites_stored(self._data(uid).get("favorites"))
+
+    def put_favorite(self, uid: str, song: str, favorite: bool) -> list[str] | None:
+        from google.cloud.firestore import DELETE_FIELD
+
+        current = self.get_favorites(uid)
+        if favorite and song not in current and len(current) >= MAX_FAVORITES:
+            return None
+        self._client().collection("users").document(uid).set(
+            {"favorites": {song: True if favorite else DELETE_FIELD}}, merge=True
+        )
+        return sorted({*current, song} if favorite else set(current) - {song})
+
+    def get_repertoires(self, uid: str) -> dict:
+        return clean_repertoires_stored(self._data(uid).get("repertoires"))
+
+    def put_repertoire(self, uid: str, rid: str, value: dict) -> bool:
+        if rid not in (mine := self.get_repertoires(uid)) and len(mine) >= MAX_REPERTOIRES:
+            return False
+        self._client().collection("users").document(uid).set(
+            {"repertoires": {rid: value}}, merge=True
+        )
+        return True
+
+    def delete_repertoire(self, uid: str, rid: str) -> None:
+        from google.cloud.firestore import DELETE_FIELD
+
+        self._client().collection("users").document(uid).set(
+            {"repertoires": {rid: DELETE_FIELD}}, merge=True
+        )
+
     def get_continue(self, uid: str) -> dict:
         return clean_continue_stored(self._data(uid).get("continue"))
 
@@ -452,6 +570,8 @@ class FirestoreUserStore:
             "progress": clean_progress(data.get("progress")),
             "profile": self.get_profile(uid),
             "continue": clean_continue_stored(data.get("continue")),
+            "favorites": clean_favorites_stored(data.get("favorites")),
+            "repertoires": clean_repertoires_stored(data.get("repertoires")),
         }
         if isinstance(consent, dict):
             at = consent.get("at")
@@ -517,8 +637,8 @@ def clean_consent(raw: object) -> str:
     return NOTICE_VERSION
 
 
-def parse_body(raw: bytes) -> object:
-    if len(raw) > MAX_BODY_BYTES:
+def parse_body(raw: bytes, limit: int = MAX_BODY_BYTES) -> object:
+    if len(raw) > limit:
         raise InvalidPreferences("demasiado grande")
     try:
         return json.loads(raw)
