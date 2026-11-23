@@ -26,7 +26,7 @@ from typing import Protocol
 PUBLIC_PROVIDERS = frozenset({"google.com", "facebook.com"})
 # Versión vigente del aviso de privacidad (`web/privacidad.html` y docs/privacidad del control).
 # Si cambia de forma importante, se sube y cada persona vuelve a aceptar.
-NOTICE_VERSION = "2026-11-23-v2"
+NOTICE_VERSION = "2026-11-23-v3"
 VERSION = re.compile(r"[0-9]{4}-[0-9]{2}-[0-9]{2}-v[0-9]{1,3}")
 MAX_BODY_BYTES = 2048
 RATE_LIMIT = 30  # peticiones por persona...
@@ -35,6 +35,12 @@ MAX_TRACKED_PEOPLE = 5000  # tope de la memoria del límite; se descartan las m�
 SLUG = re.compile(r"[a-z][a-z-]{0,23}")
 UID = re.compile(r"[A-Za-z0-9]{1,128}")
 INSTRUMENTS = frozenset({"guitarra", "teclado"})
+# Avance de Aprende (S103, C44): ruta -> lección -> mejor resultado.
+# Topes para que un documento no crezca sin fin.
+MAX_PATHS = 20
+MAX_LESSONS = 200
+MAX_POINTS = 100  # por lección (C44): 10 por acierto en 10 preguntas
+MAX_STARS = 3
 
 
 class InvalidPreferences(ValueError):
@@ -80,6 +86,62 @@ FIELDS: dict[str, Callable[[object], object]] = {
 }
 
 
+def _int_in(value: object, high: int) -> int:
+    if isinstance(value, bool) or not isinstance(value, int) or not 0 <= value <= high:
+        raise InvalidPreferences("número fuera de rango")
+    return value
+
+
+def clean_result(raw: object) -> tuple[str, str, int, int]:
+    """Cuerpo de `PUT /api/me/progress`: `path`, `lesson`, `points` (0 a 100) y `stars` (0 a 3)."""
+    if not isinstance(raw, dict) or set(raw) != {"path", "lesson", "points", "stars"}:
+        raise InvalidPreferences("cuerpo inválido")
+    return (
+        _slug(raw["path"]),
+        _slug(raw["lesson"]),
+        _int_in(raw["points"], MAX_POINTS),
+        _int_in(raw["stars"], MAX_STARS),
+    )
+
+
+def clean_progress(raw: object) -> dict:
+    """Lo que hay en Firestore, devuelto solo con la forma esperada (lo demás se ignora)."""
+    out: dict = {}
+    if not isinstance(raw, dict):
+        return out
+    for path, lessons in raw.items():
+        if not (isinstance(path, str) and SLUG.fullmatch(path) and isinstance(lessons, dict)):
+            continue
+        for lesson, entry in lessons.items():
+            if not (isinstance(lesson, str) and SLUG.fullmatch(lesson) and isinstance(entry, dict)):
+                continue
+            try:
+                out.setdefault(path, {})[lesson] = {
+                    "points": _int_in(entry.get("points"), MAX_POINTS),
+                    "stars": _int_in(entry.get("stars"), MAX_STARS),
+                    "plays": _int_in(entry.get("plays"), 1_000_000),
+                }
+            except InvalidPreferences:
+                continue
+    return out
+
+
+def merge_result(progress: dict, path: str, lesson: str, points: int, stars: int) -> dict | None:
+    """El mejor resultado de la lección tras esta jugada, o `None` si pasaría los topes."""
+    before = progress.get(path, {}).get(lesson)
+    if before is None:
+        if len(progress) + (path not in progress) > MAX_PATHS:
+            return None
+        if sum(len(v) for v in progress.values()) >= MAX_LESSONS:
+            return None
+        return {"points": points, "stars": stars, "plays": 1}
+    return {
+        "points": max(before["points"], points),
+        "stars": max(before["stars"], stars),
+        "plays": before["plays"] + 1,
+    }
+
+
 def clean_preferences(raw: object) -> dict:
     """Solo campos conocidos y válidos; lo demás es un error, no se descarta en silencio."""
     if not isinstance(raw, dict):
@@ -111,8 +173,16 @@ class UserStore(Protocol):
 
     def put_consent(self, uid: str, version: str) -> None: ...
 
+    def get_progress(self, uid: str) -> dict:
+        """El avance de la persona en Aprende: ruta -> lección -> {points, stars, plays}."""
+        ...
+
+    def put_result(self, uid: str, path: str, lesson: str, points: int, stars: int) -> dict | None:
+        """Guarda el mejor resultado de una lección y lo devuelve; `None` si pasaría los topes."""
+        ...
+
     def export(self, uid: str) -> dict:
-        """Todo lo que se guarda de la persona (`consent` y `preferences`), sin tocar nada."""
+        """Todo lo que se guarda de la persona (consentimiento, preferencias, avance)."""
         ...
 
     def delete(self, uid: str) -> None:
@@ -245,12 +315,35 @@ class FirestoreUserStore:
             merge=True,
         )
 
+    def get_progress(self, uid: str) -> dict:
+        snapshot = self._client().collection("users").document(uid).get()
+        data = (snapshot.to_dict() if snapshot.exists else None) or {}
+        return clean_progress(data.get("progress"))
+
+    def put_result(self, uid: str, path: str, lesson: str, points: int, stars: int) -> dict | None:
+        from firebase_admin import firestore
+
+        merged = merge_result(self.get_progress(uid), path, lesson, points, stars)
+        if merged is not None:
+            self._client().collection("users").document(uid).set(
+                {
+                    "progress": {path: {lesson: merged}},
+                    "updatedAt": firestore.firestore.SERVER_TIMESTAMP,
+                },
+                merge=True,
+            )
+        return merged
+
     def export(self, uid: str) -> dict:
         snapshot = self._client().collection("users").document(uid).get()
         data = (snapshot.to_dict() if snapshot.exists else None) or {}
         consent = data.get("consent")
         preferences = data.get("preferences")
-        out: dict = {"consent": None, "preferences": {}}
+        out: dict = {
+            "consent": None,
+            "preferences": {},
+            "progress": clean_progress(data.get("progress")),
+        }
         if isinstance(consent, dict):
             at = consent.get("at")
             out["consent"] = {

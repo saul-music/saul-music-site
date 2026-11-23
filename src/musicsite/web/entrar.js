@@ -51,7 +51,15 @@ async function afterSignIn() {
   await showReady();
 }
 
+// Aprende manda a entrar con `?volver=/aprende/…` y aquí se regresa al terminar (S103). Solo a rutas de Aprende
+// del mismo sitio: nunca una dirección completa ni `//`, para que no sirva de redirección abierta.
+const returnTo = () => {
+  const target = new URLSearchParams(location.search).get("volver") ?? "";
+  return /^\/aprende\/[A-Za-z0-9\-_./#?=&]*$/.test(target) && !target.includes("..") ? target : "";
+};
+
 async function showReady() {
+  if (returnTo()) return location.replace(returnTo());
   const response = await api("preferences");
   if (!response.ok) return fail(`No se pudieron leer tus preferencias (${response.status}).`);
   $("prefs").textContent = JSON.stringify((await response.json()).preferences, null, 2);

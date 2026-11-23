@@ -70,11 +70,18 @@ class Store:
     def put_consent(self, uid, version):
         self.consents[uid] = version
 
+    def get_progress(self, uid):
+        return {}
+
+    def put_result(self, uid, path, lesson, points, stars):
+        return {"points": points, "stars": stars, "plays": 1}
+
     def export(self, uid):
         consent = self.consents.get(uid)
         return {
             "consent": {"version": consent, "adult": True, "at": None} if consent else None,
             "preferences": dict(self.docs.get(uid, {})),
+            "progress": {},
         }
 
     def delete(self, uid):
