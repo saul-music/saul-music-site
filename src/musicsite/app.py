@@ -26,9 +26,11 @@ from musicsite.accounts import (
     MAX_BODY_BYTES as MAX_BODY,
 )
 from musicsite.accounts import (
+    NOTICE_VERSION,
     Accounts,
     InvalidPreferences,
     accounts_from_env,
+    clean_consent,
     clean_preferences,
     parse_body,
 )
@@ -163,14 +165,48 @@ def _register_me(app: FastAPI, accounts: Accounts) -> None:
             raise HTTPException(429)
         return uid
 
+    def consenting(request: Request) -> str:
+        """Nada de una persona se lee ni se guarda sin aceptar el aviso vigente (C39)."""
+        uid = caller(request)
+        if accounts.store.get_consent(uid) != NOTICE_VERSION:
+            raise HTTPException(403)
+        return uid
+
+    def consent_state(uid: str) -> JSONResponse:
+        accepted = accounts.store.get_consent(uid)
+        return JSONResponse(
+            {
+                "current": NOTICE_VERSION,
+                "accepted": accepted if accepted == NOTICE_VERSION else None,
+            },
+            headers=PRIVATE,
+        )
+
+    @app.get("/api/me/consent", include_in_schema=False)
+    def read_consent(request: Request) -> Response:
+        return consent_state(caller(request))
+
+    @app.put("/api/me/consent", include_in_schema=False)
+    async def write_consent(request: Request) -> Response:
+        uid = caller(request)
+        length = request.headers.get("content-length", "")
+        if length.isdigit() and int(length) > MAX_BODY:
+            raise HTTPException(413)
+        try:
+            version = clean_consent(parse_body(await request.body()))
+        except InvalidPreferences as error:
+            raise HTTPException(422) from error
+        accounts.store.put_consent(uid, version)
+        return consent_state(uid)
+
     @app.get("/api/me/preferences", include_in_schema=False)
     def read_preferences(request: Request) -> Response:
-        uid = caller(request)
+        uid = consenting(request)
         return JSONResponse({"preferences": accounts.store.get(uid)}, headers=PRIVATE)
 
     @app.put("/api/me/preferences", include_in_schema=False)
     async def write_preferences(request: Request) -> Response:
-        uid = caller(request)
+        uid = consenting(request)
         length = request.headers.get("content-length", "")
         if length.isdigit() and int(length) > MAX_BODY:
             raise HTTPException(413)

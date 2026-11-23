@@ -24,6 +24,10 @@ from typing import Protocol
 
 # Proveedores del grupo público (C17). Microsoft se suma cuando exista su cliente.
 PUBLIC_PROVIDERS = frozenset({"google.com", "facebook.com"})
+# Versión vigente del aviso de privacidad (`web/privacidad.html` y docs/privacidad del control).
+# Si cambia de forma importante, se sube y cada persona vuelve a aceptar.
+NOTICE_VERSION = "2026-11-23-v1"
+VERSION = re.compile(r"[0-9]{4}-[0-9]{2}-[0-9]{2}-v[0-9]{1,3}")
 MAX_BODY_BYTES = 2048
 RATE_LIMIT = 30  # peticiones por persona...
 RATE_WINDOW_SECONDS = 60  # ...cada minuto
@@ -92,10 +96,16 @@ class TokenVerifier(Protocol):
         ...
 
 
-class PreferencesStore(Protocol):
+class UserStore(Protocol):
     def get(self, uid: str) -> dict: ...
 
     def put(self, uid: str, preferences: dict) -> None: ...
+
+    def get_consent(self, uid: str) -> str | None:
+        """La versión del aviso que la persona aceptó, o `None`."""
+        ...
+
+    def put_consent(self, uid: str, version: str) -> None: ...
 
 
 def uid_from_claims(claims: dict) -> str | None:
@@ -143,7 +153,7 @@ class FirebaseTokenVerifier:
         return uid_from_claims(claims)
 
 
-class FirestorePreferencesStore:
+class FirestoreUserStore:
     """`users/{uid}` con un mapa `preferences`. Leer no crea nada: el documento nace al escribir."""
 
     def __init__(self, app: FirebaseApp) -> None:
@@ -168,6 +178,28 @@ class FirestorePreferencesStore:
 
         self._client().collection("users").document(uid).set(
             {"preferences": preferences, "updatedAt": firestore.firestore.SERVER_TIMESTAMP},
+            merge=True,
+        )
+
+    def get_consent(self, uid: str) -> str | None:
+        snapshot = self._client().collection("users").document(uid).get()
+        consent = ((snapshot.to_dict() if snapshot.exists else None) or {}).get("consent")
+        version = consent.get("version") if isinstance(consent, dict) else None
+        return version if isinstance(version, str) and VERSION.fullmatch(version) else None
+
+    def put_consent(self, uid: str, version: str) -> None:
+        from firebase_admin import firestore
+
+        # La hora la pone Firestore, no el navegador. `adult` es la casilla de 14 años o más (C27):
+        # no se guarda la fecha de nacimiento.
+        self._client().collection("users").document(uid).set(
+            {
+                "consent": {
+                    "version": version,
+                    "adult": True,
+                    "at": firestore.firestore.SERVER_TIMESTAMP,
+                }
+            },
             merge=True,
         )
 
@@ -206,8 +238,19 @@ class RateLimiter:
 @dataclass
 class Accounts:
     verifier: TokenVerifier
-    store: PreferencesStore
+    store: UserStore
     limiter: RateLimiter
+
+
+def clean_consent(raw: object) -> str:
+    """Cuerpo de `PUT /api/me/consent`: solo `version` (la vigente) y `adult` en verdadero."""
+    if not isinstance(raw, dict) or set(raw) != {"version", "adult"}:
+        raise InvalidPreferences("cuerpo inválido")
+    if raw["adult"] is not True:
+        raise InvalidPreferences("hay que tener 14 años o más")
+    if raw["version"] != NOTICE_VERSION:
+        raise InvalidPreferences("versión del aviso no vigente")
+    return NOTICE_VERSION
 
 
 def parse_body(raw: bytes) -> object:
@@ -225,4 +268,4 @@ def accounts_from_env(environ: dict[str, str]) -> Accounts | None:
     if not project:
         return None
     app = FirebaseApp(project)
-    return Accounts(FirebaseTokenVerifier(app), FirestorePreferencesStore(app), RateLimiter())
+    return Accounts(FirebaseTokenVerifier(app), FirestoreUserStore(app), RateLimiter())
