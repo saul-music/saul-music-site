@@ -78,63 +78,61 @@ function renderHeader() {
 
 function renderContinue() {
   const { cont, catalog } = data;
-  const cards = [];
-  if (cont.lesson) {
-    const lesson = catalog.find((p) => p.id === cont.lesson.path)?.lessons.find((l) => l.id === cont.lesson.lesson);
-    cards.push(h("a", { href: `/aprende/#/${cont.lesson.path}/${cont.lesson.lesson}` }, h("small", {}, "Tu última lección"), h("strong", {}, lesson?.title ?? cont.lesson.lesson), h("span", {}, "Seguir →")));
+  const lesson = cont.lesson && catalog.find((p) => p.id === cont.lesson.path)?.lessons.find((l) => l.id === cont.lesson.lesson);
+  // Una sola acción principal: la lección si la hay; si no, el último tema; si no hay nada, empezar.
+  const main = cont.lesson
+    ? { kicker: "Tu última lección", title: `Sigue con «${lesson?.title ?? cont.lesson.lesson}»`, href: `/aprende/#/${cont.lesson.path}/${cont.lesson.lesson}`, label: "Seguir" }
+    : cont.song
+      ? { kicker: "Tu último tema", title: titleOf(cont.song), href: `cancion-${cont.song}.html`, label: "Abrir" }
+      : { kicker: "Para empezar", title: "Tu primera lección en Aprende", href: "/aprende/", label: "Empezar" };
+  const nodes = [h("div", { class: "ac-hoy" },
+    h("div", {}, h("small", {}, main.kicker), h("strong", {}, main.title)),
+    h("a", { class: "btn btn-primary", href: main.href }, main.label))];
+  if (cont.lesson && cont.song) {
+    nodes.push(h("p", { class: "ac-tambien" }, "También: tu último tema ", h("a", { href: `cancion-${cont.song}.html` }, titleOf(cont.song)), " →"));
   }
-  if (cont.song) {
-    cards.push(h("a", { href: `cancion-${cont.song}.html` }, h("small", {}, "Tu último tema"), h("strong", {}, titleOf(cont.song)), h("span", {}, "Abrir →")));
-  }
-  if (!cards.length) {
-    cards.push(h("a", { href: "/aprende/" }, h("small", {}, "Para empezar"), h("strong", {}, "Tu primera lección en Aprende"), h("span", {}, "Empezar →")));
-  }
-  $("continuar").replaceChildren(...cards);
+  $("continuar").replaceChildren(...nodes);
 }
-
 function renderStats() {
   const t = totals();
-  const stat = (value, label) => h("li", { class: "ac-stat" }, h("b", {}, String(value)), h("span", {}, label));
-  $("cifras").replaceChildren(
-    stat(`${t.played}/${t.total}`, "lecciones jugadas"),
-    stat(`${t.stars}/${t.maxStars}`, "estrellas"),
-    stat(t.points, "puntos"),
-    stat(data.favorites.length, plural(data.favorites.length, "favorito", "favoritos")),
-    stat(data.repertoires.length, plural(data.repertoires.length, "repertorio", "repertorios")));
+  $("cifras").textContent = `${t.played}/${t.total} lecciones · ${t.stars}/${t.maxStars} estrellas · ${t.points} puntos`;
+  // Los conteos de «Tus temas» van en el resumen de cada bloque plegable.
+  $("s-favoritos").textContent = `Favoritos (${data.favorites.length})`;
+  $("s-repertorios").textContent = `Repertorios (${data.repertoires.length})`;
 }
-
 function renderBadges() {
   const t = totals();
+  const done = BADGES.filter((b) => b.earned(t, data)).length;
+  $("insignias-cuenta").textContent = `${done} de ${BADGES.length}`;
   $("insignias").replaceChildren(...BADGES.map((b) => {
     const on = b.earned(t, data);
-    return h("li", { class: `ac-badge ${on ? "is-on" : "is-off"}`, "aria-label": `Insignia ${b.name}: ${on ? "lograda" : "por lograr"}` },
-      h("i", { "aria-hidden": "true" }, b.icon), h("strong", {}, b.name), h("small", {}, on ? "¡Lograda!" : b.how));
+    const tip = on ? `${b.name} · ¡lograda!` : `${b.name} · ${b.how}`;
+    // tabindex 0: el recuadro con la descripción aparece también al enfocar con teclado o al tocar en el celular.
+    return h("li", { class: `ac-badge ${on ? "is-on" : "is-off"}`, tabindex: "0", "data-tip": tip, "aria-label": `Insignia ${b.name}: ${on ? "lograda" : "por lograr"}` },
+      h("span", { "aria-hidden": "true" }, b.icon), h("span", { class: "ac-sr" }, tip));
   }));
 }
-
 function renderProgress() {
   $("avance").replaceChildren(...paths().map((p) => {
     const mine = data.progress[p.id] ?? {};
     const played = p.lessons.filter((l) => mine[l.id]);
-    const starsGot = played.reduce((n, l) => n + mine[l.id].stars, 0);
-    const points = played.reduce((n, l) => n + mine[l.id].points, 0);
     const pct = p.lessons.length ? Math.round((played.length / p.lessons.length) * 100) : 0;
     const bar = (value, label) => h("div", { class: "progress", role: "progressbar", "aria-label": label, "aria-valuenow": String(value), "aria-valuemin": "0", "aria-valuemax": "100" },
       h("div", { class: "progress-bar", style: `width:${value}%` }));
     return h("section", { class: "ac-card ac-path-card", "aria-label": `Ruta ${p.title}` },
-      h("div", { class: "d-flex flex-wrap justify-content-between align-items-baseline gap-2" },
-        h("strong", { class: "fs-5" }, p.title), h("span", {}, `${played.length}/${p.lessons.length} lecciones · ${starsGot}/${p.lessons.length * 3} estrellas · ${points} puntos`)),
+      h("div", { class: "ac-path-head" }, h("strong", { class: "fs-5" }, p.title), h("span", { class: "text-body-secondary" }, `${pct}%`)),
       bar(pct, `Avance de ${p.title}`),
-      h("div", { class: "ac-lesson-grid" }, p.lessons.map((l, i) => {
+      h("div", { class: "ac-lesson-list" }, p.lessons.map((l, i) => {
         const r = mine[l.id];
-        return h("a", { class: `ac-lesson-card${r ? " is-played" : ""}`, href: `/aprende/#/${p.id}/${l.id}` },
-          h("div", { class: "ac-lesson-head" }, h("strong", {}, `${i + 1}. ${l.title}`), r ? stars(r.stars) : ""),
+        return h("a", { class: "ac-lesson-card", href: `/aprende/#/${p.id}/${l.id}` },
+          h("span", { class: "ac-n" }, String(i + 1)),
+          h("strong", {}, l.title),
+          r ? stars(r.stars) : h("span", { class: "text-body-secondary small" }, "Sin jugar"),
           bar(r ? r.points : 0, `Puntos de ${l.title}`),
-          h("span", { class: "small text-body-secondary" }, r ? `${r.points} pts · ${plural(r.plays, "vez", "veces")} jugada` : "Sin jugar · Empezar →"));
+          r ? h("span", { class: "ac-pts" }, `${r.points} pts · ${plural(r.plays, "vez", "veces")} jugada`) : h("span", { class: "btn btn-primary btn-sm" }, "Empezar"));
       })));
   }));
 }
-
 function renderFavorites() {
   $("favoritos").replaceChildren(...(data.favorites.length ? data.favorites.map((slug) => {
     const remove = h("button", { type: "button", class: "btn btn-sm btn-outline-secondary", "aria-label": `Quitar ${titleOf(slug)} de favoritos` }, "Quitar");
