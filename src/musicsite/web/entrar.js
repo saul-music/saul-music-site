@@ -154,7 +154,7 @@ if (!apiKey) {
 
   if (allowed) getRedirectResult(auth).catch((error) => {
     fail(error.code === "auth/account-exists-with-different-credential"
-      ? "Ya existe una cuenta con ese correo usando otro método de acceso."
+      ? "Ese correo ya tiene una cuenta con otro método de acceso. Entra con Google o con Facebook, el que usaste antes: es la misma cuenta y conserva tus datos."
       : "No se pudo completar el acceso. Intenta de nuevo.");
   });
   onAuthStateChanged(auth, (user) => {
