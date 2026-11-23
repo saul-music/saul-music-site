@@ -5,9 +5,9 @@ import re
 import pytest
 from acordia_render.songpages import render_published
 
-from musicsite import learn
 from musicsite.app import HEADERS, LIB_WEB_DIR, SONGS_DIR, WEB_DIR
 from musicsite.artists import build_page
+from musicsite.songpage import decorate
 
 # Todo lo que se sirve: los archivos de web/, los de la librería (estilos y scripts, R1) y las
 # páginas de canción que salen de su plantilla.
@@ -21,12 +21,10 @@ FILES = {
 FILES["artistas.html"] = build_page(
     (WEB_DIR / "artistas.html").read_text(encoding="utf-8"), None, SONGS_DIR
 ).lower()
-# «Aprender» (S65): las páginas y estilos que arma `learn`, revisados como todo lo público.
-FILES |= {
-    path.lstrip("/"): body.decode().lower() for path, (body, _kind) in learn.build_pages().items()
-}
+# Las páginas de canción se revisan como se sirven: con los ajustes del sitio encima (S104).
 SONG_PAGES = {
-    f"cancion-{slug}.html": page.lower() for slug, page in render_published(SONGS_DIR).items()
+    f"cancion-{slug}.html": decorate(page.encode()).decode().lower()
+    for slug, page in render_published(SONGS_DIR).items()
 }
 SERVED = set(FILES) | set(SONG_PAGES)
 PAGES = {n: c for n, c in (FILES | SONG_PAGES).items() if n.endswith(".html")}

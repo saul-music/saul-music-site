@@ -51,11 +51,12 @@ async function afterSignIn() {
   await showReady();
 }
 
-// Aprende manda a entrar con `?volver=/aprende/…` y aquí se regresa al terminar (S103). Solo a rutas de Aprende
-// del mismo sitio: nunca una dirección completa ni `//`, para que no sirva de redirección abierta.
+// Aprende manda a entrar con `?volver=/aprende/…` y Mi cuenta con `?volver=/mi-acordia.html`; aquí se regresa al terminar
+// (S103, S104). Solo a esas rutas del mismo sitio: nunca una dirección completa ni `//`, para que no sirva de redirección abierta.
 const returnTo = () => {
   const target = new URLSearchParams(location.search).get("volver") ?? "";
-  return /^\/aprende\/[A-Za-z0-9\-_./#?=&]*$/.test(target) && !target.includes("..") ? target : "";
+  const allowed = /^\/(aprende\/[A-Za-z0-9\-_./#?=&]*|mi-acordia\.html|repertorio\.html(\?[A-Za-z0-9\-_=&]*)?)$/;
+  return allowed.test(target) && !target.includes("..") ? target : "";
 };
 
 async function showReady() {
@@ -157,6 +158,8 @@ if (!apiKey) {
       : "No se pudo completar el acceso. Intenta de nuevo.");
   });
   onAuthStateChanged(auth, (user) => {
+    // «Hay una sesión»: las páginas de tema solo cargan Firebase si existe esta marca (S105); no guarda nada personal.
+    try { user ? localStorage.setItem("acordia-session", "1") : localStorage.removeItem("acordia-session"); } catch { /* sin almacenamiento */ }
     if (user) afterSignIn().catch(() => fail("No se pudo consultar tu cuenta."));
     else show("paso-entrar", "");
   });

@@ -21,8 +21,8 @@ def client() -> TestClient:
         ("/index.html", "text/html"),
         ("/cancion.html", "text/html"),
         ("/guias.html", "text/html"),
-        ("/aprender.html", "text/html"),
-        ("/aprender.css", "text/css"),
+        ("/mi-acordia.html", "text/html"),
+        ("/mi-acordia.js", "text/javascript"),
         ("/style.css", "text/css"),
         ("/acordia.js", "text/javascript"),
     ],
@@ -93,6 +93,8 @@ def test_web_dir_has_only_fixed_site_files():
         "privacidad.html",
         "entrar.html",
         "entrar.js",
+        "mi-acordia.html",
+        "mi-acordia.js",
     }
     assert {p.name for p in WEB_DIR.iterdir()} == fixed
 
@@ -196,7 +198,7 @@ def test_home_explains_how_it_works_in_five_steps(client):
     assert sec.count('class="ac-como-step"') == 5
     for n in range(1, 6):
         assert f"Paso {n}" in sec
-    assert 'href="guias.html"' in sec and 'href="aprender.html"' in sec
+    assert 'href="guias.html"' in sec and 'href="/aprende/"' in sec
     assert "ac-como-soon" in sec and "Prototipo en investigación" not in html
 
 

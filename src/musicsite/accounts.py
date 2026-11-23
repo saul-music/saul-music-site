@@ -26,7 +26,7 @@ from typing import Protocol
 PUBLIC_PROVIDERS = frozenset({"google.com", "facebook.com"})
 # Versión vigente del aviso de privacidad (`web/privacidad.html` y docs/privacidad del control).
 # Si cambia de forma importante, se sube y cada persona vuelve a aceptar.
-NOTICE_VERSION = "2026-11-23-v3"
+NOTICE_VERSION = "2026-11-24-v4"
 VERSION = re.compile(r"[0-9]{4}-[0-9]{2}-[0-9]{2}-v[0-9]{1,3}")
 MAX_BODY_BYTES = 2048
 RATE_LIMIT = 30  # peticiones por persona...
@@ -41,6 +41,14 @@ MAX_PATHS = 20
 MAX_LESSONS = 200
 MAX_POINTS = 100  # por lección (C44): 10 por acierto en 10 preguntas
 MAX_STARS = 3
+# Perfil (S104, C30): todo opcional, de listas cerradas salvo el nombre.
+PROFILE_INSTRUMENTS = frozenset({"guitarra", "teclado", "bajo", "otro"})
+LEVELS = frozenset({"inicial", "medio", "avanzado"})  # los mismos `nivel` de los temas (C32)
+MAX_NAME = 40
+NAME_CHARS = re.compile(
+    r"[^\x00-\x1f\x7f<>]+"
+)  # sin controles ni `<` `>`: se muestra como texto, nunca como HTML
+SONG_SLUG = re.compile(r"[a-z0-9][a-z0-9-]{0,59}")
 
 
 class InvalidPreferences(ValueError):
@@ -102,6 +110,66 @@ def clean_result(raw: object) -> tuple[str, str, int, int]:
         _int_in(raw["points"], MAX_POINTS),
         _int_in(raw["stars"], MAX_STARS),
     )
+
+
+def clean_profile(raw: object) -> dict:
+    """Cuerpo de `PUT /api/me/profile`: `name`, `instrument`, `level`. Reemplaza el perfil.
+
+    Un campo vacío o `null` se borra. Lo desconocido es un error, no se descarta en silencio.
+    """
+    if not isinstance(raw, dict):
+        raise InvalidPreferences("se esperaba un objeto")
+    unknown = sorted(str(k) for k in raw if k not in {"name", "instrument", "level"})
+    if unknown:
+        raise InvalidPreferences(f"campos desconocidos: {', '.join(unknown)[:80]}")
+    out: dict = {}
+    name = raw.get("name")
+    if name is not None:
+        if not isinstance(name, str):
+            raise InvalidPreferences("el nombre debe ser texto")
+        name = " ".join(name.split())  # recorta y junta espacios
+        if name:
+            if len(name) > MAX_NAME or not NAME_CHARS.fullmatch(name):
+                raise InvalidPreferences("nombre no permitido")
+            out["name"] = name
+    for key, allowed in (("instrument", PROFILE_INSTRUMENTS), ("level", LEVELS)):
+        value = raw.get(key)
+        if value in (None, ""):
+            continue
+        if not isinstance(value, str) or value not in allowed:
+            raise InvalidPreferences(f"{key} no permitido")
+        out[key] = value
+    return out
+
+
+def clean_continue(raw: object) -> dict:
+    """Cuerpo de `PUT /api/me/continue`: uno solo de `lesson` (`path`, `lesson`) o `song`."""
+    if not isinstance(raw, dict) or len(raw) != 1:
+        raise InvalidPreferences("se esperaba exactamente un campo")
+    if "song" in raw:
+        song = raw["song"]
+        if not isinstance(song, str) or not SONG_SLUG.fullmatch(song):
+            raise InvalidPreferences("tema no permitido")
+        return {"song": song}
+    lesson = raw.get("lesson")
+    if not isinstance(lesson, dict) or set(lesson) != {"path", "lesson"}:
+        raise InvalidPreferences("lección inválida")
+    return {"lesson": {"path": _slug(lesson["path"]), "lesson": _slug(lesson["lesson"])}}
+
+
+def clean_continue_stored(raw: object) -> dict:
+    """Lo guardado, devuelto solo con su forma (lo demás se ignora)."""
+    out: dict = {}
+    if not isinstance(raw, dict):
+        return out
+    try:
+        if "song" in raw:
+            out.update(clean_continue({"song": raw["song"]}))
+        if "lesson" in raw:
+            out.update(clean_continue({"lesson": raw["lesson"]}))
+    except InvalidPreferences:
+        pass
+    return out
 
 
 def clean_progress(raw: object) -> dict:
@@ -172,6 +240,22 @@ class UserStore(Protocol):
         ...
 
     def put_consent(self, uid: str, version: str) -> None: ...
+
+    def get_profile(self, uid: str) -> dict:
+        """El perfil de la persona (`name`, `instrument`, `level`; todos opcionales)."""
+        ...
+
+    def put_profile(self, uid: str, profile: dict) -> None:
+        """Reemplaza el perfil entero."""
+        ...
+
+    def get_continue(self, uid: str) -> dict:
+        """Lo último que vio: `{lesson: {path, lesson}, song: slug}` (cualquiera puede faltar)."""
+        ...
+
+    def put_continue(self, uid: str, value: dict) -> None:
+        """Guarda la última lección o el último tema (uno por llamada; lo otro se conserva)."""
+        ...
 
     def get_progress(self, uid: str) -> dict:
         """El avance de la persona en Aprende: ruta -> lección -> {points, stars, plays}."""
@@ -315,10 +399,33 @@ class FirestoreUserStore:
             merge=True,
         )
 
-    def get_progress(self, uid: str) -> dict:
+    def _data(self, uid: str) -> dict:
         snapshot = self._client().collection("users").document(uid).get()
-        data = (snapshot.to_dict() if snapshot.exists else None) or {}
-        return clean_progress(data.get("progress"))
+        return (snapshot.to_dict() if snapshot.exists else None) or {}
+
+    def get_profile(self, uid: str) -> dict:
+        try:
+            return clean_profile(self._data(uid).get("profile") or {})
+        except InvalidPreferences:
+            return {}
+
+    def put_profile(self, uid: str, profile: dict) -> None:
+        from firebase_admin import firestore
+
+        # `merge=["profile"]` reemplaza ese campo entero: un nombre borrado no queda de antes.
+        self._client().collection("users").document(uid).set(
+            {"profile": profile, "updatedAt": firestore.firestore.SERVER_TIMESTAMP},
+            merge=["profile", "updatedAt"],
+        )
+
+    def get_continue(self, uid: str) -> dict:
+        return clean_continue_stored(self._data(uid).get("continue"))
+
+    def put_continue(self, uid: str, value: dict) -> None:
+        self._client().collection("users").document(uid).set({"continue": value}, merge=True)
+
+    def get_progress(self, uid: str) -> dict:
+        return clean_progress(self._data(uid).get("progress"))
 
     def put_result(self, uid: str, path: str, lesson: str, points: int, stars: int) -> dict | None:
         from firebase_admin import firestore
@@ -343,6 +450,8 @@ class FirestoreUserStore:
             "consent": None,
             "preferences": {},
             "progress": clean_progress(data.get("progress")),
+            "profile": self.get_profile(uid),
+            "continue": clean_continue_stored(data.get("continue")),
         }
         if isinstance(consent, dict):
             at = consent.get("at")

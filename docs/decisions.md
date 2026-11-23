@@ -1096,3 +1096,19 @@ Las páginas de canción ya no muestran «Prototipo en investigación» (RD50; l
 - **Pruebas:** unitarias (API, validación, mejor resultado, aislamiento, topes, forma de lo guardado, fusión en Firestore con un doble) y el filtro de `volver` con casos hostiles.
 - **Sin comprobar:** con la app de Aprende real (la construye el repo de los juegos) y con cuentas reales en producción.
 
+## S104 · «Mi cuenta», perfil, «continuar» y retiro de «Aprender» (2026-11-24)
+
+**Tanda 1 de «Mi Acordia» (control C45, C30, C28).**
+
+- **`/mi-acordia.html`** («Mi cuenta», `noindex`): sin sesión pide entrar y vuelve aquí; sin el aviso vigente manda a aceptarlo; con ambos muestra **Continuar** (última lección de Aprende y último tema), **Tu avance** por ruta (lecciones, estrellas y puntos, con los títulos de `/aprende/lessons.json` que publica Aprende; sin ese archivo muestra lo guardado), **Tu perfil** y **Tus datos** (descargar, eliminar y cerrar sesión, con la misma confirmación y el mismo orden de borrado que S102). El contenido aparece cuando los datos ya cargaron: así una carga tardía no pisa lo que la persona escribe (lo encontró la prueba de navegador).
+- **`GET` y `PUT /api/me/profile`:** `name` (hasta 40 caracteres, sin controles ni `<` `>`; se muestra siempre como texto), `instrument` (guitarra, teclado, bajo, otro) y `level` (inicial, medio, avanzado), todos opcionales. **El `PUT` reemplaza el perfil entero** (un campo que falta se borra) y los vacíos se borran. Lo desconocido es 422.
+- **`GET` y `PUT /api/me/continue`:** exactamente uno de `lesson` (`path` y `lesson`) o `song` (identificador de tema); guarda lo último y conserva lo otro.
+- Las dos exigen sesión del grupo público y consentimiento vigente, y heredan 2 KB, límite de frecuencia y `private, no-store`. **Exportar y borrar (S102) cubren perfil y «continuar».**
+- **Aviso v4 (`2026-11-24-v4`):** nombra el perfil, lo último que viste, y los favoritos y repertorios (que llegan en la tanda 2). Quien aceptó la v3 acepta de nuevo.
+- **Enlaces (decisión del usuario):** «Aprende» y «Mi cuenta» en el menú y el pie de todas las páginas, y en las páginas de canción (que arma la librería: el sitio las ajusta al servirlas, `songpage.py`, sin tocar la librería). La página de entrada se alcanza desde «Mi cuenta». `entrar.html?volver=` ahora también regresa a `/mi-acordia.html` y a `/repertorio.html`; la prueba extrae el regex del propio JS y lo ejecuta con direcciones hostiles.
+- **Retiro de «Aprender» (C28):** se borran `learn.py`, `learn_figures.py`, las cuatro páginas teóricas y sus pruebas. `/aprender.html`, `/aprender.css` y `/aprender-*.html` responden **301 a `/aprende/`**; el botón «Aprende teoría» de los temas y el de la portada van a `/aprende/`. Todos al path básico: Intermedio y Avanzado aún no existen (C32). **Costo aceptado:** el sitio pierde su único contenido teórico indexable.
+- **Marca de sesión:** `localStorage["acordia-session"]` (sin datos personales) la ponen las páginas con sesión; las de tema solo cargarán Firebase si existe (tanda 2), para que quien no tiene cuenta no haga ninguna llamada a Google.
+- **CSP:** `entrar.html` y `mi-acordia.html` comparten la política ampliada (gstatic, Identity Toolkit); el resto del sitio conserva la suya.
+- **Pruebas:** 489 unitarias (perfil, «continuar», nombres hostiles, fusión y reemplazo en Firestore con un doble, redirecciones, enlaces, retorno de la entrada) y 11 de navegador de «Mi cuenta» (SDK simulado) en Chromium, Firefox y WebKit.
+- **Sin comprobar:** con una cuenta real, celular real y Safari.
+
