@@ -95,6 +95,10 @@ class TokenVerifier(Protocol):
         """El UID de una persona del grupo público, o `None`."""
         ...
 
+    def identity(self, token: str) -> dict | None:
+        """Los datos de Firebase Authentication de esa persona (para exportarlos), o `None`."""
+        ...
+
 
 class UserStore(Protocol):
     def get(self, uid: str) -> dict: ...
@@ -107,6 +111,14 @@ class UserStore(Protocol):
 
     def put_consent(self, uid: str, version: str) -> None: ...
 
+    def export(self, uid: str) -> dict:
+        """Todo lo que se guarda de la persona (`consent` y `preferences`), sin tocar nada."""
+        ...
+
+    def delete(self, uid: str) -> None:
+        """Borra todo lo de la persona. Repetirlo no falla."""
+        ...
+
 
 def uid_from_claims(claims: dict) -> str | None:
     """El UID de un token ya verificado, o `None` si no es de una persona del grupo público."""
@@ -117,6 +129,27 @@ def uid_from_claims(claims: dict) -> str | None:
         return None
     uid = claims.get("uid")
     return uid if isinstance(uid, str) and UID.fullmatch(uid) else None
+
+
+IDENTITY_FIELDS = ("email", "name", "picture")
+MAX_IDENTITY_CHARS = 300
+
+
+def identity_from_claims(claims: dict) -> dict | None:
+    """Lo que Firebase Authentication sabe de la persona, tomado del token ya verificado (S102).
+
+    Para el export de sus datos: es suyo y tiene derecho a verlo. No se guarda en ninguna parte.
+    """
+    uid = uid_from_claims(claims)
+    if uid is None:
+        return None
+    found = {
+        key: claims[key][:MAX_IDENTITY_CHARS]
+        for key in IDENTITY_FIELDS
+        if isinstance(claims.get(key), str) and claims[key]
+    }
+    provider = claims["firebase"].get("sign_in_provider")
+    return {"provider": provider, **found}
 
 
 class FirebaseApp:
@@ -151,6 +184,15 @@ class FirebaseTokenVerifier:
         except Exception:  # noqa: BLE001 - vencido, mal firmado o de otro proyecto: todo es "no"
             return None
         return uid_from_claims(claims)
+
+    def identity(self, token: str) -> dict | None:
+        try:
+            from firebase_admin import auth
+
+            claims = auth.verify_id_token(token, app=self._app.get())
+        except Exception:  # noqa: BLE001 - igual que `verify`
+            return None
+        return identity_from_claims(claims)
 
 
 class FirestoreUserStore:
@@ -202,6 +244,26 @@ class FirestoreUserStore:
             },
             merge=True,
         )
+
+    def export(self, uid: str) -> dict:
+        snapshot = self._client().collection("users").document(uid).get()
+        data = (snapshot.to_dict() if snapshot.exists else None) or {}
+        consent = data.get("consent")
+        preferences = data.get("preferences")
+        out: dict = {"consent": None, "preferences": {}}
+        if isinstance(consent, dict):
+            at = consent.get("at")
+            out["consent"] = {
+                "version": consent.get("version"),
+                "adult": consent.get("adult"),
+                "at": at.isoformat() if hasattr(at, "isoformat") else None,
+            }
+        if isinstance(preferences, dict):
+            out["preferences"] = clean_preferences(preferences)
+        return out
+
+    def delete(self, uid: str) -> None:
+        self._client().collection("users").document(uid).delete()  # no falla si no existe
 
 
 class RateLimiter:

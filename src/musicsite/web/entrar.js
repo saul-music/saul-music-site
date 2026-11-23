@@ -26,7 +26,7 @@ const fail = (message) => { $("error").textContent = message; $("error").hidden 
 
 async function api(path, options = {}) {
   const token = await getAuth().currentUser.getIdToken();
-  return fetch(`/api/me/${path}`, {
+  return fetch(path ? `/api/me/${path}` : "/api/me", {
     ...options,
     headers: { ...(options.body ? { "Content-Type": "application/json" } : {}), Authorization: `Bearer ${token}` },
   });
@@ -108,6 +108,40 @@ if (!apiKey) {
     $("prefs").textContent = JSON.stringify((await response.json()).preferences, null, 2);
   });
   $("salir").addEventListener("click", () => signOut(auth));
+
+  // Tus datos (S102): descargar lo que hay de ti y eliminar la cuenta.
+  $("descargar").addEventListener("click", async () => {
+    fail("");
+    const response = await api("export");
+    if (!response.ok) return fail(`No se pudieron preparar tus datos (${response.status}).`);
+    const url = URL.createObjectURL(await response.blob());
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "acordia-mis-datos.json";
+    link.click();
+    URL.revokeObjectURL(url);
+  });
+  const confirmBox = $("borrar-confirmar");
+  $("borrar").addEventListener("click", () => { confirmBox.hidden = false; $("borrar-si").focus(); });
+  $("borrar-no").addEventListener("click", () => { confirmBox.hidden = true; });
+  // Primero se borra lo nuestro y después la cuenta de Firebase: si el navegador falla en el medio, la persona queda sin
+  // consentimiento y `auth-cleanup-unconsented.sh` la recoge.
+  $("borrar-si").addEventListener("click", async () => {
+    fail("");
+    confirmBox.hidden = true;
+    const response = await api("", { method: "DELETE" });
+    if (!response.ok) return fail(`No se pudieron eliminar tus datos (${response.status}). No se tocó tu cuenta.`);
+    try {
+      await deleteUser(auth.currentUser);
+      show("paso-entrar", "Eliminamos tu cuenta y tus datos.");
+    } catch (error) {
+      await signOut(auth);
+      show("paso-entrar", "");
+      fail(error && error.code === "auth/requires-recent-login"
+        ? "Borramos tus datos, pero por seguridad Firebase pide una sesión reciente para eliminar la cuenta. Entra de nuevo y elige «No acepto: eliminar mi cuenta»."
+        : "Borramos tus datos, pero no pudimos eliminar la cuenta. Escríbenos a contacto@saulapp.com y la borramos.");
+    }
+  });
 
   if (allowed) getRedirectResult(auth).catch((error) => {
     fail(error.code === "auth/account-exists-with-different-credential"

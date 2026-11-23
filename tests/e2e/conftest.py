@@ -66,3 +66,19 @@ def one_song_url(tmp_path_factory) -> str:
         (SONGS_DIR / "camara-lenta.toml").read_text(encoding="utf-8"), encoding="utf-8"
     )
     yield from serve(create_app(songs=folder))
+
+
+@pytest.fixture
+def serve_local():
+    """Levanta un sitio propio de la prueba (solo en local) y lo apaga al terminar."""
+    local_only()
+    running = []
+
+    def start(app) -> str:
+        generator = serve(app)
+        running.append(generator)
+        return next(generator)
+
+    yield start
+    for generator in running:
+        next(generator, None)

@@ -13,6 +13,7 @@ Sin /docs, /redoc ni /openapi.json.
 import html
 import mimetypes
 import os
+from datetime import UTC, datetime
 from pathlib import Path
 
 import uvicorn
@@ -224,6 +225,43 @@ def _register_me(app: FastAPI, accounts: Accounts) -> None:
             raise HTTPException(422) from error
         accounts.store.put_consent(uid, version)
         return consent_state(uid)
+
+    @app.get("/api/me/export", include_in_schema=False)
+    def export_data(request: Request) -> Response:
+        """Derecho de acceso y portabilidad (S102): todo lo que hay de la persona, para descargar.
+
+        Sin exigir consentimiento: quien nunca aceptó también puede ver (y llevarse) lo que haya.
+        """
+        uid = caller(request)
+        _, _, token = request.headers.get("authorization", "").partition(" ")
+        stored = accounts.store.export(uid)
+        body = {
+            "generatedAt": datetime.now(UTC).isoformat(timespec="seconds"),
+            "stored": stored,
+            "firebaseAuthentication": accounts.verifier.identity(token) or {},
+            "note": (
+                "stored es lo que Acordia guarda en su base de datos. "
+                "firebaseAuthentication son los datos de tu cuenta de Google o Facebook "
+                "que guarda Firebase Authentication; Acordia no los copia."
+            ),
+        }
+        return JSONResponse(
+            body,
+            headers={
+                **PRIVATE,
+                "Content-Disposition": 'attachment; filename="acordia-mis-datos.json"',
+            },
+        )
+
+    @app.delete("/api/me", include_in_schema=False)
+    def delete_data(request: Request) -> Response:
+        """Derecho de supresión (S102): borra el documento de la persona. Sin exigir consentimiento.
+
+        La cuenta de Firebase Authentication la elimina el navegador después (sin permisos nuevos);
+        si no llega a hacerlo, queda sin consentimiento y la limpia `auth-cleanup-unconsented.sh`.
+        """
+        accounts.store.delete(caller(request))
+        return Response(status_code=204, headers=PRIVATE)
 
     @app.get("/api/me/preferences", include_in_schema=False)
     def read_preferences(request: Request) -> Response:
