@@ -45,6 +45,9 @@ async function afterSignIn() {
     $("c-edad").checked = false;
     $("c-aviso").checked = false;
     $("aceptar").disabled = true;
+    // El perfil se pide solo la primera vez: quien vuelve a aceptar un aviso nuevo ya pasó por aquí (S110).
+    $("c-perfil").hidden = Boolean(state.returning);
+    for (const id of ["c-nombre", "c-instrumento", "c-nivel"]) $(id).value = "";
     $("paso-consentimiento").dataset.version = state.current;
     return show("paso-consentimiento", "Un paso más.");
   }
@@ -90,6 +93,13 @@ if (!apiKey) {
     const version = $("paso-consentimiento").dataset.version;
     const response = await api("consent", { method: "PUT", body: JSON.stringify({ version, adult: true }) });
     if (!response.ok) return fail("No se pudo guardar tu consentimiento. Intenta de nuevo.");
+    // Perfil opcional: solo se guarda si hay algo escrito. El consentimiento ya quedó; reenviar es inocuo.
+    const profile = { name: $("c-nombre").value, instrument: $("c-instrumento").value, level: $("c-nivel").value };
+    if (!$("c-perfil").hidden && Object.values(profile).some((value) => value.trim())) {
+      const saved = await api("profile", { method: "PUT", body: JSON.stringify(profile) });
+      if (saved.status === 422) return fail("Revisa el nombre: hasta 40 letras, sin < ni >.");
+      if (!saved.ok) return fail("No se pudo guardar tu perfil. Puedes completarlo después en Mi cuenta.");
+    }
     showReady();
   });
 

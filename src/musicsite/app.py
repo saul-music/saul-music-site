@@ -245,6 +245,8 @@ def _register_me(app: FastAPI, accounts: Accounts, known_song: Callable[[str], b
             {
                 "current": NOTICE_VERSION,
                 "accepted": accepted if accepted == NOTICE_VERSION else None,
+                # Aceptó alguna versión antes: «Entrar» no le vuelve a pedir el perfil (S110).
+                "returning": accepted is not None,
             },
             headers=PRIVATE,
         )

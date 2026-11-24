@@ -431,13 +431,17 @@ def test_consent_state_starts_empty_and_reading_it_stores_nothing(bare):
     client, store = bare
     response = client.get("/api/me/consent", headers=bearer())
     assert response.status_code == 200
-    assert response.json() == {"current": NOTICE_VERSION, "accepted": None}
+    assert response.json() == {"current": NOTICE_VERSION, "accepted": None, "returning": False}
     assert store.consents == {}
 
 
 def test_accepting_unlocks_the_preferences(bare):
     client, store = bare
-    assert accept(client).json() == {"current": NOTICE_VERSION, "accepted": NOTICE_VERSION}
+    assert accept(client).json() == {
+        "current": NOTICE_VERSION,
+        "accepted": NOTICE_VERSION,
+        "returning": True,
+    }
     assert store.consents == {"uid1": NOTICE_VERSION}
     assert put(client, {"muted": True}).status_code == 200
     assert client.get("/api/me/preferences", headers=bearer()).json() == {
@@ -476,7 +480,10 @@ def test_consent_needs_the_current_version_and_the_over_14_box(bare, body):
 def test_an_old_version_must_be_accepted_again():
     store = FakeStore({"uid1": "2025-01-01-v1"})
     client = make_client(store)
-    assert client.get("/api/me/consent", headers=bearer()).json()["accepted"] is None
+    state = client.get("/api/me/consent", headers=bearer()).json()
+    assert (
+        state["accepted"] is None and state["returning"] is True
+    )  # reacepta: no se le pide el perfil
     assert client.get("/api/me/preferences", headers=bearer()).status_code == 403
     assert accept(client).status_code == 200
     assert client.get("/api/me/preferences", headers=bearer()).status_code == 200
@@ -817,6 +824,13 @@ def test_firestore_delete_removes_the_document_and_repeating_is_harmless():
     store.delete("u")
     store.delete("u")
     assert store._db.docs == {} and store._db.deleted == ["u", "u"]
+
+
+def test_the_consent_step_offers_the_optional_profile_for_a_first_account():
+    page = (WEB_DIR / "entrar.html").read_text()
+    for element in ("c-perfil", "c-nombre", "c-instrumento", "c-nivel"):
+        assert f'id="{element}"' in page
+    assert 'id="c-perfil" class="d-grid gap-3 m-0 p-0 border-0" hidden' in page
 
 
 def test_the_login_page_is_only_a_login_and_sends_a_signed_in_person_to_my_account():
