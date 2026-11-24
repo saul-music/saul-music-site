@@ -1162,3 +1162,13 @@ Las páginas de canción ya no muestran «Prototipo en investigación» (RD50; l
 - **Se retira de `entrar.html`/`entrar.js`:** la página de prueba, descargar y eliminar la cuenta y cerrar sesión. Los derechos de acceso y borrado quedan en «Mi cuenta» (S102, S104); la API no cambia.
 - **Pruebas:** e2e del redirect (con sesión, con `?volver=` y sin sesión) en `test_cuenta.py`; las de descargar y eliminar en la página de entrada se reemplazan, porque `test_mi_cuenta.py` ya las cubre.
 - **Sin comprobar:** el redirect con una sesión real de Google o Facebook (solo se puede en `web.app`) y el aviso de «cuenta ya existente» con otro proveedor (S108 no lo cambia; ver PR #135).
+
+## S109 · «Cerrar sesión» a un toque en «Mi cuenta» (2026-11-24)
+
+**Pregunta del usuario:** «¿cómo se cierra sesión actualmente?». Hasta aquí el único botón estaba en «Mi cuenta» → Configuración, al fondo y junto a «Descargar mis datos»; las páginas de tema, el repertorio y Aprende no tienen botón (Aprende expone `signOut` en `auth.js`, sin pantalla que lo use). De tres opciones (dejarlo, botón en el encabezado de «Mi cuenta», menú de cuenta en toda la barra) el usuario eligió la segunda.
+
+- **«Cerrar sesión» va en la fila de pestañas** de «Mi cuenta», a la derecha, visible en Resumen y en Configuración; en celular baja a su propia línea. Estilo discreto (`btn-ghost`): el dorado sigue siendo solo para acciones (S107).
+- **Fuera del `role="tablist"`**, para que las flechas del teclado no lo traten como una pestaña. La lógica no cambia: `signOut`, borra la marca `acordia-session` y dice «Cerraste tu sesión.».
+- **Fuera de alcance:** botón en las páginas de tema, el repertorio y Aprende (la tercera opción).
+- **Pruebas:** el cierre de sesión se prueba desde el Resumen; el botón es visible en ambas pestañas, no está dentro del tablist y cabe en 360 px.
+- **Sin comprobar:** el aspecto en un celular real. Queda el título «Tus datos y tu sesión» de Configuración, que ya no lleva el botón.

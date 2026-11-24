@@ -23,7 +23,9 @@
     .ac-stars { letter-spacing: .1em; color: var(--bs-warning); }
     .ac-lessons { list-style: none; padding: 0; margin: 0; display: grid; gap: .4rem; }
     .ac-lessons li { display: flex; flex-wrap: wrap; justify-content: space-between; gap: .5rem; }
-    .ac-tabs { display: flex; gap: .5rem; border-bottom: 1px solid var(--bs-border-color); padding-bottom: .75rem; }
+    .ac-tabs { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; border-bottom: 1px solid var(--bs-border-color); padding-bottom: .75rem; }
+    .ac-tabs [role="tablist"] { display: flex; gap: .5rem; }
+    .ac-tabs #salir { margin-left: auto; }
     .ac-tabs [aria-selected="true"] { background: var(--bs-primary); color: var(--bs-body-bg); border-color: var(--bs-primary); }
     .ac-chips { display: flex; flex-wrap: wrap; gap: .5rem; margin: 0; padding: 0; list-style: none; }
     .ac-chips li { border: 1px solid var(--bs-border-color); border-radius: 999px; padding: .15rem .8rem; font-size: .9rem; }
@@ -133,9 +135,12 @@
 
         <div id="contenido" class="d-grid gap-4" hidden>
 
-          <div class="ac-tabs" role="tablist" aria-label="Secciones de tu cuenta">
-            <button id="tab-resumen" class="btn btn-outline-secondary" type="button" role="tab" aria-selected="true" aria-controls="panel-resumen">Resumen</button>
-            <button id="tab-configuracion" class="btn btn-outline-secondary" type="button" role="tab" aria-selected="false" aria-controls="panel-configuracion" tabindex="-1">Configuración</button>
+          <div class="ac-tabs">
+            <div role="tablist" aria-label="Secciones de tu cuenta">
+              <button id="tab-resumen" class="btn btn-outline-secondary" type="button" role="tab" aria-selected="true" aria-controls="panel-resumen">Resumen</button>
+              <button id="tab-configuracion" class="btn btn-outline-secondary" type="button" role="tab" aria-selected="false" aria-controls="panel-configuracion" tabindex="-1">Configuración</button>
+            </div>
+            <button id="salir" class="btn btn-ghost" type="button">Cerrar sesión</button>
           </div>
 
           <div id="panel-resumen" class="d-grid gap-4" role="tabpanel" aria-labelledby="tab-resumen">
@@ -214,7 +219,6 @@
               <p class="small m-0">Tus preferencias del reproductor (sonido, cuenta inicial, volumen, tema) se guardan solas en tu cuenta cuando usas un tema con tu sesión iniciada. Lee el <a href="privacidad.html">Aviso de privacidad</a>.</p>
               <div class="d-flex flex-wrap gap-2">
                 <button id="descargar" class="btn btn-outline-secondary" type="button">Descargar mis datos</button>
-                <button id="salir" class="btn btn-outline-secondary" type="button">Cerrar sesión</button>
               </div>
             </section>
 

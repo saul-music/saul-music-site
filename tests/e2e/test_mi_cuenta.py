@@ -268,12 +268,24 @@ def test_deleting_always_asks_and_then_removes_our_data_and_the_account(
 def test_signing_out_clears_the_session_hint(page: Page, account_url):
     open_page(page, account_url)
     expect(page.locator("#contenido")).to_be_visible()
-    settings(page)
     assert page.evaluate("localStorage.getItem('acordia-session')") == "1"
-    page.click("#salir")
+    page.click("#salir")  # desde el Resumen, sin abrir Configuración
     expect(page.locator("#estado")).to_have_text("Cerraste tu sesión.")
     assert page.evaluate("localStorage.getItem('acordia-session')") is None
     assert page.evaluate("window.__calls") == ["signOut"]
+
+
+def test_sign_out_is_visible_in_both_tabs_outside_the_tablist_and_fits_a_phone(
+    page: Page, account_url
+):
+    open_page(page, account_url)
+    expect(page.locator("#salir")).to_be_visible()
+    assert page.evaluate("document.querySelector('#salir').closest('[role=tablist]')") is None
+    settings(page)
+    expect(page.locator("#salir")).to_be_visible()
+    page.set_viewport_size({"width": 360, "height": 740})
+    box = page.locator("#salir").bounding_box()
+    assert box["x"] >= 0 and box["x"] + box["width"] <= 360
 
 
 def test_download_has_the_new_data(page: Page, account_url, store):
@@ -294,7 +306,7 @@ def test_the_summary_is_the_default_and_the_dangerous_controls_live_only_in_sett
     open_page(page, account_url)
     expect(page.locator("#panel-resumen")).to_be_visible()
     expect(page.locator("#panel-configuracion")).to_be_hidden()
-    for hidden in ("#borrar", "#descargar", "#perfil", "#salir"):
+    for hidden in ("#borrar", "#descargar", "#perfil"):
         expect(page.locator(hidden)).to_be_hidden()  # en el resumen no hay nada para borrar
     expect(page.locator("#tab-resumen")).to_have_attribute("aria-selected", "true")
     settings(page)
