@@ -237,11 +237,24 @@ def test_pages_have_no_plans_or_prices_from_acordia(client):
         assert "Acordia Plus" not in html and "$3.990" not in html and "$2.990" not in html, page
 
 
-def test_become_a_guide_page_asks_for_an_email_and_has_no_ai_pitch(client):
+def test_become_a_guide_page_is_private_and_unlinked(client):
+    """S110: «Ser guía» es una URL que se envía a quien elegimos: viva, sin índice y sin enlaces."""
     page = client.get("/ser-guia.html")
     assert page.status_code == 200
     assert "mailto:contacto@saulapp.com" in page.text
     assert "Al menos 4 contactos al mes" in page.text
-    home = client.get("/").text
-    assert 'href="ser-guia.html"' in home
-    assert "La IA convierte" not in home
+    assert 'name="robots" content="noindex, nofollow"' in page.text
+    for url in (
+        "/",
+        "/guias.html",
+        "/artistas.html",
+        "/pedidos.html",
+        "/privacidad.html",
+        "/entrar.html",
+        "/mi-acordia.html",
+        "/repertorio.html",
+        "/ser-guia.html",
+    ):
+        html = client.get(url).text
+        assert 'href="ser-guia.html"' not in html, url
+        assert "Quiero ser guía" not in html.replace("Quiero ser guía en Acordia", ""), url
