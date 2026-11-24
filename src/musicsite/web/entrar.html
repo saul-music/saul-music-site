@@ -95,6 +95,28 @@
             <input class="form-check-input" type="checkbox" id="c-aviso">
             <label class="form-check-label" for="c-aviso">Leí el <a href="privacidad.html" target="_blank" rel="noopener">Aviso de privacidad</a> y acepto que Acordia trate los datos de mi cuenta y mis preferencias para darme este servicio.</label>
           </div>
+          <fieldset id="c-perfil" class="d-grid gap-3 m-0 p-0 border-0" hidden>
+            <legend class="h6 m-0">Cuéntanos de ti <span class="text-body-secondary fw-normal">(opcional)</span></legend>
+            <p class="small m-0 text-body-secondary">Solo lo ves tú. El nombre puede ser el que quieras, no tiene que ser el real. Lo puedes cambiar después en Mi cuenta.</p>
+            <div>
+              <label class="form-label" for="c-nombre">Nombre</label>
+              <input id="c-nombre" class="form-control" type="text" maxlength="40" autocomplete="nickname">
+            </div>
+            <div class="row g-3">
+              <div class="col-sm-6">
+                <label class="form-label" for="c-instrumento">Instrumento</label>
+                <select id="c-instrumento" class="form-select">
+                  <option value="">Sin elegir</option><option value="guitarra">Guitarra</option><option value="teclado">Teclado</option><option value="bajo">Bajo</option><option value="otro">Otro</option>
+                </select>
+              </div>
+              <div class="col-sm-6">
+                <label class="form-label" for="c-nivel">Nivel</label>
+                <select id="c-nivel" class="form-select">
+                  <option value="">Sin elegir</option><option value="inicial">Inicial</option><option value="medio">Medio</option><option value="avanzado">Avanzado</option>
+                </select>
+              </div>
+            </div>
+          </fieldset>
           <div class="d-flex flex-wrap gap-2">
             <button id="aceptar" class="btn btn-jade" type="submit" disabled>Aceptar y continuar</button>
             <button id="rechazar" class="btn btn-outline-secondary" type="button">No acepto: eliminar mi cuenta</button>

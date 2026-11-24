@@ -57,6 +57,7 @@ class Store:
     def __init__(self):
         self.docs = {"uid1": {"muted": True}}
         self.consents = {"uid1": NOTICE_VERSION}
+        self.profile = {}
 
     def get(self, uid):
         return dict(self.docs.get(uid, {}))
@@ -71,10 +72,10 @@ class Store:
         self.consents[uid] = version
 
     def get_profile(self, uid):
-        return {}
+        return dict(self.profile)
 
     def put_profile(self, uid, profile):
-        pass
+        self.profile = dict(profile)
 
     def get_continue(self, uid):
         return {}
@@ -170,3 +171,55 @@ def test_without_a_session_it_is_a_plain_login(page: Page, account_url: str):
     expect(page.locator("#paso-consentimiento")).to_be_hidden()
     expect(page.get_by_text("Tus datos")).to_have_count(0)
     assert "entrar.html" in page.url
+
+
+def fill_consent(page: Page):
+    page.check("#c-edad")
+    page.check("#c-aviso")
+
+
+def test_a_new_account_is_asked_for_the_profile_next_to_the_consent(
+    page: Page, account_url: str, store
+):
+    store.consents.clear()
+    open_login(page, account_url)
+    expect(page.locator("#paso-consentimiento")).to_be_visible()
+    expect(page.locator("#c-perfil")).to_be_visible()
+    fill_consent(page)
+    page.fill("#c-nombre", "Ana")
+    page.select_option("#c-instrumento", "guitarra")
+    page.select_option("#c-nivel", "inicial")
+    page.click("#aceptar")
+    page.wait_for_url("**/mi-acordia.html")
+    assert store.consents["uid1"] == NOTICE_VERSION
+    assert store.profile == {"name": "Ana", "instrument": "guitarra", "level": "inicial"}
+
+
+def test_an_empty_profile_is_not_saved_and_never_blocks_the_account(
+    page: Page, account_url: str, store
+):
+    store.consents.clear()
+    store.profile = {"name": "Previo"}
+    open_login(page, account_url)
+    fill_consent(page)
+    page.click("#aceptar")
+    page.wait_for_url("**/mi-acordia.html")
+    assert store.profile == {"name": "Previo"}  # nada escrito: no se toca
+
+
+def test_a_bad_name_stays_on_the_step_and_explains_it(page: Page, account_url: str, store):
+    store.consents.clear()
+    open_login(page, account_url)
+    fill_consent(page)
+    page.fill("#c-nombre", "<b>")
+    page.click("#aceptar")
+    expect(page.locator("#error")).to_contain_text("Revisa el nombre")
+    assert "mi-acordia" not in page.url
+    assert store.consents["uid1"] == NOTICE_VERSION  # el consentimiento ya quedó
+
+
+def test_someone_accepting_a_new_notice_is_not_asked_again(page: Page, account_url: str, store):
+    store.consents["uid1"] = "2025-01-01-v1"
+    open_login(page, account_url)
+    expect(page.locator("#paso-consentimiento")).to_be_visible()
+    expect(page.locator("#c-perfil")).to_be_hidden()

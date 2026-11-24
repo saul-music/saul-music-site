@@ -1172,3 +1172,15 @@ Las páginas de canción ya no muestran «Prototipo en investigación» (RD50; l
 - **Fuera de alcance:** botón en las páginas de tema, el repertorio y Aprende (la tercera opción).
 - **Pruebas:** el cierre de sesión se prueba desde el Resumen; el botón es visible en ambas pestañas, no está dentro del tablist y cabe en 360 px.
 - **Sin comprobar:** el aspecto en un celular real. Queda el título «Tus datos y tu sesión» de Configuración, que ya no lleva el botón.
+
+## S110 · El perfil se pide junto al consentimiento, la primera vez (2026-11-24)
+
+**Pedido del usuario:** que al crear la cuenta se pidan los datos de «Tu perfil» junto al consentimiento, de modo que sea raro tener que ir a Configuración.
+
+- **Paso de consentimiento de `entrar.html`:** bajo las dos casillas, «Cuéntanos de ti (opcional)» con nombre, instrumento y nivel (mismos campos y límites que «Tu perfil»). Todo opcional, sin paso aparte: es lo que dice el aviso v4, así que no cambia el aviso ni su versión.
+- **Solo la primera vez.** `GET /api/me/consent` suma `returning` (verdadero si la cuenta aceptó alguna versión antes; solo lectura, no guarda nada nuevo). Quien solo reacepta un aviso nuevo no ve el bloque. Hizo falta porque `accepted` ya valía `null` tanto para una cuenta nueva como para una con un aviso viejo.
+- **Orden al enviar:** primero `PUT /api/me/consent` y, solo si hay algo escrito, `PUT /api/me/profile`. Nada escrito no toca el perfil. Un nombre rechazado (422) deja a la persona en el paso con el mensaje y sin avanzar; el consentimiento ya quedó y reenviar es inocuo. Otro fallo del perfil avisa que puede completarlo después en Mi cuenta.
+- **No se rellena el nombre con el de Google o Facebook:** suele ser el real y el perfil dice que puede ser un apodo. Revisable.
+- **Sin cambios:** `clean_profile`, la API de perfil y la sección Configuración, que sigue permitiendo editarlo.
+- **Pruebas:** e2e de cuenta nueva (guarda el perfil), sin nada escrito (no lo toca), nombre inválido (se queda y lo explica) y reaceptación (no se pide); unitarias de `returning` y de los campos del paso.
+- **Sin comprobar:** el flujo real con Google o Facebook en `web.app` y el aspecto en un celular real.
