@@ -1152,3 +1152,13 @@ Las páginas de canción ya no muestran «Prototipo en investigación» (RD50; l
 - **Pruebas:** 51 de navegador de cuenta en Chromium, Firefox y WebKit (una acción principal, la alternativa discreta, el estado sin lección y sin nada, insignias pequeñas en una sola fila y también a 360 px, el contador y las descripciones, temas plegados, orden de los bloques, cifras una sola vez, «Guardar perfil» dorado). Una prueba nueva, que **comprobé que falla sin la corrección**, fija que en el celular el botón «Empezar» no queda recortado: lo encontró la revisión de la captura del celular.
 - **Sin comprobar:** el aspecto en un celular real y el comportamiento táctil del recuadro de descripción de las insignias.
 
+
+## S108 · «Entrar» es solo un login; con sesión lleva a «Mi cuenta» (2026-11-24)
+
+**Pedido del usuario:** si ya estás con sesión, la página «Entrar» te lleva a «Mi cuenta»; si no, es un login normal, sin la parte de «Tus datos». Antes, con sesión mostraba una página de prueba (preferencias en JSON, «Guardar preferencia de prueba», «Cerrar sesión») y el bloque «Tus datos» (descargar y eliminar), que ya viven en «Mi cuenta» → Configuración.
+
+- **Con sesión y consentimiento al día:** redirige a `/mi-acordia.html`, o a la ruta de `?volver=` si es válida (sin cambios en ese filtro).
+- **Sin sesión:** solo Google y Facebook, un texto breve y el aviso de privacidad. Con sesión sin consentimiento, sigue el paso de consentimiento y «No acepto: eliminar mi cuenta».
+- **Se retira de `entrar.html`/`entrar.js`:** la página de prueba, descargar y eliminar la cuenta y cerrar sesión. Los derechos de acceso y borrado quedan en «Mi cuenta» (S102, S104); la API no cambia.
+- **Pruebas:** e2e del redirect (con sesión, con `?volver=` y sin sesión) en `test_cuenta.py`; las de descargar y eliminar en la página de entrada se reemplazan, porque `test_mi_cuenta.py` ya las cubre.
+- **Sin comprobar:** el redirect con una sesión real de Google o Facebook (solo se puede en `web.app`) y el aviso de «cuenta ya existente» con otro proveedor (S108 no lo cambia; ver PR #135).

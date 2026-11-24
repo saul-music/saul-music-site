@@ -819,20 +819,12 @@ def test_firestore_delete_removes_the_document_and_repeating_is_harmless():
     assert store._db.docs == {} and store._db.deleted == ["u", "u"]
 
 
-def test_the_login_script_deletes_our_data_before_the_firebase_account():
-    script = (WEB_DIR / "entrar.js").read_text()
-    delete_call = script.index('api("", { method: "DELETE" })')
-    assert delete_call < script.index("deleteUser(auth.currentUser)", delete_call)
-    assert "requires-recent-login" in script
-
-
-def test_the_login_page_offers_both_rights_and_a_confirmation():
+def test_the_login_page_is_only_a_login_and_sends_a_signed_in_person_to_my_account():
     page = (WEB_DIR / "entrar.html").read_text()
-    for element in ("descargar", "borrar", "borrar-confirmar", "borrar-si", "borrar-no"):
-        assert f'id="{element}"' in page
-    assert (
-        'id="borrar-confirmar" class="d-grid gap-2" hidden' in page
-    )  # nunca se borra de un solo clic
+    script = (WEB_DIR / "entrar.js").read_text()
+    for element in ("paso-listo", "descargar", "borrar", "prefs", "guardar", "salir"):
+        assert f'id="{element}"' not in page  # los datos y la cuenta viven en «Mi cuenta»
+    assert 'location.replace(returnTo() || "/mi-acordia.html")' in script
 
 
 # --- avance de Aprende (S103, C44)
@@ -977,7 +969,7 @@ def test_firestore_progress_is_merged_not_replaced():
 def _return_pattern():
     """El regex de `returnTo` de entrar.js, tomado del propio archivo: se prueba lo que corre."""
     source = (WEB_DIR / "entrar.js").read_text(encoding="utf-8")
-    assert "volver" in source and "location.replace(returnTo())" in source
+    assert "volver" in source and "location.replace(returnTo() ||" in source
     found = re.search(r"const allowed = /(.+)/;", source)
     assert found, "no se encontró el regex de retorno"
     return re.compile(found.group(1)), 'target.includes("..")' in source

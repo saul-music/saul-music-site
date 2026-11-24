@@ -1,12 +1,12 @@
-"""Tus datos en la página de entrada (S102): descargar y eliminar, en un navegador real.
+"""La página de entrada (S108): solo login; con sesión lleva a «Mi cuenta», en un navegador real.
 
-El SDK de Firebase (gstatic) se reemplaza por un doble que simula una sesión abierta, y la API es la
-del sitio con un almacén en memoria: no hay red ni cuentas reales. Solo en local.
+El SDK de Firebase (gstatic) se reemplaza por un doble que simula una sesión abierta o ninguna, y la
+API es la del sitio con un almacén en memoria: no hay red ni cuentas reales. Solo en local.
 
     uv run pytest tests/e2e/test_cuenta.py --browser chromium
 """
 
-import json
+from urllib.parse import urlparse
 
 import pytest
 from playwright.sync_api import Page, expect
@@ -32,7 +32,7 @@ const calls = (window.__calls = []);
 const user = { getIdToken: async () => "p1" };
 const auth = { currentUser: user };
 export const getAuth = () => auth;
-export const onAuthStateChanged = (_a, callback) => { callback(user); };
+export const onAuthStateChanged = (_a, callback) => { callback(window.__noUser ? null : user); };
 export const getRedirectResult = async () => null;
 export const signInWithRedirect = async () => {};
 export const signOut = async () => { calls.push("signOut"); };
@@ -129,55 +129,44 @@ def account_url(store, serve_local):
     return serve_local(create_app(accounts=accounts, firebase_api_key="clave-de-prueba"))
 
 
-@pytest.fixture
-def ready(page: Page, account_url: str) -> Page:
+DESTINATIONS = ("/mi-acordia.html", "/repertorio.html")
+
+
+def open_login(page: Page, account_url: str, query: str = "", signed_in: bool = True) -> Page:
     def route(r):
         url = r.request.url
         if "firebase-app.js" in url:
             return r.fulfill(body=APP_JS, content_type="text/javascript")
         if "firebase-auth.js" in url:
             return r.fulfill(body=AUTH_JS, content_type="text/javascript")
+        if urlparse(url).path in DESTINATIONS:
+            return r.fulfill(body="<title>destino</title>", content_type="text/html")
         return r.abort()  # nada sale a Internet (Bootstrap, fuentes)
 
-    page.route(lambda url: not url.startswith(account_url), route)
-    page.goto(account_url + "/entrar.html")
-    expect(page.locator("#paso-listo")).to_be_visible()
+    page.route(
+        lambda url: not url.startswith(account_url) or urlparse(url).path in DESTINATIONS, route
+    )
+    if not signed_in:
+        page.add_init_script("window.__noUser = true")
+    page.goto(account_url + "/entrar.html" + query)
     return page
 
 
-def test_download_gives_a_json_with_the_persons_data(ready: Page):
-    with ready.expect_download() as info:
-        ready.click("#descargar")
-    download = info.value
-    assert download.suggested_filename == "acordia-mis-datos.json"
-    body = json.loads(open(download.path(), encoding="utf-8").read())
-    assert body["stored"]["preferences"] == {"muted": True}
-    assert body["firebaseAuthentication"]["email"] == "persona.sintetica@example.test"
+def test_a_signed_in_person_goes_to_my_account(page: Page, account_url: str):
+    open_login(page, account_url)
+    page.wait_for_url("**/mi-acordia.html")
 
 
-def test_delete_always_asks_first_and_cancelling_touches_nothing(ready: Page, store):
-    ready.click("#borrar")
-    expect(ready.locator("#borrar-confirmar")).to_be_visible()
-    assert store.docs and ready.evaluate("window.__calls") == []  # un clic no borra nada
-    ready.click("#borrar-no")
-    expect(ready.locator("#borrar-confirmar")).to_be_hidden()
-    assert store.docs and store.consents
+def test_a_signed_in_person_goes_back_to_where_they_came_from(page: Page, account_url: str):
+    open_login(page, account_url, "?volver=/repertorio.html")
+    page.wait_for_url("**/repertorio.html")
 
 
-def test_confirming_deletes_our_data_and_then_the_account(ready: Page, store):
-    ready.click("#borrar")
-    ready.click("#borrar-si")
-    expect(ready.locator("#estado")).to_have_text("Eliminamos tu cuenta y tus datos.")
-    assert store.docs == {} and store.consents == {}
-    assert ready.evaluate("window.__calls") == ["deleteUser"]
-    expect(ready.locator("#paso-entrar")).to_be_visible()
-
-
-def test_an_old_session_still_deletes_our_data_and_says_what_to_do(ready: Page, store):
-    ready.evaluate("window.__failDelete = 'auth/requires-recent-login'")
-    ready.click("#borrar")
-    ready.click("#borrar-si")
-    expect(ready.locator("#error")).to_contain_text("sesión reciente")
-    expect(ready.locator("#error")).to_contain_text("No acepto")
-    assert store.docs == {} and store.consents == {}  # lo nuestro ya se borró
-    assert ready.evaluate("window.__calls") == ["deleteUser", "signOut"]
+def test_without_a_session_it_is_a_plain_login(page: Page, account_url: str):
+    open_login(page, account_url, signed_in=False)
+    expect(page.locator("#paso-entrar")).to_be_visible()
+    expect(page.locator("#entrar-google")).to_be_visible()
+    expect(page.locator("#entrar-facebook")).to_be_visible()
+    expect(page.locator("#paso-consentimiento")).to_be_hidden()
+    expect(page.get_by_text("Tus datos")).to_have_count(0)
+    assert "entrar.html" in page.url

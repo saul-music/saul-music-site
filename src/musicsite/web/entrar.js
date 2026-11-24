@@ -16,7 +16,7 @@ import {
 const allowedHost = () => location.hostname.endsWith(".web.app");
 const $ = (id) => document.getElementById(id);
 const apiKey = document.querySelector('meta[name="firebase-api-key"]').content;
-const STEPS = ["paso-entrar", "paso-consentimiento", "paso-listo"];
+const STEPS = ["paso-entrar", "paso-consentimiento"];
 
 const show = (step, message = "") => {
   for (const id of STEPS) $(id).hidden = id !== step;
@@ -48,7 +48,7 @@ async function afterSignIn() {
     $("paso-consentimiento").dataset.version = state.current;
     return show("paso-consentimiento", "Un paso más.");
   }
-  await showReady();
+  showReady();
 }
 
 // Aprende manda a entrar con `?volver=/aprende/…` y Mi cuenta con `?volver=/mi-acordia.html`; aquí se regresa al terminar
@@ -59,12 +59,9 @@ const returnTo = () => {
   return allowed.test(target) && !target.includes("..") ? target : "";
 };
 
-async function showReady() {
-  if (returnTo()) return location.replace(returnTo());
-  const response = await api("preferences");
-  if (!response.ok) return fail(`No se pudieron leer tus preferencias (${response.status}).`);
-  $("prefs").textContent = JSON.stringify((await response.json()).preferences, null, 2);
-  show("paso-listo", "Sesión iniciada.");
+// Con sesión y consentimiento al día no hay nada que hacer aquí: se vuelve a donde se venía o, si no, a «Mi cuenta».
+function showReady() {
+  location.replace(returnTo() || "/mi-acordia.html");
 }
 
 if (!apiKey) {
@@ -93,7 +90,7 @@ if (!apiKey) {
     const version = $("paso-consentimiento").dataset.version;
     const response = await api("consent", { method: "PUT", body: JSON.stringify({ version, adult: true }) });
     if (!response.ok) return fail("No se pudo guardar tu consentimiento. Intenta de nuevo.");
-    await showReady();
+    showReady();
   });
 
   // «No acepto»: la cuenta ya existe en Firebase (se crea al iniciar sesión), así que se elimina.
@@ -106,49 +103,6 @@ if (!apiKey) {
       await signOut(auth);
       show("paso-entrar", "");
       fail("Cerramos tu sesión, pero no pudimos eliminar la cuenta. Escríbenos a contacto@saulapp.com y la borramos.");
-    }
-  });
-
-  $("guardar").addEventListener("click", async () => {
-    fail("");
-    const current = JSON.parse($("prefs").textContent || "{}");
-    const response = await api("preferences", { method: "PUT", body: JSON.stringify({ preferences: { ...current, muted: !current.muted } }) });
-    if (!response.ok) return fail(`No se pudo guardar (${response.status}).`);
-    $("prefs").textContent = JSON.stringify((await response.json()).preferences, null, 2);
-  });
-  $("salir").addEventListener("click", () => signOut(auth));
-
-  // Tus datos (S102): descargar lo que hay de ti y eliminar la cuenta.
-  $("descargar").addEventListener("click", async () => {
-    fail("");
-    const response = await api("export");
-    if (!response.ok) return fail(`No se pudieron preparar tus datos (${response.status}).`);
-    const url = URL.createObjectURL(await response.blob());
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = "acordia-mis-datos.json";
-    link.click();
-    URL.revokeObjectURL(url);
-  });
-  const confirmBox = $("borrar-confirmar");
-  $("borrar").addEventListener("click", () => { confirmBox.hidden = false; $("borrar-si").focus(); });
-  $("borrar-no").addEventListener("click", () => { confirmBox.hidden = true; });
-  // Primero se borra lo nuestro y después la cuenta de Firebase: si el navegador falla en el medio, la persona queda sin
-  // consentimiento y `auth-cleanup-unconsented.sh` la recoge.
-  $("borrar-si").addEventListener("click", async () => {
-    fail("");
-    confirmBox.hidden = true;
-    const response = await api("", { method: "DELETE" });
-    if (!response.ok) return fail(`No se pudieron eliminar tus datos (${response.status}). No se tocó tu cuenta.`);
-    try {
-      await deleteUser(auth.currentUser);
-      show("paso-entrar", "Eliminamos tu cuenta y tus datos.");
-    } catch (error) {
-      await signOut(auth);
-      show("paso-entrar", "");
-      fail(error && error.code === "auth/requires-recent-login"
-        ? "Borramos tus datos, pero por seguridad Firebase pide una sesión reciente para eliminar la cuenta. Entra de nuevo y elige «No acepto: eliminar mi cuenta»."
-        : "Borramos tus datos, pero no pudimos eliminar la cuenta. Escríbenos a contacto@saulapp.com y la borramos.");
     }
   });
 
