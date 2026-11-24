@@ -1184,3 +1184,14 @@ Las páginas de canción ya no muestran «Prototipo en investigación» (RD50; l
 - **Sin cambios:** `clean_profile`, la API de perfil y la sección Configuración, que sigue permitiendo editarlo.
 - **Pruebas:** e2e de cuenta nueva (guarda el perfil), sin nada escrito (no lo toca), nombre inválido (se queda y lo explica) y reaceptación (no se pide); unitarias de `returning` y de los campos del paso.
 - **Sin comprobar:** el flujo real con Google o Facebook en `web.app` y el aspecto en un celular real.
+
+## S111 · «Ser guía» deja de ser pública: una URL que enviamos a quien elegimos (2026-11-24)
+
+**Pedido del usuario:** por ahora el sitio no ofrece «quiero ser guía»; la página queda como una URL que manejamos internamente y se envía a las personas que elegimos. **Reemplaza la parte pública de S55** (S55 no se borra: su contenido y el `mailto` siguen vigentes en la página).
+
+- **Se quitan los enlaces:** el bloque «¿Enseñas guitarra, bajo o teclado?» de la portada, la sección «¿Enseñas?» de `guias.html` y «Ser guía» del pie de todas las páginas.
+- **`ser-guia.html` sigue viva** (200, mismo texto y mismo correo, contacto@saulapp.com) con `noindex, nofollow`, para que los buscadores no la encuentren. Ninguna página del sitio apunta a ella.
+- **Sin tocar el texto** de la página («programa cerrado», «postular es enviar un correo»): se ajustará cuando se decida qué ven los guías invitados.
+- **Pruebas:** la página responde 200 con el correo y `noindex`, y ninguna otra página la enlaza ni dice «Quiero ser guía».
+- **Sin comprobar:** el aspecto de la portada sin la tarjeta (queda una sola columna en «Los guías»), a ojo y en celular real. Una URL sin enlace sigue siendo pública para quien la conozca; no es un acceso restringido.
+
