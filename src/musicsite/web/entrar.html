@@ -18,7 +18,6 @@
   <style>
     .ac-login { max-width: 34rem; }
     .ac-login [hidden] { display: none !important; }
-    .ac-login pre { white-space: pre-wrap; }
   </style>
 </head>
 <body>
@@ -79,7 +78,7 @@
         </div>
 
         <div id="paso-entrar" class="d-grid gap-3" hidden>
-          <p class="m-0">Entra con tu cuenta de Google o de Facebook. Al continuar, Google recibe tu dirección IP para cargar el inicio de sesión. Lee el <a href="privacidad.html">Aviso de privacidad</a>.</p>
+          <p class="m-0">Entra con tu cuenta de Google o de Facebook para guardar tus favoritos, tus repertorios y tu avance. Al continuar, Google recibe tu dirección IP para cargar el inicio de sesión. Lee el <a href="privacidad.html">Aviso de privacidad</a>.</p>
           <div class="d-flex flex-wrap gap-2">
             <button id="entrar-google" class="btn btn-jade" type="button">Continuar con Google</button>
             <button id="entrar-facebook" class="btn btn-outline-secondary" type="button">Continuar con Facebook</button>
@@ -101,30 +100,6 @@
             <button id="rechazar" class="btn btn-outline-secondary" type="button">No acepto: eliminar mi cuenta</button>
           </div>
         </form>
-
-        <div id="paso-listo" class="d-grid gap-3" hidden>
-          <p class="m-0">Tu cuenta está lista. Esta página es de prueba: lee y guarda una preferencia en tu cuenta.</p>
-          <pre id="prefs" class="m-0 small"></pre>
-          <div class="d-flex flex-wrap gap-2">
-            <button id="guardar" class="btn btn-jade" type="button">Guardar preferencia de prueba</button>
-            <button id="salir" class="btn btn-outline-secondary" type="button">Cerrar sesión</button>
-          </div>
-          <div class="d-grid gap-2 border-top pt-3">
-            <h2 class="h5 m-0">Tus datos</h2>
-            <p class="m-0 small">Puedes llevarte lo que guardamos de ti o eliminar tu cuenta con todo lo que guardamos. También puedes escribirnos a <a href="mailto:contacto@saulapp.com">contacto@saulapp.com</a>.</p>
-            <div class="d-flex flex-wrap gap-2">
-              <button id="descargar" class="btn btn-outline-secondary" type="button">Descargar mis datos</button>
-              <button id="borrar" class="btn btn-outline-danger" type="button">Eliminar mi cuenta y mis datos</button>
-            </div>
-            <div id="borrar-confirmar" class="d-grid gap-2" hidden role="alertdialog" aria-labelledby="borrar-titulo">
-              <p id="borrar-titulo" class="m-0"><strong>¿Eliminar tu cuenta?</strong> Borramos tus preferencias y tu consentimiento, y cerramos y eliminamos tu cuenta. No se puede deshacer.</p>
-              <div class="d-flex flex-wrap gap-2">
-                <button id="borrar-si" class="btn btn-danger" type="button">Sí, eliminar</button>
-                <button id="borrar-no" class="btn btn-outline-secondary" type="button">Cancelar</button>
-              </div>
-            </div>
-          </div>
-        </div>
 
         <p id="error" class="text-danger m-0" role="alert" hidden></p>
       </div>
