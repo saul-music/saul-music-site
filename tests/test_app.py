@@ -265,3 +265,31 @@ def test_become_a_guide_page_is_private_and_unlinked(client):
         html = client.get(url).text
         assert 'href="ser-guia.html"' not in html, url
         assert "Quiero ser guía" not in html.replace("Quiero ser guía en Acordia", ""), url
+
+
+CLAIMS_LINE = '<a href="mailto:contacto@acordia.io">contacto@acordia.io</a>'
+
+
+@pytest.mark.parametrize(
+    "path",
+    [
+        "/",
+        "/guias.html",
+        "/artistas.html",
+        "/pedidos.html",
+        "/privacidad.html",
+        "/entrar.html",
+        "/mi-acordia.html",
+        "/repertorio.html",
+        "/ser-guia.html",
+    ],
+)
+def test_site_footer_has_the_copyright_claims_email(client, path):
+    """C55: basta un correo para reclamos de derechos, en el pie del sitio (no en cada tema)."""
+    assert client.get(path).text.count("infringe un derecho tuyo") == 1, path
+    assert CLAIMS_LINE in client.get(path).text, path
+
+
+def test_song_pages_do_not_repeat_the_claims_line(client):
+    slug = client.get("/songs.json").json()[0]["slug"]
+    assert "infringe un derecho tuyo" not in client.get(f"/cancion-{slug}.html").text
