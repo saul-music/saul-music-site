@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Entrar · Acordia</title>
   <meta name="robots" content="noindex, nofollow">
-  <meta name="description" content="Entrar a Acordia con tu cuenta de Google.">
+  <meta name="description" content="Entrar a Acordia con Google o con tu correo.">
   <meta name="firebase-api-key" content="__API_KEY__">
   <meta name="theme-color" content="#191430">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 56'%3E%3Crect width='48' height='56' fill='%23191430'/%3E%3Cpath d='M6 54V24a18 18 0 0 1 36 0v30' fill='none' stroke='%23D4A64A' stroke-width='5'/%3E%3Ccircle cx='24' cy='16' r='4' fill='%235FB39B'/%3E%3C/svg%3E">
@@ -43,7 +43,7 @@
     .ac-login-status { margin: 0; font-size: .92rem; color: var(--ac-fg-muted); }
     .ac-login-status:empty { display: none; }
 
-    /* Botones de Google y Facebook: mismo ancho, logo oficial a la izquierda y texto centrado */
+    /* Botón de Google: ancho completo, logo oficial a la izquierda y texto centrado */
     .ac-idps { display: grid; gap: .75rem; }
     .ac-idp {
       display: flex; align-items: center; gap: .75rem; width: 100%; min-height: 3.1rem;
@@ -57,9 +57,6 @@
     /* Google: botón claro de sus pautas (#fff, borde #747775, texto #1f1f1f) en los dos temas */
     .ac-idp-google { background: #fff; color: #1f1f1f; border-color: #747775; }
     .ac-idp-google:hover:not(:disabled) { background: #f2f2f2; }
-    /* Facebook: azul de Meta un paso más oscuro (#166fe5): con #1877f2 el texto blanco queda en 4,2:1, bajo AA */
-    .ac-idp-facebook { background: #166fe5; color: #fff; border-color: #166fe5; }
-    .ac-idp-facebook:hover:not(:disabled) { background: #1259bd; border-color: #1259bd; }
     .ac-idp:focus-visible { outline: 2px solid var(--ac-fill); outline-offset: 3px; }
     .ac-idp:disabled { cursor: not-allowed; opacity: .6; }
     .ac-idp.is-loading { cursor: progress; opacity: .85; }
@@ -71,6 +68,27 @@
     .ac-idp.is-loading .ac-idp-spinner { display: block; }
     .ac-idp.is-loading .ac-idp-mark svg { display: none; }
     @keyframes ac-login-spin { to { transform: rotate(360deg); } }
+
+    /* Entrar con el correo (S114): un enlace de un solo uso, sin contraseña */
+    .ac-login-or { display: flex; align-items: center; gap: .75rem; margin: 0; color: var(--ac-fg-muted); font-size: .9rem; }
+    .ac-login-or::before, .ac-login-or::after { content: ""; flex: 1; height: 1px; background: var(--ac-line); }
+    .ac-email { display: grid; gap: .55rem; }
+    .ac-email .form-label { margin: 0; font-weight: 600; }
+    .ac-email .form-control { min-height: 3.1rem; }
+    .ac-email .btn { min-height: 3.1rem; }
+    .ac-email-sent {
+      display: grid; gap: .6rem; padding: 1rem; border: 1px solid var(--ac-line); border-left: 3px solid var(--ac-second);
+      border-radius: var(--ac-radius); background: var(--ac-bg);
+    }
+    .ac-email-sent p { margin: 0; }
+    .ac-email-sent strong { overflow-wrap: anywhere; }
+    .ac-email-actions { display: flex; flex-wrap: wrap; gap: .25rem 1.25rem; }
+    .ac-link-button {
+      padding: .35rem 0; border: 0; background: none; color: var(--ac-accent); font-weight: 600;
+      text-decoration: underline; text-underline-offset: .2em;
+    }
+    .ac-link-button:disabled { color: var(--ac-fg-muted); text-decoration: none; cursor: default; }
+    .ac-email > .ac-link-button { justify-self: start; }
 
     .ac-login-trust {
       list-style: none; margin: 0; padding: 1rem 0 0; display: grid; gap: .45rem;
@@ -201,11 +219,12 @@
             <p id="estado" class="ac-login-status" role="status">Comprobando tu sesión…</p>
           </div>
 
-          <div id="aviso-host" class="alert alert-warning m-0" hidden>
-            El inicio de sesión solo funciona desde la dirección oficial del sitio, <strong>acordia.io</strong>.
-          </div>
-
           <div id="paso-entrar" class="d-grid gap-3" hidden>
+            <div id="aviso-app" class="alert alert-warning m-0" role="note" hidden>
+              <strong>Estás en el navegador de una app.</strong> Google no permite entrar desde aquí. Abre esta página en tu
+              navegador (toca ⋯ o el botón de compartir y elige <em>Abrir en el navegador</em>) o entra con tu correo.
+              <a id="abrir-chrome" class="d-block mt-2 fw-semibold" hidden>Abrir en Chrome</a>
+            </div>
             <div class="ac-idps">
               <button id="entrar-google" class="ac-idp ac-idp-google" type="button" aria-busy="false">
                 <span class="ac-idp-mark" aria-hidden="true">
@@ -214,15 +233,21 @@
                 </span>
                 <span class="ac-idp-label">Continuar con Google</span>
               </button>
-              <!-- Facebook oculto (S112): la app de Meta no puede pasar a Live sin verificación del negocio y aún no hay
-                   empresa; en modo desarrollo solo entran quienes tienen un rol en la app. Para mostrarlo, quitar `hidden`. -->
-              <button id="entrar-facebook" class="ac-idp ac-idp-facebook" type="button" aria-busy="false" hidden>
-                <span class="ac-idp-mark" aria-hidden="true">
-                  <svg viewBox="0 0 24 24"><path fill="#fff" d="M24 12.073C24 5.405 18.627 0 12 0S0 5.405 0 12.073C0 18.1 4.388 23.094 10.125 24v-8.437H7.078v-3.49h3.047V9.413c0-3.026 1.792-4.697 4.533-4.697 1.312 0 2.686.236 2.686.236v2.971H15.83c-1.491 0-1.956.93-1.956 1.886v2.264h3.328l-.532 3.49h-2.796V24C19.612 23.094 24 18.1 24 12.073z"/></svg>
-                  <span class="ac-idp-spinner"></span>
-                </span>
-                <span class="ac-idp-label">Continuar con Facebook</span>
-              </button>
+            </div>
+            <p class="ac-login-or">o</p>
+            <form id="form-correo" class="ac-email" novalidate>
+              <label class="form-label" for="correo">Continuar con tu correo</label>
+              <input id="correo" class="form-control" type="email" name="email" autocomplete="email" inputmode="email"
+                     autocapitalize="none" spellcheck="false" placeholder="tu@correo.cl" maxlength="254" required>
+              <button id="correo-enviar" class="btn btn-outline-primary" type="submit">Enviarme un enlace</button>
+            </form>
+            <div id="correo-enviado" class="ac-email-sent" role="status" hidden>
+              <p>Te enviamos un enlace a <strong id="correo-destino"></strong>.</p>
+              <p class="small text-body-secondary">Ábrelo en este mismo teléfono o computador. Si no llega en un minuto, revisa Spam o Promociones.</p>
+              <div class="ac-email-actions">
+                <button id="correo-reenviar" class="ac-link-button" type="button" disabled>Reenviar el enlace</button>
+                <button id="correo-otro" class="ac-link-button" type="button">Usar otro correo</button>
+              </div>
             </div>
             <ul class="ac-login-trust">
               <li><svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Sin contraseña nueva que recordar.</li>
@@ -234,8 +259,17 @@
               gratis, con su reproductor y el modo estudio, sin entrar.
               <a href="index.html#biblioteca">Ir a la Biblioteca</a>
             </p>
-            <p class="ac-login-legal">Al continuar, Google recibe tu dirección IP para cargar el inicio de sesión. Lee el <a href="privacidad.html">Aviso de privacidad</a>.</p>
+            <p class="ac-login-legal">Al continuar, Google recibe tu dirección IP para cargar el inicio de sesión y, si eliges el correo, te envía el enlace. Lee el <a href="privacidad.html">Aviso de privacidad</a>.</p>
           </div>
+
+          <!-- El enlace se abrió en otro dispositivo o navegador: Firebase exige volver a escribir el correo (S114) -->
+          <form id="paso-confirmar" class="ac-email" novalidate hidden>
+            <label class="form-label" for="confirmar-correo">Tu correo</label>
+            <input id="confirmar-correo" class="form-control" type="email" name="email" autocomplete="email" inputmode="email"
+                   autocapitalize="none" spellcheck="false" maxlength="254" required>
+            <button id="confirmar-entrar" class="btn btn-primary" type="submit">Entrar</button>
+            <button id="confirmar-volver" class="ac-link-button" type="button">Volver a las opciones para entrar</button>
+          </form>
 
           <form id="paso-consentimiento" class="ac-consent" aria-labelledby="login-title" hidden>
             <ol class="ac-steps" aria-label="Pasos para crear tu cuenta">

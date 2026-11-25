@@ -36,7 +36,13 @@ PUBLIC = {
     "name": "Persona Sintética",
     "firebase": {"sign_in_provider": "google.com"},
 }
-OTHER = {"uid": "uid2", "firebase": {"sign_in_provider": "facebook.com"}}
+# Entró con el enlace por correo (S114): llega como `password` con el correo verificado.
+OTHER = {
+    "uid": "uid2",
+    "email": "otra.persona@example.test",
+    "email_verified": True,
+    "firebase": {"sign_in_provider": "password"},
+}
 TEAM = {"uid": "uid3", "firebase": {"sign_in_provider": "password", "tenant": "equipo-x"}}
 TENANT_GOOGLE = {
     "uid": "uid4",
@@ -188,7 +194,12 @@ def test_public_group_people_are_accepted(claims):
     [
         TEAM,
         TENANT_GOOGLE,
+        # Contraseña o enlace sin correo verificado: una cuenta creada directo por la API (S114).
         {"uid": "u", "firebase": {"sign_in_provider": "password"}},
+        {"uid": "u", "email_verified": False, "firebase": {"sign_in_provider": "password"}},
+        {"uid": "u", "email_verified": "true", "firebase": {"sign_in_provider": "password"}},
+        # Un proveedor que el sitio no ofrece no entra aunque Firebase lo acepte.
+        {"uid": "u", "email_verified": True, "firebase": {"sign_in_provider": "github.com"}},
         {"uid": "u", "firebase": {"sign_in_provider": "anonymous"}},
         {"uid": "u", "firebase": {"sign_in_provider": "custom"}},
         {"uid": "u", "firebase": {}},
@@ -525,6 +536,9 @@ def test_the_public_notice_matches_the_version_the_server_asks_for(client):
     assert NOTICE_VERSION in page.text
     assert "contacto@saulapp.com" in page.text and "14 años o más" in page.text
     assert "noindex" not in page.text
+    # S114: nombra el correo como forma de entrar; borrar la cuenta está en Mi cuenta.
+    assert "si entras con Google" in page.text and "si entras con tu correo" in page.text
+    assert "Mi cuenta</a> → Configuración" in page.text
 
 
 @pytest.mark.parametrize(
@@ -619,7 +633,28 @@ def test_login_is_allowed_on_the_own_domain_and_on_web_app_and_nowhere_else():
     assert "www.acordia.io" not in source  # www redirige al raíz antes del login
     assert 'includes("acordia.io")' not in source  # nada de coincidencias parciales
     page = (WEB_DIR / "entrar.html").read_text(encoding="utf-8")
-    assert "acordia.io" in page and "web.app" not in page
+    # S114: sin aviso de dirección a la vista; la página no nombra otras direcciones del sitio.
+    assert 'id="aviso-host"' not in page and "web.app" not in page
+
+
+def test_the_login_page_offers_google_and_an_email_link_and_nothing_else():
+    # S114: Google y un enlace de un solo uso por correo, en español; ningún otro proveedor.
+    page = (WEB_DIR / "entrar.html").read_text(encoding="utf-8")
+    script = (WEB_DIR / "entrar.js").read_text(encoding="utf-8")
+    assert 'id="entrar-google"' in page and 'id="form-correo"' in page and 'type="email"' in page
+    assert 'id="paso-confirmar"' in page and 'id="aviso-app"' in page
+    assert page.count('class="ac-idp ') == 1  # un solo botón de proveedor: Google
+    assert set(re.findall(r"\b([A-Z][a-z]+)AuthProvider\b", script)) == {"Google"}
+    for name in ("sendSignInLinkToEmail", "isSignInWithEmailLink", "signInWithEmailLink"):
+        assert name in script
+    assert "handleCodeInApp: true" in script and 'auth.languageCode = "es"' in script
+    # el correo pendiente se borra al entrar y nunca va al servidor ni a la consola
+    assert 'writePending("")' in script and "console." not in script
+
+
+def test_the_my_account_page_names_both_ways_to_sign_in():
+    page = (WEB_DIR / "mi-acordia.html").read_text(encoding="utf-8")
+    assert "entrar con Google o con tu correo" in page
 
 
 def test_login_script_is_served_as_javascript():
@@ -722,10 +757,11 @@ def test_identity_keeps_only_known_short_text_fields():
         "name": "x" * 1000,
         "picture": 5,  # no es texto: se ignora
         "phone_number": "+000",  # no se pide: no sale
-        "firebase": {"sign_in_provider": "facebook.com"},
+        "email_verified": True,
+        "firebase": {"sign_in_provider": "password"},
     }
     found = identity_from_claims(claims)
-    assert found["provider"] == "facebook.com" and found["email"] == "a@example.test"
+    assert found["provider"] == "password" and found["email"] == "a@example.test"
     assert len(found["name"]) == 300 and "picture" not in found and "phone_number" not in found
 
 
