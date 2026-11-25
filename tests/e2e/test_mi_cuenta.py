@@ -44,8 +44,13 @@ export const onAuthStateChanged = (_a, cb) => {
   setTimeout(() => cb(window.__signedOut ? null : user), 0);
   return () => {};
 };
-export const signOut = async () => { calls.push("signOut"); };
-export const deleteUser = async () => { calls.push("deleteUser"); };
+// También en sessionStorage: `window.__calls` se pierde al redirigir.
+const record = (name) => {
+  calls.push(name);
+  sessionStorage.setItem("__calls", JSON.stringify(calls));
+};
+export const signOut = async () => record("signOut");
+export const deleteUser = async () => record("deleteUser");
 """
 
 
@@ -260,9 +265,10 @@ def test_deleting_always_asks_and_then_removes_our_data_and_the_account(
     expect(page.locator("#borrar-confirmar")).to_be_hidden()
     page.click("#borrar")
     page.click("#borrar-si")
-    expect(page.locator("#estado")).to_have_text("Eliminamos tu cuenta y tus datos.")
-    assert store.deleted and page.evaluate("window.__calls") == ["deleteUser"]
-    expect(page.locator("#contenido")).to_be_hidden()
+    page.wait_for_url(f"{account_url}/")  # sin pantalla intermedia: a la portada
+    assert store.deleted and json.loads(page.evaluate("sessionStorage.getItem('__calls')")) == [
+        "deleteUser"
+    ]
 
 
 def test_signing_out_clears_the_session_hint(page: Page, account_url):
@@ -270,12 +276,11 @@ def test_signing_out_clears_the_session_hint(page: Page, account_url):
     expect(page.locator("#contenido")).to_be_visible()
     assert page.evaluate("localStorage.getItem('acordia-session')") == "1"
     page.click("#salir")  # desde el Resumen, sin abrir Configuración
-    expect(page.locator("#estado")).to_have_text("Cerraste tu sesión.")
+    page.wait_for_url(
+        f"{account_url}/"
+    )  # cerrar la sesión lleva a la portada, sin pantalla intermedia
     assert page.evaluate("localStorage.getItem('acordia-session')") is None
-    assert page.evaluate("window.__calls") == ["signOut"]
-    assert page.url.endswith(
-        "/mi-acordia.html"
-    )  # cerrar la sesión no manda a entrar: se queda con su mensaje
+    assert json.loads(page.evaluate("sessionStorage.getItem('__calls')")) == ["signOut"]
 
 
 def test_sign_out_is_visible_in_both_tabs_outside_the_tablist_and_fits_a_phone(
