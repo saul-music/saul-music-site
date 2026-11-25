@@ -46,7 +46,7 @@ def gtag_loaded(page: Page) -> None:
 def test_without_a_decision_nothing_is_loaded_from_google(page: Page, url: str):
     calls = watch(page, url)
     page.goto(url + "/")
-    expect(page.get_by_role("dialog", name="Medición de visitas")).to_be_visible()
+    expect(page.get_by_role("dialog", name="Cookies")).to_be_visible()
     page.wait_for_timeout(500)
     assert calls == []
     assert page.evaluate("typeof window.dataLayer") == "undefined"
@@ -84,7 +84,7 @@ def test_withdrawing_the_permission_clears_the_cookies(page: Page, url: str):
     page.evaluate(
         "document.cookie = '_ga=GA1.1.1; path=/'; document.cookie = '_ga_ABC=GS1; path=/'"
     )
-    page.get_by_role("link", name="Preferencias de analítica").click()
+    page.get_by_role("link", name="Preferencias de cookies").click()
     page.get_by_role("button", name="Rechazar").click()
     assert "_ga" not in page.evaluate("document.cookie")
     assert (
@@ -101,11 +101,11 @@ def test_a_song_page_asks_too_and_the_footer_link_reopens_the_banner(page: Page,
     calls = watch(page, url)
     slug = page.request.get(url + "/songs.json").json()[0]["slug"]
     page.goto(f"{url}/cancion-{slug}.html")
-    expect(page.get_by_role("dialog", name="Medición de visitas")).to_be_visible()
+    expect(page.get_by_role("dialog", name="Cookies")).to_be_visible()
     assert calls == []
     page.get_by_role("button", name="Rechazar").click()
-    page.get_by_role("link", name="Preferencias de analítica").click()
-    expect(page.get_by_role("dialog", name="Medición de visitas")).to_be_visible()
+    page.get_by_role("link", name="Preferencias de cookies").click()
+    expect(page.get_by_role("dialog", name="Cookies")).to_be_visible()
 
 
 @pytest.mark.parametrize("path", ["/mi-acordia.html", "/entrar.html", "/pedidos.html"])
@@ -113,7 +113,7 @@ def test_account_pages_are_never_measured(page: Page, url: str, path: str):
     calls = watch(page, url)
     page.goto(url + path)
     page.wait_for_timeout(300)
-    expect(page.get_by_role("dialog", name="Medición de visitas")).to_have_count(0)
+    expect(page.get_by_role("dialog", name="Cookies")).to_have_count(0)
     assert calls == []
 
 
@@ -122,5 +122,5 @@ def test_embedded_song_never_asks(page: Page, url: str):
     slug = page.request.get(url + "/songs.json").json()[0]["slug"]
     page.goto(f"{url}/cancion-{slug}.html?embed=1")
     page.wait_for_timeout(300)
-    expect(page.get_by_role("dialog", name="Medición de visitas")).to_have_count(0)
+    expect(page.get_by_role("dialog", name="Cookies")).to_have_count(0)
     assert calls == []
