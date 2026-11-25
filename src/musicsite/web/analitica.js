@@ -1,6 +1,6 @@
 // Analítica con consentimiento previo (S116, C51). El servidor solo inyecta este script en páginas públicas y en los hosts
 // con medición. Hasta que la persona acepta no se carga nada de Google: ni gtag.js ni cookies. Rechazar, o retirar el permiso
-// desde «Preferencias de analítica» en el pie, borra las cookies de Analytics y deja de medir. Todo texto entra con textContent.
+// desde «Preferencias de cookies» en el pie, borra las cookies de Analytics y deja de medir. Todo texto entra con textContent.
 (() => {
   const script = document.currentScript;
   const ID = script?.dataset.id;
@@ -65,7 +65,7 @@
     if (banner) return;
     banner = document.createElement("div");
     banner.setAttribute("role", "dialog");
-    banner.setAttribute("aria-label", "Medición de visitas");
+    banner.setAttribute("aria-label", "Cookies");
     banner.style.cssText = "position:fixed;left:0;right:0;bottom:0;z-index:1080;background:#191430;color:#f4f1ff;" +
       "border-top:1px solid #4a3f7a;padding:.9rem 1rem;box-shadow:0 -4px 18px rgba(0,0,0,.35)";
     const inner = document.createElement("div");
@@ -73,7 +73,7 @@
     const text = document.createElement("p");
     text.className = "m-0 small flex-grow-1";
     text.style.maxWidth = "48rem";
-    text.append("¿Nos ayudas a saber qué temas se visitan? Con tu permiso usamos Google Analytics, sin publicidad. Si no aceptas, el sitio funciona igual. ");
+    text.append("Usamos cookies para entender cómo se usa el sitio y mejorarlo. Puedes aceptarlas o rechazarlas; el sitio funciona igual. ");
     const more = document.createElement("a");
     more.href = "privacidad.html#analitica";
     more.textContent = "Más información";
@@ -103,7 +103,7 @@
     const link = document.createElement("a");
     link.href = "#analitica";
     link.dataset.analitica = "1";
-    link.textContent = "Preferencias de analítica";
+    link.textContent = "Preferencias de cookies";
     link.addEventListener("click", (event) => { event.preventDefault(); openBanner(); });
     nav.append(link);
   }
