@@ -1292,6 +1292,55 @@ def test_song_pages_get_the_account_links_and_the_theory_button_goes_to_aprende(
     )  # sin esos fragmentos, no cambia nada
 
 
+@pytest.mark.parametrize(
+    ("level", "href"),
+    [
+        ("Inicial", "/aprende/#/basico"),
+        ("Medio", "/aprende/#/intermedio"),
+        ("", "/aprende/"),
+    ],
+)
+def test_the_theory_button_goes_to_the_route_of_the_song_level(level, href):
+    from musicsite.songpage import decorate
+
+    page = (
+        f'<dl><dt class="x">Nivel</dt><dd class="y">{level}</dd></dl>'
+        '<a class="btn" href="aprender.html" target="_blank" data-ac-util-learn>Aprende teoría</a>'
+    ).encode()
+    for embed in (False, True):
+        assert f'href="{href}"' in decorate(page, embed=embed).decode()
+
+
+def test_advanced_songs_have_no_theory_button():
+    from musicsite.songpage import decorate
+
+    page = (
+        '<dl><dt class="x">Nivel</dt><dd class="y">Avanzado</dd></dl>'
+        '<div class="ac-util-btns"><button>Afinador</button>\n'
+        '<a class="btn" href="aprender.html" data-ac-util-learn>Aprende teoría <svg></svg></a>\n'
+        '</div><a href="otra.html">sigue</a>'
+    ).encode()
+    out = decorate(page).decode()
+    assert "Aprende teoría" not in out and "aprender.html" not in out
+    assert "<button>Afinador</button>" in out and 'href="otra.html"' in out
+
+
+def test_published_song_pages_link_the_theory_button_by_level(client):
+    """Con las páginas reales de la librería: si cambia la ficha o el botón, esto lo detecta."""
+    routes = {"Inicial": "/aprende/#/basico", "Medio": "/aprende/#/intermedio"}
+    seen = set()
+    for song in client.get("/songs.json").json():
+        html = client.get(f"/cancion-{song['slug']}.html").text
+        level = re.search(r">Nivel</dt><dd[^>]*>([^<]*)</dd>", html).group(1)
+        button = re.search(r'<a [^>]*href="([^"]*)"[^>]*data-ac-util-learn', html)
+        if level == "Avanzado":
+            assert button is None and "data-ac-util-learn" not in html, song["slug"]
+        else:
+            assert button.group(1) == routes.get(level, "/aprende/"), song["slug"]
+        seen.add(level)
+    assert seen & set(routes), seen
+
+
 def test_a_served_song_page_has_the_links(client):
     page = client.get("/cancion-camara-lenta.html").text
     assert 'href="mi-acordia.html">Mi cuenta</a>' in page and "aprender.html" not in page
