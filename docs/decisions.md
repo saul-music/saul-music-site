@@ -1207,3 +1207,33 @@ falló en `acordia.io` por dos motivos: esta guarda y que Google y Facebook solo
 - **Ya hecho en infra:** `acordia.io` y `www` autorizados en Firebase Auth y en las direcciones de la key del site (`firebase.sh`).
 - **Sigue con `noindex`** (todo el sitio, hasta el lanzamiento; S6).
 - **Pruebas:** la guarda y el aviso. **Sin comprobar:** el login real con Google y con Facebook en `acordia.io` (lo prueba el usuario con una cuenta real).
+
+## S112 · Rediseño de «Entrar»; por ahora solo con Google (2026-11-25)
+
+**Pedido del usuario:** «mejorar mucho la pantalla de login y dar la opción de ingresar con Instagram». Tras investigar, Instagram no se puede y
+Facebook queda en pausa (abajo): la página pública ofrece solo Google. Revisado a ojo por el usuario en local antes del PR.
+
+- **Diseño:** en escritorio (≥ 992 px), tarjeta y a su lado los beneficios en el arco de la marca; en celular, una columna. Botón de Google con
+  su marca (blanco, «G» oficial), líneas de confianza, línea legal con el Aviso de privacidad y error con `role="alert"`.
+- **Título según de dónde se viene** (`?volver=`, mismo filtro de destinos): Aprende → «Guarda tu avance», Mi cuenta → «Entra a tu cuenta»,
+  repertorio → «Abre tus repertorios»; sin destino o con uno no permitido → «Entra a Acordia».
+- **La cuenta es opcional, y se dice:** «¿Solo quieres tocar? No necesitas cuenta: todos los temas de la Biblioteca se ven y se tocan gratis…»,
+  con enlace a la Biblioteca, dentro de la tarjeta para que en celular se lea antes que los beneficios. Dice «temas de la Biblioteca» y no
+  «repertorio», porque «Repertorios» son las listas de cada persona y esas sí piden cuenta.
+- **Estado de carga:** al tocar el botón dice «Abriendo Google…», con `aria-busy` y los botones desactivados; vuelven si la redirección falla o
+  si la persona regresa con «atrás».
+- **Paso de consentimiento:** indicador de dos pasos, las mismas casillas, el perfil opcional de S110 y «No acepto» como enlace discreto.
+- **Lógica sin cambios:** Firebase 13.4.0 por redirección, consentimiento, filtro de `?volver=`, borrar la cuenta al rechazar, solo `textContent`
+  y la guarda de direcciones de S113.
+- **Facebook oculto, no retirado** (`hidden` en el botón; su código sigue): la app de Meta está en modo desarrollo, donde solo entran quienes
+  tienen un rol en ella. Pasar a *Live* exige acceso avanzado a `email` y `public_profile`, y eso exige la verificación del negocio (desde
+  febrero de 2023), que no se puede hacer sin una empresa. Las URL de privacidad y de borrado de datos ya quedaron aceptadas por Meta. Para
+  volver a mostrarlo: quitar `hidden` y volver a nombrarlo en `mi-acordia.html`. Detalle de los pasos de Meta: control C46.
+- **Instagram no se puede:** la API Basic Display cerró el 2024-12-04; la API de Instagram con login de Instagram solo sirve a cuentas
+  profesionales; Firebase no tiene ese proveedor, y el login de Facebook no es un «login con Meta» que acepte cuentas de Instagram. Threads
+  (solo identificador y usuario, sin correo) obligaría a tokens propios y revisión de la app: descartado.
+- **Pruebas:** 11 de navegador nuevas (título según `?volver=`, paso 2, aviso fuera de la dirección oficial, carga y botones que vuelven),
+  Facebook oculto y aviso de cuenta opcional; 553 unitarias y 36 de navegador de cuenta en Chromium y WebKit.
+- **Sin comprobar:** el login real con Google tras el rediseño (la lógica no cambió) y el aspecto en un celular real. **Anotado, sin tocar:**
+  la barra de navegación de todo el sitio se rompe a 768 px; la guía de marca de Google pide Roboto en el botón (aquí va Work Sans);
+  `privacidad.html` dice que la cuenta se borra «desde la página donde iniciaste sesión», y desde S108 es «Mi cuenta» → Configuración.

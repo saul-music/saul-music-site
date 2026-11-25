@@ -840,7 +840,8 @@ def test_the_consent_step_offers_the_optional_profile_for_a_first_account():
     page = (WEB_DIR / "entrar.html").read_text()
     for element in ("c-perfil", "c-nombre", "c-instrumento", "c-nivel"):
         assert f'id="{element}"' in page
-    assert 'id="c-perfil" class="d-grid gap-3 m-0 p-0 border-0" hidden' in page
+    # Oculto hasta saber si es la primera vez.
+    assert 'id="c-perfil" class="ac-login-profile" hidden' in page
 
 
 def test_the_login_page_is_only_a_login_and_sends_a_signed_in_person_to_my_account():
