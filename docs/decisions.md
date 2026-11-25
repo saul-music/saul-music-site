@@ -1277,3 +1277,23 @@ de personas. Con Google más un enlace por correo puede entrar cualquiera que te
 - **Sin comprobar:** el primer correo real (llegada, spam, remitente, español), que el token del enlace diga `password` (si no, la API
   respondería 404 y se vería al probar), los navegadores de Instagram y TikTok en teléfonos reales, y el caso de una cuenta de Google de
   empresa o colegio que después entra con un enlace al mismo correo.
+
+## S115 · SEO mínimo para poder probar antes de lanzar: `noindex` por host, `robots.txt`, `sitemap.xml` y metadatos únicos (2026-11-25)
+
+**Contexto:** S6 exige SEO antes de anunciar. El usuario quiere lanzar con 100 temas (hoy 50) y pidió **solo lo mínimo que permita probar antes de salir
+indexado**. Hoy el `noindex` lo pone Firebase Hosting para todo el sitio (`hosting.sh`) y no distingue dominios; al quitarlo se indexarían también
+`*.web.app` y `*.run.app`.
+**Decisión:**
+- `musicsite.seo` decide por host: la cabecera `X-Robots-Tag: noindex, nofollow` sale siempre, salvo que `INDEXING_ENABLED` sea verdadero **y** el host
+  sea `acordia.io` **y** la página sea pública (`/`, artistas, guías, privacidad y cada tema; nunca cuenta, `pedidos`, `ser-guia`, `cancion.html` ni `?embed=1`).
+  El host sale de `X-Forwarded-Host` (Hosting) y, si falta, de `Host`.
+- `INDEXING_ENABLED = False`: **nada cambia al desplegar**, salvo dos archivos nuevos. Lanzar = ese flag a `True` por PR **y** quitar la cabecera de Hosting
+  (`NOINDEX=0 bootstrap/hosting.sh on`, infra).
+- `/robots.txt`: en hosts técnicos o sin lanzar, `Disallow: /`; en `acordia.io` lanzado, `Allow: /`, `Disallow: /api/` y el sitemap.
+- `/sitemap.xml`: siempre disponible, con URLs absolutas de `acordia.io`: portada, páginas públicas y cada tema publicado (un tema nuevo entra solo).
+- En cada tema (se inserta al servir, sin tocar la librería): `canonical` absoluto, título «Tema · Artista · Acordia» y descripción con el artista.
+**Se deja fuera a propósito:** Open Graph, JSON-LD, metadatos de las demás páginas, contenido propio por tema, analítica y Search Console (siguen en S6),
+`/aprende/` (estático, en otro repo) y el límite de peticiones.
+**Sin comprobar hasta desplegar:** que Hosting entregue el dominio original en `X-Forwarded-Host` a Cloud Run; si no, `acordia.io` quedaría `noindex`
+(falla seguro) y hay que ajustar. Tests: `tests/test_seo.py`.
+

@@ -8,6 +8,8 @@ y un fragmento no está, no pasa nada.
 import html
 import re
 
+from musicsite import seo
+
 PEDIDOS_NAV = (
     '<li class="nav-item"><a class="nav-link" href="pedidos.html">Pide una canción</a></li>'
 )
@@ -30,7 +32,7 @@ def song_slug(path: str) -> str | None:
     return found.group(1) if found else None
 
 
-def decorate(page: bytes, *, api_key: str = "", embed: bool = False) -> bytes:
+def decorate(page: bytes, *, api_key: str = "", embed: bool = False, path: str = "") -> bytes:
     """Menú y pie con «Aprende» y «Mi cuenta»; «Aprende teoría» va a `/aprende/` (C28).
 
     Con `embed`, sin menú, pie ni script de cuenta (el reproductor va dentro de otra página).
@@ -41,6 +43,8 @@ def decorate(page: bytes, *, api_key: str = "", embed: bool = False) -> bytes:
     text = text.replace('href="aprender.html"', 'href="/aprende/"')
     if embed:
         return text.replace("</head>", EMBED_STYLE + "</head>", 1).encode("utf-8")
+    if song_slug(path):
+        text = seo.enrich_song(text, path)  # título con artista y `canonical` (S115)
     text = text.replace(PEDIDOS_NAV, PEDIDOS_NAV + ACCOUNT_NAV, 1)
     text = text.replace(PEDIDOS_FOOT + "\n", PEDIDOS_FOOT + ACCOUNT_FOOT + "\n", 1)
     if api_key:
