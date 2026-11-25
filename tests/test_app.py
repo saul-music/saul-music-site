@@ -19,7 +19,6 @@ def client() -> TestClient:
     [
         ("/", "text/html"),
         ("/index.html", "text/html"),
-        ("/cancion.html", "text/html"),
         ("/guias.html", "text/html"),
         ("/mi-acordia.html", "text/html"),
         ("/mi-acordia.js", "text/javascript"),
@@ -42,7 +41,15 @@ def test_head_has_no_body(client):
 
 @pytest.mark.parametrize(
     "path",
-    ["/docs", "/redoc", "/openapi.json", "/nada.html", "/web/index.html", "/dashboard/latest"],
+    [
+        "/docs",
+        "/redoc",
+        "/openapi.json",
+        "/nada.html",
+        "/web/index.html",
+        "/dashboard/latest",
+        "/cancion.html",
+    ],
 )
 def test_other_routes_are_empty_404(client, path):
     response = client.get(path)
@@ -84,7 +91,6 @@ def test_web_dir_has_only_fixed_site_files():
     # muestras también son de la librería (R1) y no se copian aquí.
     fixed = {
         "index.html",
-        "cancion.html",
         "guias.html",
         "ser-guia.html",
         "artistas.html",

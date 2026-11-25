@@ -1325,3 +1325,8 @@ propia «Cookies y medición de visitas» (`#analitica`: Google Analytics, opt-i
 la base legal y nombra a Cloudflare (DNS y reenvío de `contacto@acordia.io`). `NOTICE_VERSION` queda en v5: la sección es de cookies, no de datos de cuenta, y no pide
 volver a aceptar. `ANALYTICS_HOSTS` pasa a `("saulapp-music.web.app", "acordia.io")`; `www` redirige y `run.app` no se mide. Sigue pendiente la revisión legal del aviso (antes del 2027-10-15).
 
+
+## S117 · Se retira `cancion.html`, el tema de ejemplo ajeno (2026-11-25)
+
+**Contexto:** `cancion.html` mostraba una canción ajena marcada «Ejemplo» (S2, V2 del control). La consulta legal (C55 del control) resolvió V2 para lo que publica Acordia (acordes y estructura sin letra ni melodía); el usuario decidió quitar el ejemplo en vez de revisar su caso.
+**Decisión:** se borra `web/cancion.html`; la dirección responde 404 como cualquier otra inexistente (no la enlaza nadie y estaba en `noindex`). Salen sus pruebas y las dos comprobaciones del smoke del pipeline. Las páginas de cada tema (`cancion-<tema>.html`) salen de la librería y no cambian.

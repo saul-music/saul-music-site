@@ -4,7 +4,7 @@ El script `analitica.js` se inyecta al servir, solo en las páginas públicas y 
 hosts de `ANALYTICS_HOSTS` (el host de pruebas y el dominio propio); fuera de la lista no cambia
 ni el HTML ni la CSP.
 No carga nada de Google hasta que la persona acepta en el banner. Nunca se mide en cuenta,
-`pedidos`, `ser-guia`, `cancion.html` ni `?embed=1`.
+`pedidos`, `ser-guia` ni `?embed=1`.
 """
 
 from fastapi import Request

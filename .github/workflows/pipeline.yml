@@ -176,7 +176,6 @@ jobs:
           done
           code() { curl -s -o /dev/null -w '%{http_code}' "http://localhost:8080$1"; }
           test "$(code /)" = "200"
-          test "$(code /cancion.html)" = "200"
           test "$(code /cancion-otra-era.html)" = "200"
           test "$(code /docs)" = "404"
           docker stop site
@@ -245,13 +244,12 @@ jobs:
             --set-env-vars "EDITORIAL_DIR=/editorial,FIREBASE_PROJECT_ID=${PROJECT_ID},FIREBASE_API_KEY=${FIREBASE_SITE_API_KEY}" \
             --min-instances 0 --max-instances 2 --cpu 1 --memory 512Mi \
             --allow-unauthenticated --quiet
-      - name: smoke (/ y /cancion.html y una página de canción dan 200; /docs y /dashboard/latest dan 404)
+      - name: smoke (/ y una página de canción dan 200; /docs y /dashboard/latest dan 404)
         run: |
           url="$(gcloud run services describe "$SERVICE" --project "$PROJECT_ID" \
             --region "$REGION" --format='value(status.url)')"
           code() { curl -s -o /dev/null -w '%{http_code}' "${url}$1"; }
           test "$(code /)" = "200"
-          test "$(code /cancion.html)" = "200"
           test "$(code /cancion-otra-era.html)" = "200"
           test "$(code /docs)" = "404"
           test "$(code /dashboard/latest)" = "404"
