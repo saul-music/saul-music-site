@@ -204,3 +204,4 @@ AAAA-MM-DD · paso · qué se hizo · qué quedó pendiente · decisiones nuevas
 2026-11-25 · analítica con consentimiento en producción, apagada (S116, PR #145, de0e239) · desplegado y verificado: ni `acordia.io` ni `web.app` traen el script ni cambió la CSP; `analitica.js` responde 200 · PR corto activa solo `saulapp-music.web.app` para probar con datos en tiempo real · pendiente: probar, aviso de privacidad con la sección de analítica y recién entonces `acordia.io`
 
 - 2026-11-25 · S116 · el aviso de privacidad publica «Cookies y medición de visitas» y `acordia.io` entra en `ANALYTICS_HOSTS` (PR abierto, sin mezclar; NOTICE_VERSION sigue en v5).
+- 2026-11-25 · S112 · en «Entrar», los tres puntos de confianza y el aviso «¿Solo quieres tocar?» pasan de la tarjeta de login al arco de «Con tu cuenta» (misma página, mismos ids); la tarjeta queda solo con el acceso.
