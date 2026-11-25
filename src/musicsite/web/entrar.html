@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Entrar · Acordia</title>
   <meta name="robots" content="noindex, nofollow">
-  <meta name="description" content="Entrar a Acordia con Google o Facebook.">
+  <meta name="description" content="Entrar a Acordia con tu cuenta de Google.">
   <meta name="firebase-api-key" content="__API_KEY__">
   <meta name="theme-color" content="#191430">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 56'%3E%3Crect width='48' height='56' fill='%23191430'/%3E%3Cpath d='M6 54V24a18 18 0 0 1 36 0v30' fill='none' stroke='%23D4A64A' stroke-width='5'/%3E%3Ccircle cx='24' cy='16' r='4' fill='%235FB39B'/%3E%3C/svg%3E">
@@ -16,8 +16,138 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
   <link rel="stylesheet" href="style.css">
   <style>
-    .ac-login { max-width: 34rem; }
-    .ac-login [hidden] { display: none !important; }
+    /* Página de entrada (S112). Estilos solo de esta página, con los tokens --ac-* de la librería:
+       plana, sin degradados ni sombras, esquinas casi rectas y el arco como forma firma. */
+    .ac-login-page [hidden] { display: none !important; }
+    .ac-login-page { padding-block: clamp(2rem, 5vw, 4.5rem); }
+    .ac-login-grid {
+      display: grid; gap: 2rem; grid-template-columns: minmax(0, 1fr);
+      max-width: 30rem; margin-inline: auto;
+    }
+    @media (min-width: 992px) {
+      .ac-login-grid {
+        max-width: 64rem; grid-template-columns: minmax(0, 30rem) minmax(0, 32rem);
+        justify-content: space-between; align-items: start; gap: 3rem;
+      }
+    }
+
+    /* Tarjeta de acceso */
+    .ac-login-card {
+      display: grid; gap: 1.25rem; padding: clamp(1.5rem, 4vw, 2.25rem);
+      background: var(--ac-surface); border: 1px solid var(--ac-line); border-top: 3px solid var(--ac-fill);
+      border-radius: 6px;
+    }
+    .ac-login-head { display: grid; gap: .5rem; }
+    .ac-login-head h1 { margin: 0; font-size: clamp(2rem, 5vw, 2.6rem); line-height: 1.1; }
+    .ac-login-lead { margin: 0; color: var(--ac-fg-muted); }
+    .ac-login-status { margin: 0; font-size: .92rem; color: var(--ac-fg-muted); }
+    .ac-login-status:empty { display: none; }
+
+    /* Botones de Google y Facebook: mismo ancho, logo oficial a la izquierda y texto centrado */
+    .ac-idps { display: grid; gap: .75rem; }
+    .ac-idp {
+      display: flex; align-items: center; gap: .75rem; width: 100%; min-height: 3.1rem;
+      padding: .65rem 1rem; border: 1px solid transparent; border-radius: var(--ac-radius);
+      font: 600 1rem/1.2 var(--ac-font-text); cursor: pointer;
+      transition: background-color .15s, border-color .15s;
+    }
+    .ac-idp-mark { flex: none; display: grid; place-items: center; width: 20px; height: 20px; }
+    .ac-idp-mark svg { width: 20px; height: 20px; display: block; }
+    .ac-idp-label { flex: 1; text-align: center; margin-right: 20px; }
+    /* Google: botón claro de sus pautas (#fff, borde #747775, texto #1f1f1f) en los dos temas */
+    .ac-idp-google { background: #fff; color: #1f1f1f; border-color: #747775; }
+    .ac-idp-google:hover:not(:disabled) { background: #f2f2f2; }
+    /* Facebook: azul de Meta un paso más oscuro (#166fe5): con #1877f2 el texto blanco queda en 4,2:1, bajo AA */
+    .ac-idp-facebook { background: #166fe5; color: #fff; border-color: #166fe5; }
+    .ac-idp-facebook:hover:not(:disabled) { background: #1259bd; border-color: #1259bd; }
+    .ac-idp:focus-visible { outline: 2px solid var(--ac-fill); outline-offset: 3px; }
+    .ac-idp:disabled { cursor: not-allowed; opacity: .6; }
+    .ac-idp.is-loading { cursor: progress; opacity: .85; }
+    .ac-idp-spinner {
+      display: none; width: 18px; height: 18px; border-radius: 50%;
+      border: 2px solid currentColor; border-right-color: transparent;
+      animation: ac-login-spin .8s linear infinite;
+    }
+    .ac-idp.is-loading .ac-idp-spinner { display: block; }
+    .ac-idp.is-loading .ac-idp-mark svg { display: none; }
+    @keyframes ac-login-spin { to { transform: rotate(360deg); } }
+
+    .ac-login-trust {
+      list-style: none; margin: 0; padding: 1rem 0 0; display: grid; gap: .45rem;
+      border-top: 1px solid var(--ac-line); font-size: .95rem;
+    }
+    .ac-login-trust li { display: flex; gap: .6rem; align-items: flex-start; }
+    .ac-login-trust svg { flex: none; width: 18px; height: 18px; margin-top: .2em; stroke: var(--ac-second); }
+    .ac-login-legal { margin: 0; font-size: .85rem; color: var(--ac-fg-muted); }
+    /* La cuenta es opcional: el repertorio completo se usa sin entrar (S112) */
+    .ac-login-free {
+      margin: 0; padding: .8rem 1rem; border-left: 3px solid var(--ac-second); border-radius: var(--ac-radius);
+      background: rgba(var(--ac-second-rgb), .1); font-size: .95rem;
+    }
+    .ac-login-free a { white-space: nowrap; font-weight: 600; }
+    .ac-login-free a::after { content: " →"; }
+
+    /* Paso 2: consentimiento */
+    .ac-steps { display: flex; align-items: center; gap: .6rem; margin: 0; padding: 0; list-style: none; font-size: .9rem; }
+    .ac-steps li { display: flex; align-items: center; gap: .45rem; color: var(--ac-fg-muted); }
+    .ac-steps li + li::before { content: ""; width: 1.5rem; height: 1px; background: var(--ac-line); }
+    .ac-steps li[aria-current="step"] { color: var(--ac-fg); font-weight: 600; }
+    .ac-step-dot {
+      display: grid; place-items: center; width: 1.5rem; height: 1.5rem; border-radius: 50%;
+      border: 2px solid var(--ac-fill); font-size: .8rem; font-weight: 600; line-height: 1;
+    }
+    .ac-steps .is-done .ac-step-dot { background: var(--ac-fill-2); border-color: var(--ac-fill-2); color: var(--ac-on-fill-2); }
+    .ac-consent { display: grid; gap: 1.25rem; }
+    .ac-consent-checks { display: grid; gap: .85rem; padding: 1rem; border: 1px solid var(--ac-line); border-radius: var(--ac-radius); background: var(--ac-bg); }
+    .ac-consent-checks .form-check { display: flex; gap: .7rem; margin: 0; padding: 0; min-height: 0; }
+    .ac-consent-checks .form-check-input { flex: none; float: none; width: 1.3rem; height: 1.3rem; margin: .1rem 0 0; }
+    .ac-login-profile { display: grid; gap: .85rem; margin: 0; padding: 1.1rem 0 0; border: 0; border-top: 1px dashed var(--ac-line); }
+    .ac-login-profile legend { float: left; width: 100%; margin: 0; padding: 0; font: 600 1rem/1.3 var(--ac-font-text); }
+    .ac-login-profile legend + * { clear: both; }
+    .ac-login-profile legend span { font-weight: 400; color: var(--ac-fg-muted); }
+    .ac-login-profile .form-label { margin-bottom: .25rem; font-size: .9rem; color: var(--ac-fg-muted); }
+    .ac-consent-actions { display: grid; gap: .5rem; }
+    /* Desactivado se ve como el mismo botón, apagado (sin las dos casillas no se puede seguir) */
+    .ac-consent-actions .btn-jade:disabled {
+      background: var(--ac-fill-2); border-color: var(--ac-fill-2); color: var(--ac-on-fill-2); opacity: .45;
+    }
+    .ac-login-reject {
+      justify-self: center; padding: .6rem .25rem; border: 0; background: none;
+      color: var(--ac-fg-muted); font-size: .9rem; text-decoration: underline; text-underline-offset: .2em;
+    }
+    .ac-login-reject:hover { color: var(--ac-fg); }
+
+    .ac-login-error {
+      margin: 0; padding: .7rem .9rem; border: 1px solid var(--bs-danger-border-subtle);
+      border-radius: var(--ac-radius); background: var(--bs-danger-bg-subtle); color: var(--bs-danger-text-emphasis);
+    }
+
+    /* Qué se guarda con la cuenta: en escritorio, dentro de un arco (el portal de la marca) */
+    .ac-login-aside { padding: 1.5rem; border: 1px solid var(--ac-line); border-radius: 6px; }
+    .ac-login-aside-art { display: none; }
+    .ac-login-aside h2 { margin: 0 0 1.25rem; font-size: 1.5rem; }
+    .ac-benefits { list-style: none; margin: 0; padding: 0; display: grid; gap: 1.1rem; }
+    .ac-benefits li { display: grid; grid-template-columns: 2.5rem 1fr; gap: .9rem; align-items: start; }
+    .ac-benefit-icon {
+      display: grid; place-items: center; width: 2.5rem; height: 2.5rem; border-radius: 50%;
+      border: 1px solid var(--ac-line); color: var(--ac-accent);
+    }
+    .ac-benefit-icon svg { width: 20px; height: 20px; }
+    .ac-benefits h3 { margin: 0 0 .15rem; font: 600 1rem/1.3 var(--ac-font-text); }
+    .ac-benefits p { margin: 0; font-size: .95rem; color: var(--ac-fg-muted); }
+    @media (min-width: 992px) {
+      .ac-login-aside { padding: 3.25rem 2.75rem 2.75rem; border: 2px solid var(--ac-fill); border-radius: var(--ac-arch); }
+      .ac-login-aside-art { display: block; width: 52px; height: 60px; margin: 0 auto 1rem; }
+      .ac-login-aside h2 { text-align: center; margin-bottom: 2rem; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .ac-idp { transition: none; }
+      .ac-idp-spinner { animation: none; border-right-color: currentColor; opacity: .6; }
+    }
+    @media (forced-colors: active) {
+      .ac-idp { border-color: ButtonText; }
+    }
   </style>
 </head>
 <body>
@@ -42,7 +172,7 @@
       <div class="collapse navbar-collapse" id="nav">
         <ul class="navbar-nav ms-md-4 me-auto gap-md-2">
           <li class="nav-item"><a class="nav-link" href="index.html#biblioteca">Biblioteca</a></li>
-          <li class="nav-item"><a class="nav-link active" aria-current="page" href="guias.html">Guías</a></li>
+          <li class="nav-item"><a class="nav-link" href="guias.html">Guías</a></li>
           <li class="nav-item"><a class="nav-link" href="artistas.html">Artistas</a></li>
           <li class="nav-item"><a class="nav-link" href="pedidos.html">Pide una canción</a></li>
           <li class="nav-item"><a class="nav-link" href="/aprende/">Aprende</a></li>
@@ -59,74 +189,136 @@
     </div>
   </nav>
 
-  <main>
-    <section class="ac-hero">
-      <div class="container"><div class="d-grid gap-3 ac-login">
-        <span class="ac-eyebrow">Tu cuenta</span>
-        <h1>Entrar</h1>
-        <p id="estado" class="lead m-0" role="status">Cargando…</p>
-      </div></div>
-    </section>
+  <main class="ac-login-page">
+    <div class="container">
+      <div class="ac-login-grid">
 
-    <div class="ac-frieze" aria-hidden="true"></div>
+        <div class="ac-login-card">
+          <div class="ac-login-head">
+            <span id="login-eyebrow" class="ac-eyebrow">Tu cuenta</span>
+            <h1 id="login-title">Entra a Acordia</h1>
+            <p id="login-lead" class="ac-login-lead">Guarda tus temas favoritos, arma repertorios y sigue tu avance en Aprende.</p>
+            <p id="estado" class="ac-login-status" role="status">Comprobando tu sesión…</p>
+          </div>
 
-    <section class="ac-section">
-      <div class="container ac-login d-grid gap-4">
+          <div id="aviso-host" class="alert alert-warning m-0" hidden>
+            El inicio de sesión solo funciona desde la dirección oficial del sitio, <strong>acordia.io</strong>.
+          </div>
 
-        <div id="aviso-host" class="alert alert-warning m-0" hidden>
-          El inicio de sesión solo funciona desde la dirección oficial del sitio, <strong>acordia.io</strong>.
+          <div id="paso-entrar" class="d-grid gap-3" hidden>
+            <div class="ac-idps">
+              <button id="entrar-google" class="ac-idp ac-idp-google" type="button" aria-busy="false">
+                <span class="ac-idp-mark" aria-hidden="true">
+                  <svg viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+                  <span class="ac-idp-spinner"></span>
+                </span>
+                <span class="ac-idp-label">Continuar con Google</span>
+              </button>
+              <!-- Facebook oculto (S112): la app de Meta no puede pasar a Live sin verificación del negocio y aún no hay
+                   empresa; en modo desarrollo solo entran quienes tienen un rol en la app. Para mostrarlo, quitar `hidden`. -->
+              <button id="entrar-facebook" class="ac-idp ac-idp-facebook" type="button" aria-busy="false" hidden>
+                <span class="ac-idp-mark" aria-hidden="true">
+                  <svg viewBox="0 0 24 24"><path fill="#fff" d="M24 12.073C24 5.405 18.627 0 12 0S0 5.405 0 12.073C0 18.1 4.388 23.094 10.125 24v-8.437H7.078v-3.49h3.047V9.413c0-3.026 1.792-4.697 4.533-4.697 1.312 0 2.686.236 2.686.236v2.971H15.83c-1.491 0-1.956.93-1.956 1.886v2.264h3.328l-.532 3.49h-2.796V24C19.612 23.094 24 18.1 24 12.073z"/></svg>
+                  <span class="ac-idp-spinner"></span>
+                </span>
+                <span class="ac-idp-label">Continuar con Facebook</span>
+              </button>
+            </div>
+            <ul class="ac-login-trust">
+              <li><svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Sin contraseña nueva que recordar.</li>
+              <li><svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>No publicamos nada en tus redes.</li>
+              <li><svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Tu cuenta es privada: solo tú ves tus temas y tu avance.</li>
+            </ul>
+            <p id="sin-cuenta" class="ac-login-free">
+              <strong>¿Solo quieres tocar?</strong> No necesitas cuenta: todos los temas de la Biblioteca se ven y se tocan
+              gratis, con su reproductor y el modo estudio, sin entrar.
+              <a href="index.html#biblioteca">Ir a la Biblioteca</a>
+            </p>
+            <p class="ac-login-legal">Al continuar, Google recibe tu dirección IP para cargar el inicio de sesión. Lee el <a href="privacidad.html">Aviso de privacidad</a>.</p>
+          </div>
+
+          <form id="paso-consentimiento" class="ac-consent" aria-labelledby="login-title" hidden>
+            <ol class="ac-steps" aria-label="Pasos para crear tu cuenta">
+              <li class="is-done"><span class="ac-step-dot" aria-hidden="true">✓</span>Entrar<span class="visually-hidden"> (listo)</span></li>
+              <li aria-current="step"><span class="ac-step-dot" aria-hidden="true">2</span>Un paso más</li>
+            </ol>
+            <div class="ac-consent-checks">
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="c-edad">
+                <label class="form-check-label" for="c-edad">Tengo 14 años o más.</label>
+              </div>
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="c-aviso">
+                <label class="form-check-label" for="c-aviso">Leí el <a href="privacidad.html" target="_blank" rel="noopener">Aviso de privacidad</a> y acepto que Acordia trate los datos de mi cuenta y mis preferencias para darme este servicio.</label>
+              </div>
+            </div>
+            <fieldset id="c-perfil" class="ac-login-profile" hidden>
+              <legend>Cuéntanos de ti <span>· opcional</span></legend>
+              <p class="small m-0 text-body-secondary">Solo lo ves tú. El nombre puede ser el que quieras, no tiene que ser el real. Lo puedes cambiar después en Mi cuenta.</p>
+              <div>
+                <label class="form-label" for="c-nombre">Nombre</label>
+                <input id="c-nombre" class="form-control" type="text" maxlength="40" autocomplete="nickname">
+              </div>
+              <div class="row g-3">
+                <div class="col-6">
+                  <label class="form-label" for="c-instrumento">Instrumento</label>
+                  <select id="c-instrumento" class="form-select">
+                    <option value="">Sin elegir</option><option value="guitarra">Guitarra</option><option value="teclado">Teclado</option><option value="bajo">Bajo</option><option value="otro">Otro</option>
+                  </select>
+                </div>
+                <div class="col-6">
+                  <label class="form-label" for="c-nivel">Nivel</label>
+                  <select id="c-nivel" class="form-select">
+                    <option value="">Sin elegir</option><option value="inicial">Inicial</option><option value="medio">Medio</option><option value="avanzado">Avanzado</option>
+                  </select>
+                </div>
+              </div>
+            </fieldset>
+            <div class="ac-consent-actions">
+              <button id="aceptar" class="btn btn-jade" type="submit" disabled>Aceptar y continuar</button>
+              <button id="rechazar" class="ac-login-reject" type="button">No acepto: eliminar mi cuenta</button>
+            </div>
+          </form>
+
+          <p id="error" class="ac-login-error" role="alert" hidden></p>
         </div>
 
-        <div id="paso-entrar" class="d-grid gap-3" hidden>
-          <p class="m-0">Entra con tu cuenta de Google o de Facebook para guardar tus favoritos, tus repertorios y tu avance. Al continuar, Google recibe tu dirección IP para cargar el inicio de sesión. Lee el <a href="privacidad.html">Aviso de privacidad</a>.</p>
-          <div class="d-flex flex-wrap gap-2">
-            <button id="entrar-google" class="btn btn-jade" type="button">Continuar con Google</button>
-            <button id="entrar-facebook" class="btn btn-outline-secondary" type="button">Continuar con Facebook</button>
-          </div>
-        </div>
+        <aside class="ac-login-aside" aria-labelledby="beneficios">
+          <svg class="ac-login-aside-art" viewBox="0 0 48 56" aria-hidden="true">
+            <path d="M6 54V24a18 18 0 0 1 36 0v30" fill="none" stroke="var(--ac-fill)" stroke-width="3"/>
+            <g stroke="var(--ac-fg-muted)" stroke-width="1.4">
+              <line x1="14" y1="26" x2="14" y2="54"/><line x1="19" y1="26" x2="19" y2="54"/>
+              <line x1="24" y1="26" x2="24" y2="54"/><line x1="29" y1="26" x2="29" y2="54"/>
+              <line x1="34" y1="26" x2="34" y2="54"/>
+            </g>
+            <circle cx="24" cy="16" r="3" fill="var(--ac-fill-2)"/>
+          </svg>
+          <h2 id="beneficios">Con tu cuenta</h2>
+          <ul class="ac-benefits">
+            <li>
+              <span class="ac-benefit-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M12 20s-7.5-4.6-7.5-10.2A4.2 4.2 0 0 1 12 7.3a4.2 4.2 0 0 1 7.5 2.5C19.5 15.4 12 20 12 20z"/></svg></span>
+              <div><h3>Favoritos</h3><p>Marca los temas que quieres tocar y tenlos siempre a mano.</p></div>
+            </li>
+            <li>
+              <span class="ac-benefit-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h10M4 11h10M4 16h6"/><circle cx="16.5" cy="17.5" r="2"/><path d="M18.5 17.5V7l2.5-1"/></svg></span>
+              <div><h3>Repertorios</h3><p>Arma tus listas para ensayar o tocar en vivo, un tema tras otro.</p></div>
+            </li>
+            <li>
+              <span class="ac-benefit-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M12 3.5l2.6 5.3 5.8.8-4.2 4.1 1 5.8L12 16.8l-5.2 2.7 1-5.8-4.2-4.1 5.8-.8z"/></svg></span>
+              <div><h3>Tu avance en Aprende</h3><p>Tus lecciones, tus puntos y tus estrellas quedan guardados.</p></div>
+            </li>
+            <li>
+              <span class="ac-benefit-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M10.2 8.6v6.8l5.6-3.4z"/></svg></span>
+              <div><h3>Sigue donde quedaste</h3><p>Vuelve al último tema y a la última lección con un toque, en cualquier dispositivo.</p></div>
+            </li>
+          </ul>
+        </aside>
 
-        <form id="paso-consentimiento" class="d-grid gap-3" hidden>
-          <h2 class="h4 m-0">Antes de seguir</h2>
-          <div class="form-check">
-            <input class="form-check-input" type="checkbox" id="c-edad">
-            <label class="form-check-label" for="c-edad">Tengo 14 años o más.</label>
-          </div>
-          <div class="form-check">
-            <input class="form-check-input" type="checkbox" id="c-aviso">
-            <label class="form-check-label" for="c-aviso">Leí el <a href="privacidad.html" target="_blank" rel="noopener">Aviso de privacidad</a> y acepto que Acordia trate los datos de mi cuenta y mis preferencias para darme este servicio.</label>
-          </div>
-          <fieldset id="c-perfil" class="d-grid gap-3 m-0 p-0 border-0" hidden>
-            <legend class="h6 m-0">Cuéntanos de ti <span class="text-body-secondary fw-normal">(opcional)</span></legend>
-            <p class="small m-0 text-body-secondary">Solo lo ves tú. El nombre puede ser el que quieras, no tiene que ser el real. Lo puedes cambiar después en Mi cuenta.</p>
-            <div>
-              <label class="form-label" for="c-nombre">Nombre</label>
-              <input id="c-nombre" class="form-control" type="text" maxlength="40" autocomplete="nickname">
-            </div>
-            <div class="row g-3">
-              <div class="col-sm-6">
-                <label class="form-label" for="c-instrumento">Instrumento</label>
-                <select id="c-instrumento" class="form-select">
-                  <option value="">Sin elegir</option><option value="guitarra">Guitarra</option><option value="teclado">Teclado</option><option value="bajo">Bajo</option><option value="otro">Otro</option>
-                </select>
-              </div>
-              <div class="col-sm-6">
-                <label class="form-label" for="c-nivel">Nivel</label>
-                <select id="c-nivel" class="form-select">
-                  <option value="">Sin elegir</option><option value="inicial">Inicial</option><option value="medio">Medio</option><option value="avanzado">Avanzado</option>
-                </select>
-              </div>
-            </div>
-          </fieldset>
-          <div class="d-flex flex-wrap gap-2">
-            <button id="aceptar" class="btn btn-jade" type="submit" disabled>Aceptar y continuar</button>
-            <button id="rechazar" class="btn btn-outline-secondary" type="button">No acepto: eliminar mi cuenta</button>
-          </div>
-        </form>
-
-        <p id="error" class="text-danger m-0" role="alert" hidden></p>
       </div>
-    </section>
+    </div>
   </main>
+
+  <div class="ac-frieze" aria-hidden="true"></div>
 
   <footer class="ac-footer">
     <div class="container d-grid gap-3">

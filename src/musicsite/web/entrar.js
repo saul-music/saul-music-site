@@ -19,9 +19,44 @@ const $ = (id) => document.getElementById(id);
 const apiKey = document.querySelector('meta[name="firebase-api-key"]').content;
 const STEPS = ["paso-entrar", "paso-consentimiento"];
 
+// Título y bajada según de dónde viene la persona (`?volver`, ya validado por returnTo): solo textos fijos (S112).
+const HEADINGS = {
+  inicio: ["Tu cuenta", "Entra a Acordia", "Guarda tus temas favoritos, arma repertorios y sigue tu avance en Aprende."],
+  aprende: ["Aprende", "Guarda tu avance", "Entra para que tus lecciones, tus puntos y tus estrellas queden guardados y puedas seguir desde cualquier dispositivo."],
+  cuenta: ["Mi cuenta", "Entra a tu cuenta", "Tus favoritos, tus repertorios y tu avance, en un solo lugar."],
+  repertorio: ["Repertorios", "Abre tus repertorios", "Entra para ver tus listas de temas y tocarlas una tras otra."],
+  consentimiento: ["Tu cuenta", "Antes de seguir", "Confirma estos dos puntos y tu cuenta queda lista."],
+};
+const context = () => {
+  const target = returnTo();
+  if (target.startsWith("/aprende/")) return "aprende";
+  if (target.startsWith("/repertorio.html")) return "repertorio";
+  return target === "/mi-acordia.html" ? "cuenta" : "inicio";
+};
+const setHeading = (key) => {
+  const [eyebrow, title, lead] = HEADINGS[key];
+  $("login-eyebrow").textContent = eyebrow;
+  $("login-title").textContent = title;
+  $("login-lead").textContent = lead;
+};
+
 const show = (step, message = "") => {
   for (const id of STEPS) $(id).hidden = id !== step;
   $("estado").textContent = message;
+  setHeading(step === "paso-consentimiento" ? "consentimiento" : context());
+};
+
+// Mientras el navegador va a Google o Facebook, el botón tocado lo dice y ninguno se puede volver a tocar (S112).
+const PROVIDERS = { "entrar-google": "Google", "entrar-facebook": "Facebook" };
+const setLoading = (active = "") => {
+  for (const [id, name] of Object.entries(PROVIDERS)) {
+    const button = $(id);
+    const loading = id === active;
+    button.disabled = Boolean(active);
+    button.classList.toggle("is-loading", loading);
+    button.setAttribute("aria-busy", String(loading));
+    button.querySelector(".ac-idp-label").textContent = loading ? `Abriendo ${name}…` : `Continuar con ${name}`;
+  }
 };
 const fail = (message) => { $("error").textContent = message; $("error").hidden = !message; };
 
@@ -50,7 +85,9 @@ async function afterSignIn() {
     $("c-perfil").hidden = Boolean(state.returning);
     for (const id of ["c-nombre", "c-instrumento", "c-nivel"]) $(id).value = "";
     $("paso-consentimiento").dataset.version = state.current;
-    return show("paso-consentimiento", "Un paso más.");
+    show("paso-consentimiento");
+    if (state.returning) $("login-lead").textContent = "Actualizamos el Aviso de privacidad. Revísalo y acéptalo para seguir.";
+    return;
   }
   showReady();
 }
@@ -68,6 +105,8 @@ function showReady() {
   location.replace(returnTo() || "/mi-acordia.html");
 }
 
+setHeading(context()); // antes de saber si hay sesión, para que el título no cambie a la vista
+
 if (!apiKey) {
   show("paso-entrar", "El inicio de sesión no está disponible por ahora.");
   $("entrar-google").disabled = true;
@@ -77,13 +116,21 @@ if (!apiKey) {
   const allowed = allowedHost();
   $("aviso-host").hidden = allowed;
 
-  const start = (provider) => async () => {
+  const start = (id, provider) => async () => {
     fail("");
     if (!allowed) return fail("Entra desde la dirección oficial del sitio.");
-    try { await signInWithRedirect(auth, provider()); } catch { fail("No se pudo iniciar el acceso. Intenta de nuevo."); }
+    setLoading(id);
+    try {
+      await signInWithRedirect(auth, provider());
+    } catch {
+      setLoading();
+      fail("No se pudo iniciar el acceso. Intenta de nuevo.");
+    }
   };
-  $("entrar-google").addEventListener("click", start(() => new GoogleAuthProvider()));
-  $("entrar-facebook").addEventListener("click", start(() => new FacebookAuthProvider()));
+  $("entrar-google").addEventListener("click", start("entrar-google", () => new GoogleAuthProvider()));
+  $("entrar-facebook").addEventListener("click", start("entrar-facebook", () => new FacebookAuthProvider()));
+  // Volver con «Atrás» desde Google o Facebook puede restaurar la página tal como quedó: los botones vuelven a estar listos.
+  addEventListener("pageshow", (event) => { if (event.persisted) setLoading(); });
   for (const id of ["c-edad", "c-aviso"]) {
     $(id).addEventListener("change", () => { $("aceptar").disabled = !($("c-edad").checked && $("c-aviso").checked); });
   }
