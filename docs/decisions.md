@@ -1195,3 +1195,15 @@ Las páginas de canción ya no muestran «Prototipo en investigación» (RD50; l
 - **Pruebas:** la página responde 200 con el correo y `noindex`, y ninguna otra página la enlaza ni dice «Quiero ser guía».
 - **Sin comprobar:** el aspecto de la portada sin la tarjeta (queda una sola columna en «Los guías»), a ojo y en celular real. Una URL sin enlace sigue siendo pública para quien la conozca; no es un acceso restringido.
 
+## S113 · El login también funciona en el dominio propio `acordia.io` (2026-11-25)
+
+**Amplía C20.** La página de entrada solo dejaba iniciar sesión en `*.web.app`. Con el dominio propio asociado a Hosting (infra I22) el login
+falló en `acordia.io` por dos motivos: esta guarda y que Google y Facebook solo tenían autorizado el retorno de `web.app`.
+
+- **`allowedHost`** acepta `*.web.app` y exactamente `acordia.io` (sin coincidencias parciales). `www.acordia.io` no se agrega: redirige al raíz
+  (301) antes de que alguien intente entrar. El aviso ya no nombra `web.app`.
+- **Consolas (hecho por el usuario, 2026-11-25):** la URI `https://acordia.io/__/auth/handler` se agregó al cliente OAuth de Google (y su origen de
+  JavaScript) y a «URI de redireccionamiento de OAuth válidos» de Facebook. No hay API para esto: va en `saul-music-infra/bootstrap/README-dominio.md`.
+- **Ya hecho en infra:** `acordia.io` y `www` autorizados en Firebase Auth y en las direcciones de la key del site (`firebase.sh`).
+- **Sigue con `noindex`** (todo el sitio, hasta el lanzamiento; S6).
+- **Pruebas:** la guarda y el aviso. **Sin comprobar:** el login real con Google y con Facebook en `acordia.io` (lo prueba el usuario con una cuenta real).
