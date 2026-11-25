@@ -205,3 +205,4 @@ AAAA-MM-DD · paso · qué se hizo · qué quedó pendiente · decisiones nuevas
 
 - 2026-11-25 · S116 · el aviso de privacidad publica «Cookies y medición de visitas» y `acordia.io` entra en `ANALYTICS_HOSTS` (PR abierto, sin mezclar; NOTICE_VERSION sigue en v5).
 - 2026-11-25 · S112 · en «Entrar», los tres puntos de confianza y el aviso «¿Solo quieres tocar?» pasan de la tarjeta de login al arco de «Con tu cuenta» (misma página, mismos ids); la tarjeta queda solo con el acceso.
+- 2026-11-25 · fix · el cejuelo de las figuras de «Cómo funciona» (`index.html`) traía trazos mal escritos (`M2018H100`, `M8.010H56.0`) que el navegador rechazaba en la consola; corregidos y con un test que valida los trazos SVG de todas las páginas estáticas.
