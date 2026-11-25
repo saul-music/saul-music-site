@@ -255,7 +255,7 @@ function wire() {
     try {
       await deleteUser(auth.currentUser);
       hint(false);
-      show("sin-sesion", "Eliminamos tu cuenta y tus datos.");
+      location.replace("/"); // la cuenta ya no existe: a la portada, sin pantalla intermedia
     } catch (error) {
       await signOut(auth);
       hint(false);
@@ -265,7 +265,7 @@ function wire() {
         : "Borramos tus datos, pero no pudimos eliminar la cuenta. Escríbenos a contacto@saulapp.com y la borramos.");
     }
   });
-  $("salir").addEventListener("click", async () => { leaving = true; await signOut(auth); hint(false); show("sin-sesion", "Cerraste tu sesión."); });
+  $("salir").addEventListener("click", async () => { leaving = true; await signOut(auth); hint(false); location.replace("/"); });
 }
 
 function show(which, message = "") {
@@ -279,8 +279,9 @@ async function start(user) {
   if (!user) {
     hint(false);
     // Sin sesión no hay nada que ver aquí: se va directo a entrar y se vuelve a esta página al terminar (`?volver`).
-    // Dejamos la pantalla de «Entra» solo de respaldo, por si el navegador no deja redirigir.
-    show("sin-sesion", "Entra para ver tu avance.");
+    // Mientras tanto la página sigue en «Cargando…»; la pantalla de «Entra» solo aparece de respaldo si el navegador no
+    // deja redirigir.
+    setTimeout(() => show("sin-sesion", "Entra para ver tu avance."), 4000);
     return location.replace("/entrar.html?volver=/mi-acordia.html");
   }
   hint(true);
