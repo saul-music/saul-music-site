@@ -159,11 +159,11 @@ def open_page(page: Page, account_url: str, signed_out=False):
     page.goto(account_url + "/mi-acordia.html")
 
 
-def test_without_a_session_it_asks_to_enter_and_comes_back_here(page: Page, account_url):
+def test_without_a_session_it_goes_straight_to_entering_and_comes_back_here(
+    page: Page, account_url
+):
     open_page(page, account_url, signed_out=True)
-    expect(page.locator("#sin-sesion")).to_be_visible()
-    expect(page.locator("#contenido")).to_be_hidden()
-    assert page.get_attribute("#entrar", "href") == "entrar.html?volver=/mi-acordia.html"
+    page.wait_for_url("**/entrar.html?volver=/mi-acordia.html")
 
 
 def test_without_consent_it_sends_to_accept_the_notice(page: Page, account_url, store):
@@ -273,6 +273,9 @@ def test_signing_out_clears_the_session_hint(page: Page, account_url):
     expect(page.locator("#estado")).to_have_text("Cerraste tu sesión.")
     assert page.evaluate("localStorage.getItem('acordia-session')") is None
     assert page.evaluate("window.__calls") == ["signOut"]
+    assert page.url.endswith(
+        "/mi-acordia.html"
+    )  # cerrar la sesión no manda a entrar: se queda con su mensaje
 
 
 def test_sign_out_is_visible_in_both_tabs_outside_the_tablist_and_fits_a_phone(
