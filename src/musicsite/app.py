@@ -24,7 +24,7 @@ from fastapi import FastAPI, Request, Response
 from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException
 
-from musicsite import seo, songpage
+from musicsite import analytics, seo, songpage
 from musicsite.accounts import (
     MAX_BODY_BIG,
     NOTICE_VERSION,
@@ -111,6 +111,7 @@ def create_app(
     accounts: Accounts | None = None,
     firebase_api_key: str = "",
     indexing: bool = seo.INDEXING_ENABLED,
+    analytics_hosts: tuple[str, ...] = analytics.ANALYTICS_HOSTS,
 ) -> FastAPI:
     from musicsite import profes
     from musicsite.catalog import Catalog  # aquí y no arriba: profes importa este módulo
@@ -170,6 +171,16 @@ def create_app(
     if accounts is not None:
         _register_me(app, accounts, known_song)
 
+    def public_html(body: bytes, request: Request, csp: str | None = None) -> Response:
+        """HTML público; con analítica (S116) suma el script y la política que pide Google."""
+        headers = {}
+        if analytics.is_enabled(request, analytics_hosts):
+            body = analytics.inject(body)
+            csp = analytics.csp(csp or HEADERS["Content-Security-Policy"])
+        if csp:
+            headers["Content-Security-Policy"] = csp
+        return Response(body, media_type=TYPES[".html"], headers=headers)
+
     @app.get("/robots.txt", include_in_schema=False)
     def robots(request: Request) -> Response:
         return Response(seo.robots_txt(request, enabled=indexing), media_type="text/plain")
@@ -193,11 +204,11 @@ def create_app(
             return Response(status_code=301, headers={"Location": "/aprende/"})  # C28
         state = catalog.current()
         if path in ("/", "/index.html") and state.index is not None:
-            return Response(state.index, media_type=TYPES[".html"])
+            return public_html(state.index, request)
         if path == "/artistas.html" and state.artists is not None:
-            return Response(state.artists, media_type=TYPES[".html"])
+            return public_html(state.artists, request)
         if path == "/guias.html" and state.guides is not None:
-            return Response(state.guides, media_type=TYPES[".html"])
+            return public_html(state.guides, request)
         photo = state.photos.get(path[1:]) if path.startswith("/fotos/") else None
         if photo is not None:  # el nombre lleva el hash: una foto nueva es otro archivo
             return Response(
@@ -221,13 +232,13 @@ def create_app(
                 else (LOGIN_CSP if firebase_api_key else HEADERS["Content-Security-Policy"])
             )
             body = songpage.decorate(song, api_key=firebase_api_key, embed=embed, path=path)
-            return Response(
-                body, media_type=TYPES[".html"], headers={"Content-Security-Policy": csp}
-            )
+            return public_html(body, request, csp)
         entry = files.get(path)
         if entry is None:
             return Response(status_code=404)
         body, kind = entry
+        if kind == TYPES[".html"]:
+            return public_html(body, request)
         if path.endswith(".mp3"):  # muestras de la guitarra (S37): no cambian; un día de caché
             return Response(body, media_type=kind, headers={"Cache-Control": CACHE_SAMPLES})
         return Response(body, media_type=kind)

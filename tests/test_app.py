@@ -98,6 +98,7 @@ def test_web_dir_has_only_fixed_site_files():
         "repertorio.html",
         "repertorio.js",
         "cuenta-tema.js",
+        "analitica.js",
     }
     assert {p.name for p in WEB_DIR.iterdir()} == fixed
 

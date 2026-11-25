@@ -1297,3 +1297,20 @@ indexado**. Hoy el `noindex` lo pone Firebase Hosting para todo el sitio (`hosti
 **Sin comprobar hasta desplegar:** que Hosting entregue el dominio original en `X-Forwarded-Host` a Cloud Run; si no, `acordia.io` quedaría `noindex`
 (falla seguro) y hay que ajustar. Tests: `tests/test_seo.py`.
 
+## S116 · Google Analytics 4 con consentimiento previo, apagado salvo en los hosts que se listan (2026-11-25)
+
+**Contexto:** C51 (control) decide medir con Google Analytics solo con consentimiento previo (opt-in). La propiedad `Acordia` y su ID de medición `G-5KLRKGHGTN`
+los creó infra (I27). El site es un repo público: el ID no es secreto (va en el HTML) y no hay datos ni claves.
+**Decisión:**
+- `musicsite.analytics`: `ANALYTICS_HOSTS = ()` (**apagado**: sin script y con la CSP de siempre). El script `analitica.js` se inyecta al servir, solo en portada,
+  artistas, guías, privacidad y cada tema, y solo si el host (`X-Forwarded-Host` o `Host`, como en S115) está en esa lista. Nunca en cuenta, `pedidos`, `ser-guia`,
+  `cancion.html` ni `?embed=1`, y no se envía ningún identificador de cuenta.
+- `analitica.js`: sin decisión guardada muestra un banner con «Aceptar» y «Rechazar» de igual peso y **no carga nada de Google**. Al aceptar carga `gtag.js` con
+  `allow_google_signals` y la personalización apagadas, `ad_*` denegados y cookies `SameSite=Lax; Secure`. Rechazar, o retirar el permiso desde «Preferencias de
+  analítica» (enlace en el pie), borra las cookies `_ga*` y desactiva la medición. La decisión se guarda en `localStorage` con una versión (`analitica-2026-11-25`).
+- La CSP se amplía solo en las páginas medidas: `googletagmanager.com` para scripts y los dominios de Google Analytics para conexiones e imágenes.
+- **Plan de salida en dos PR:** este (solo código, nadie medido), después de probar en `saulapp-music.web.app` con datos en tiempo real, y otro que publica el
+  aviso de privacidad (sección «Analítica del sitio» con versión propia, sin subir `NOTICE_VERSION`, y quita «No usamos analítica ni publicidad») y agrega `acordia.io`.
+**Sin comprobar hasta desplegar y activar un host:** que lleguen datos en tiempo real, que el host se lea bien en producción (`X-Forwarded-Host`, pendiente de S115),
+y el aspecto del banner en un celular real. `/aprende/` no se mide (es estático y vive en el repo de los juegos).
+
