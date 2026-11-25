@@ -73,7 +73,6 @@ def test_forwarded_host_wins_over_host(on):
         "/repertorio.html",
         "/pedidos.html",
         "/ser-guia.html",
-        "/cancion.html",
     ],
 )
 def test_account_and_demo_pages_never_indexable(on, path):

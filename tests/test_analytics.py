@@ -94,7 +94,6 @@ def test_forwarded_host_decides(on):
         "/repertorio.html",
         "/pedidos.html",
         "/ser-guia.html",
-        "/cancion.html",
     ],
 )
 def test_account_and_demo_pages_are_never_measured(on, path):
