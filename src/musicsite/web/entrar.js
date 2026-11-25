@@ -12,8 +12,9 @@ import {
   signOut,
 } from "https://www.gstatic.com/firebasejs/13.4.0/firebase-auth.js";
 
-// El retorno de Google y Facebook solo está autorizado en la dirección web.app del sitio (C20): el SDK avisa si no lo es.
-const allowedHost = () => location.hostname.endsWith(".web.app");
+// El retorno de Google y Facebook solo está autorizado en la dirección web.app del sitio (C20) y en el dominio propio
+// (S113): en otra dirección el SDK avisa y no entra. `www` redirige al dominio raíz antes de llegar aquí.
+const allowedHost = () => location.hostname.endsWith(".web.app") || location.hostname === "acordia.io";
 const $ = (id) => document.getElementById(id);
 const apiKey = document.querySelector('meta[name="firebase-api-key"]').content;
 const STEPS = ["paso-entrar", "paso-consentimiento"];
@@ -78,7 +79,7 @@ if (!apiKey) {
 
   const start = (provider) => async () => {
     fail("");
-    if (!allowed) return fail("Entra desde la dirección web.app oficial del sitio.");
+    if (!allowed) return fail("Entra desde la dirección oficial del sitio.");
     try { await signInWithRedirect(auth, provider()); } catch { fail("No se pudo iniciar el acceso. Intenta de nuevo."); }
   };
   $("entrar-google").addEventListener("click", start(() => new GoogleAuthProvider()));

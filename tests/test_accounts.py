@@ -612,6 +612,16 @@ def test_login_script_is_pinned_and_safe():
     assert "saulapp-music" not in source  # el sitio público no nombra el proyecto interno
 
 
+def test_login_is_allowed_on_the_own_domain_and_on_web_app_and_nowhere_else():
+    # S113: el login solo está autorizado en acordia.io y en *.web.app.
+    source = (WEB_DIR / "entrar.js").read_text(encoding="utf-8")
+    assert '.endsWith(".web.app")' in source and '=== "acordia.io"' in source
+    assert "www.acordia.io" not in source  # www redirige al raíz antes del login
+    assert 'includes("acordia.io")' not in source  # nada de coincidencias parciales
+    page = (WEB_DIR / "entrar.html").read_text(encoding="utf-8")
+    assert "acordia.io" in page and "web.app" not in page
+
+
 def test_login_script_is_served_as_javascript():
     response = login_client().get("/entrar.js")
     assert response.status_code == 200 and response.headers["content-type"].startswith(
