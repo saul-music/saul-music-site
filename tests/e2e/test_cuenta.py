@@ -43,8 +43,21 @@ export const deleteUser = async () => {
   calls.push("deleteUser");
   if (window.__failDelete) { const e = new Error("x"); e.code = window.__failDelete; throw e; }
 };
+const fail = (code) => { const e = new Error("x"); e.code = code; throw e; };
+export const isSignInWithEmailLink = (_a, href) => {
+  const query = new URL(href).searchParams;
+  return query.get("mode") === "signIn" && query.has("oobCode");
+};
+export const sendSignInLinkToEmail = async (_a, email, settings) => {
+  calls.push(["send", email, settings.url, settings.handleCodeInApp]);
+  if (window.__failSend) fail(window.__failSend);
+};
+export const signInWithEmailLink = async (_a, email) => {
+  calls.push(["link", email]);
+  if (window.__linkError) fail(window.__linkError);
+  if (email !== window.__linkEmail) fail("auth/invalid-email");
+};
 export class GoogleAuthProvider {}
-export class FacebookAuthProvider {}
 """
 
 
@@ -170,8 +183,10 @@ def test_without_a_session_it_is_a_plain_login(page: Page, account_url: str):
     open_login(page, account_url, signed_in=False)
     expect(page.locator("#paso-entrar")).to_be_visible()
     expect(page.locator("#entrar-google")).to_be_visible()
-    # Facebook queda oculto mientras la app de Meta no pase a Live (S112).
-    expect(page.locator("#entrar-facebook")).to_be_hidden()
+    # Google y el correo (S114): un solo botón de proveedor y el formulario del enlace.
+    expect(page.locator(".ac-idp")).to_have_count(1)
+    expect(page.locator("#form-correo")).to_be_visible()
+    expect(page.locator("#aviso-app")).to_be_hidden()
     # La cuenta es opcional: la página dice que la Biblioteca se usa sin entrar y lleva a ella.
     expect(page.locator("#sin-cuenta")).to_contain_text("No necesitas cuenta")
     expect(page.locator("#sin-cuenta a")).to_have_attribute("href", "index.html#biblioteca")
@@ -265,17 +280,26 @@ def test_the_consent_step_shows_where_you_are(page: Page, account_url: str, stor
 
 def test_outside_web_app_the_buttons_explain_instead_of_loading(page: Page, account_url: str):
     open_login(page, account_url, signed_in=False)
-    expect(page.locator("#aviso-host")).to_be_visible()
+    expect(page.locator(".ac-login-card .alert:visible")).to_have_count(0)  # sin aviso (S114)
     page.click("#entrar-google")
     expect(page.locator("#error")).to_contain_text("dirección oficial")
     expect(page.locator("#entrar-google")).to_be_enabled()
-    assert "redirect" not in page.evaluate("window.__calls")
+    page.fill("#correo", EMAIL)
+    page.click("#correo-enviar")
+    expect(page.locator("#error")).to_contain_text("dirección oficial")
+    assert page.evaluate("window.__calls") == []  # ni redirección ni enlace
 
 
 WEB_APP = "https://prueba.web.app"
 
 
-def open_on_web_app(page: Page, account_url: str, fail_redirect: bool = False) -> Page:
+def open_on_web_app(
+    page: Page,
+    account_url: str,
+    fail_redirect: bool = False,
+    path: str = "/entrar.html",
+    init: str = "",
+) -> Page:
     """La página servida como si fuera la dirección web.app: ahí los botones inician el acceso."""
 
     def route(r):
@@ -292,19 +316,20 @@ def open_on_web_app(page: Page, account_url: str, fail_redirect: bool = False) -
     page.add_init_script("window.__noUser = true")
     if fail_redirect:
         page.add_init_script("window.__failRedirect = true")
-    page.goto(WEB_APP + "/entrar.html")
+    if init:
+        page.add_init_script(init)
+    page.goto(WEB_APP + path)
     return page
 
 
 def test_a_button_shows_it_is_opening_the_provider(page: Page, account_url: str):
     open_on_web_app(page, account_url)
-    expect(page.locator("#aviso-host")).to_be_hidden()
     page.click("#entrar-google")
     google = page.locator("#entrar-google")
     expect(google).to_have_text("Abriendo Google…")
     expect(google).to_be_disabled()
     expect(google).to_have_attribute("aria-busy", "true")
-    expect(page.locator("#entrar-facebook")).to_be_disabled()
+    expect(page.locator("#correo-enviar")).to_be_disabled()
     assert page.evaluate("window.__calls") == ["redirect"]
 
 
@@ -316,3 +341,126 @@ def test_if_the_provider_cannot_open_the_buttons_come_back(page: Page, account_u
     expect(google).to_have_text("Continuar con Google")
     expect(google).to_be_enabled()
     expect(google).to_have_attribute("aria-busy", "false")
+
+
+# --- entrar con el correo (S114): un enlace de un solo uso, sin contraseña
+EMAIL = "persona.sintetica@example.test"
+PENDING = "acordia-correo-pendiente"
+LINK = "&apiKey=k&oobCode=codigo-sintetico&mode=signIn&lang=es"
+# El correo pendiente se siembra solo en la página de entrada (el script de inicio corre en todas).
+SEED = f"if (location.pathname === '/entrar.html') localStorage.setItem('{PENDING}', '{EMAIL}');"
+SAME_EMAIL = f"window.__linkEmail = '{EMAIL}';"
+
+
+def test_the_email_link_is_sent_and_the_page_says_where(page: Page, account_url: str):
+    open_on_web_app(page, account_url, path="/entrar.html?volver=/aprende/")
+    page.fill("#correo", EMAIL)
+    page.click("#correo-enviar")
+    expect(page.locator("#correo-enviado")).to_contain_text(EMAIL)
+    expect(page.locator("#form-correo")).to_be_hidden()
+    expect(page.locator("#correo-reenviar")).to_be_disabled()
+    expect(page.locator("#correo-reenviar")).to_contain_text("s)")
+    # el enlace vuelve a esta página y conserva el destino; el correo queda solo en este navegador
+    url = WEB_APP + "/entrar.html?volver=%2Faprende%2F"
+    assert page.evaluate("window.__calls") == [["send", EMAIL, url, True]]
+    assert page.evaluate(f"localStorage.getItem('{PENDING}')") == EMAIL
+
+
+def test_resend_waits_a_minute_and_another_email_can_be_used(page: Page, account_url: str):
+    page.clock.install()
+    open_on_web_app(page, account_url)
+    page.fill("#correo", EMAIL)
+    page.click("#correo-enviar")
+    resend = page.locator("#correo-reenviar")
+    expect(resend).to_be_disabled()
+    page.clock.run_for(61_000)
+    expect(resend).to_be_enabled()
+    expect(resend).to_have_text("Reenviar el enlace")
+    resend.click()
+    expect(resend).to_be_disabled()
+    assert [call[0] for call in page.evaluate("window.__calls")] == ["send", "send"]
+    page.click("#correo-otro")
+    expect(page.locator("#form-correo")).to_be_visible()
+    expect(page.locator("#correo-enviado")).to_be_hidden()
+
+
+def test_an_incomplete_email_is_explained_and_nothing_is_sent(page: Page, account_url: str):
+    open_on_web_app(page, account_url)
+    page.fill("#correo", "persona@")
+    page.click("#correo-enviar")
+    expect(page.locator("#error")).to_contain_text("parece incompleto")
+    assert page.evaluate("window.__calls") == []
+
+
+def test_if_the_link_cannot_be_sent_the_form_stays(page: Page, account_url: str):
+    open_on_web_app(page, account_url, init="window.__failSend = 'auth/too-many-requests'")
+    page.fill("#correo", EMAIL)
+    page.click("#correo-enviar")
+    expect(page.locator("#error")).to_contain_text("muchos enlaces")
+    expect(page.locator("#form-correo")).to_be_visible()
+    expect(page.locator("#correo-enviar")).to_be_enabled()
+    assert page.evaluate(f"localStorage.getItem('{PENDING}')") is None
+
+
+def test_back_from_the_link_in_the_same_browser_goes_straight_in(page: Page, account_url: str):
+    path = "/entrar.html?volver=/repertorio.html" + LINK
+    open_on_web_app(page, account_url, path=path, init=SEED + SAME_EMAIL)
+    page.wait_for_url("**/repertorio.html")
+    assert page.evaluate(f"localStorage.getItem('{PENDING}')") is None  # se borra al entrar
+
+
+def test_the_link_in_another_browser_asks_for_the_email_first(page: Page, account_url: str):
+    open_on_web_app(page, account_url, path="/entrar.html?x=1" + LINK, init=SAME_EMAIL)
+    expect(page.locator("#paso-confirmar")).to_be_visible()
+    expect(page.locator("#login-title")).to_have_text("Confirma tu correo")
+    expect(page.locator("#paso-entrar")).to_be_hidden()
+    assert page.evaluate("window.__calls") == []  # sin el correo, el enlace no se usa
+    page.fill("#confirmar-correo", "otra.persona@example.test")
+    page.click("#confirmar-entrar")
+    expect(page.locator("#error")).to_contain_text("no es el correo")
+    expect(page.locator("#paso-confirmar")).to_be_visible()
+    page.fill("#confirmar-correo", EMAIL)
+    page.click("#confirmar-entrar")
+    page.wait_for_url("**/mi-acordia.html")
+
+
+def test_a_used_link_says_to_ask_for_a_new_one(page: Page, account_url: str):
+    init = SEED + SAME_EMAIL + "window.__linkError = 'auth/invalid-action-code';"
+    open_on_web_app(page, account_url, path="/entrar.html?x=1" + LINK, init=init)
+    expect(page.locator("#error")).to_contain_text("ya no sirve")
+    expect(page.locator("#paso-entrar")).to_be_visible()
+    assert "oobCode" not in page.url  # el código usado sale de la dirección
+
+
+INSTAGRAM_IPHONE = (
+    "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15"
+    " (KHTML, like Gecko) Mobile/15E148 Instagram 350.0.0.0 (iPhone14,5; iOS 18_0; es_CL; es)"
+)
+INSTAGRAM_ANDROID = (
+    "Mozilla/5.0 (Linux; Android 14; Pixel 7 Build/UQ1A; wv) AppleWebKit/537.36 (KHTML, like Gecko)"
+    " Version/4.0 Chrome/130.0.0.0 Mobile Safari/537.36 Instagram 350.0.0.0 Android"
+)
+
+
+@pytest.mark.parametrize(
+    ("agent", "chrome_link"), [(INSTAGRAM_IPHONE, False), (INSTAGRAM_ANDROID, True)]
+)
+def test_inside_instagram_google_is_explained_and_the_email_stays(
+    browser, account_url: str, agent: str, chrome_link: bool
+):
+    context = browser.new_context(user_agent=agent)
+    try:
+        page = open_on_web_app(context.new_page(), account_url)
+        expect(page.locator("#aviso-app")).to_be_visible()
+        expect(page.locator("#entrar-google")).to_be_disabled()
+        expect(page.locator("#correo-enviar")).to_be_enabled()
+        chrome = page.locator("#abrir-chrome")
+        if chrome_link:
+            expect(chrome).to_be_visible()
+            assert chrome.get_attribute("href").startswith(
+                "intent://prueba.web.app/entrar.html#Intent;"
+            )
+        else:
+            expect(chrome).to_be_hidden()
+    finally:
+        context.close()

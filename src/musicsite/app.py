@@ -408,7 +408,7 @@ def _register_me(app: FastAPI, accounts: Accounts, known_song: Callable[[str], b
             "firebaseAuthentication": accounts.verifier.identity(token) or {},
             "note": (
                 "stored es lo que Acordia guarda en su base de datos. "
-                "firebaseAuthentication son los datos de tu cuenta de Google o Facebook "
+                "firebaseAuthentication son los datos de tu cuenta (Google o tu correo) "
                 "que guarda Firebase Authentication; Acordia no los copia."
             ),
         }

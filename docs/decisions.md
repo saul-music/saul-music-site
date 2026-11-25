@@ -1237,3 +1237,43 @@ Facebook queda en pausa (abajo): la página pública ofrece solo Google. Revisad
 - **Sin comprobar:** el login real con Google tras el rediseño (la lógica no cambió) y el aspecto en un celular real. **Anotado, sin tocar:**
   la barra de navegación de todo el sitio se rompe a 768 px; la guía de marca de Google pide Roboto en el botón (aquí va Work Sans);
   `privacidad.html` dice que la cuenta se borra «desde la página donde iniciaste sesión», y desde S108 es «Mi cuenta» → Configuración.
+
+## S114 · «Continuar con tu correo»: un enlace de un solo uso, sin contraseña (2026-11-25)
+
+**Pedido del usuario** (análisis en el control, `docs/analisis-login-inclusivo.md`; decisión C48): que el login incluya a la mayor cantidad
+de personas. Con Google más un enlace por correo puede entrar cualquiera que tenga un correo. Facebook se descarta del todo.
+
+- **La página:** bajo «Continuar con Google», un «o» y el formulario «Continuar con tu correo» con «Enviarme un enlace».
+  - **Al enviar:** «Te enviamos un enlace a …», con «Reenviar el enlace» (se habilita a los 60 s) y «Usar otro correo».
+  - **El enlace** vuelve a `entrar.html` conservando `?volver=`. Con el correo guardado en ese navegador entra solo y sigue el flujo de
+    siempre (consentimiento la primera vez y después el destino). Se borran el correo pendiente y el código de la dirección.
+  - **En otro dispositivo o navegador** pide confirmar el correo («Confirma tu correo»), como exige Firebase. Así el revisor automático de un
+    correo de empresa que abre el enlace no lo gasta. Si el correo no coincide, lo dice.
+  - **Errores con texto propio:** correo incompleto, demasiados intentos, cupo diario, sin conexión, y enlace vencido o ya usado.
+- **Navegador dentro de una app** (Instagram, Facebook, TikTok, LinkedIn, Snapchat, Line, vistas web de Android): Google rechaza ahí el
+  inicio de sesión (403). Se reconoce por el identificador del navegador y la página muestra un aviso. El botón de Google queda desactivado
+  y el correo sigue disponible. En Android hay además un enlace «Abrir en Chrome» (`intent://`).
+- **Servidor:** `PUBLIC_PROVIDERS` pasa a `google.com` y `password` (el enlace llega con el proveedor de la contraseña), y `password` solo
+  vale con `email_verified` verdadero. El proveedor de correo de Firebase también admite crear cuentas con contraseña por la API, aunque la
+  página no lo ofrece: esas cuentas no tienen el correo verificado y la API las trata como si no existieran (404).
+- **Facebook fuera:** botón, estilos, `FacebookAuthProvider`, `facebook.com` en el servidor y textos (Mi cuenta, exportación y aviso).
+- **Sin el aviso de dirección** «El inicio de sesión solo funciona desde la dirección oficial del sitio» (pedido del usuario: nadie
+  conoce otras direcciones). Fuera de `acordia.io` y `web.app`, los botones siguen sin iniciar el acceso y lo explican al tocarlos.
+  Ajusta S113, que había cambiado ese aviso para nombrar `acordia.io`.
+- **Aviso de privacidad v5 (`2026-11-25-v5`):**
+  - los datos de la cuenta según cómo entres (Google: correo, nombre y foto; correo: solo la dirección);
+  - que el enlace lo envía Google (Firebase) por encargo;
+  - que mientras entras el navegador guarda tu correo y lo borra al entrar;
+  - que la cuenta se borra desde «Mi cuenta» → Configuración (antes decía «desde la página donde iniciaste sesión», desactualizado desde S108).
+  
+  Cada persona lo acepta de nuevo una vez: cambiar el texto sin cambiar la versión dejaría la v4 con dos textos distintos.
+- **Infra (I24):** el proveedor de correo, la página de acción en `acordia.io`, el español y el remitente `noreply@acordia.io`.
+- **Pruebas:**
+  - unitarias: correo verificado aceptado; sin verificar, con `"true"` como texto y con un proveedor no ofrecido, rechazados; la página con
+    un solo botón de proveedor; el aviso v5;
+  - 13 de navegador nuevas, en Chromium y WebKit: envío y destino, espera de 60 s, otro correo, correo incompleto, error de envío, vuelta en
+    el mismo navegador y en otro, enlace usado, Instagram en iPhone y Android, y la página fuera de la dirección oficial;
+  - las 111 de navegador del sitio pasan en Chromium.
+- **Sin comprobar:** el primer correo real (llegada, spam, remitente, español), que el token del enlace diga `password` (si no, la API
+  respondería 404 y se vería al probar), los navegadores de Instagram y TikTok en teléfonos reales, y el caso de una cuenta de Google de
+  empresa o colegio que después entra con un enlace al mismo correo.

@@ -4,9 +4,9 @@ Solo existe si `create_app` recibe una configuración de cuentas (`accounts_from
 `/api/me/*` es 404 como lo que no existe. El navegador nunca habla con Firestore (sus reglas lo
 niegan): todo pasa por aquí, que entra por IAM.
 
-- **Quién llama:** el ID token de Firebase del **grupo público** (Google y Facebook). Un token del
-  tenant del equipo es válido para el proyecto y se rechaza: el equipo no es público del sitio.
-  Nunca se registran ni el token ni el correo.
+- **Quién llama:** el ID token de Firebase del **grupo público** (Google o el enlace por correo).
+  Un token del tenant del equipo es válido para el proyecto y se rechaza: el equipo no es
+  público del sitio. Nunca se registran ni el token ni el correo.
 - **Qué se guarda:** el UID y datos del producto. Ni correo ni nombre, que quedan solo en
   Firebase Auth.
 - **Cuánto:** campos conocidos y validados, 2 KB como máximo y un límite de frecuencia por persona.
@@ -22,11 +22,14 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Protocol
 
-# Proveedores del grupo público (C17). Microsoft se suma cuando exista su cliente.
-PUBLIC_PROVIDERS = frozenset({"google.com", "facebook.com"})
+# Proveedores del grupo público (C17, C48): Google y el enlace por correo. El enlace llega como
+# `password`, el mismo proveedor que la contraseña, así que solo vale con el correo verificado: una
+# cuenta con contraseña creada directo por la API no lo está y no entra (S114).
+PUBLIC_PROVIDERS = frozenset({"google.com", "password"})
+EMAIL_PROVIDER = "password"
 # Versión vigente del aviso de privacidad (`web/privacidad.html` y docs/privacidad del control).
 # Si cambia de forma importante, se sube y cada persona vuelve a aceptar.
-NOTICE_VERSION = "2026-11-24-v4"
+NOTICE_VERSION = "2026-11-25-v5"
 VERSION = re.compile(r"[0-9]{4}-[0-9]{2}-[0-9]{2}-v[0-9]{1,3}")
 MAX_BODY_BYTES = 2048
 RATE_LIMIT = 30  # peticiones por persona...
@@ -365,7 +368,10 @@ def uid_from_claims(claims: dict) -> str | None:
     firebase = claims.get("firebase")
     if not isinstance(firebase, dict) or firebase.get("tenant"):
         return None  # un token del tenant del equipo pasa la verificación del proyecto: aquí no
-    if firebase.get("sign_in_provider") not in PUBLIC_PROVIDERS:
+    provider = firebase.get("sign_in_provider")
+    if provider not in PUBLIC_PROVIDERS:
+        return None
+    if provider == EMAIL_PROVIDER and claims.get("email_verified") is not True:
         return None
     uid = claims.get("uid")
     return uid if isinstance(uid, str) and UID.fullmatch(uid) else None
