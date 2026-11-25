@@ -212,3 +212,4 @@ AAAA-MM-DD · paso · qué se hizo · qué quedó pendiente · decisiones nuevas
 - 2026-11-25 · S118 · «Mi cuenta» sin sesión redirige directo a `/entrar.html?volver=/mi-acordia.html` (antes mostraba una pantalla con un botón «Entrar»: dos pasos); cerrar sesión o borrar la cuenta no redirigen.
 - 2026-11-25 · S119 · pie de las nueve páginas del sitio con el correo para reclamos de derechos (`contacto@acordia.io`), no en las páginas de tema (C55, pregunta 15).
 - 2026-11-25 · S120 · «Mi cuenta» redirige siempre: sin sesión a entrar (sin pantalla intermedia), y al cerrar sesión o eliminar la cuenta a la portada.
+- 2026-11-25 · S122 · «Aprende teoría» según el nivel: inicial a Básico, medio a Intermedio, avanzado sin botón.

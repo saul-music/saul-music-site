@@ -24,6 +24,10 @@ EMBED_STYLE = (
     "<style>.navbar,.ac-footer,.ac-frieze{display:none!important}"
     "body{padding-top:0!important}</style>"
 )
+# «Aprende teoría» (C32): a la ruta de Aprende del nivel; los avanzados no tienen ruta, sin botón.
+LEVEL = re.compile(r">Nivel</dt><dd[^>]*>([^<]*)</dd>")
+LEARN_ROUTES = {"inicial": "/aprende/#/basico", "medio": "/aprende/#/intermedio"}
+LEARN_BUTTON = re.compile(r"\s*<a [^>]*data-ac-util-learn[^>]*>.*?</a>", re.S)
 SONG_PATH = re.compile(r"/cancion-([a-z0-9]+(?:-[a-z0-9]+)*)\.html")
 
 
@@ -32,15 +36,24 @@ def song_slug(path: str) -> str | None:
     return found.group(1) if found else None
 
 
+def _learn_theory(text: str) -> str:
+    """El botón «Aprende teoría» según el nivel que la ficha del tema muestra (C56)."""
+    found = LEVEL.search(text)
+    level = found.group(1).strip().lower() if found else ""
+    if level == "avanzado":
+        return LEARN_BUTTON.sub("", text, count=1)
+    return text.replace('href="aprender.html"', f'href="{LEARN_ROUTES.get(level, "/aprende/")}"')
+
+
 def decorate(page: bytes, *, api_key: str = "", embed: bool = False, path: str = "") -> bytes:
-    """Menú y pie con «Aprende» y «Mi cuenta»; «Aprende teoría» va a `/aprende/` (C28).
+    """Menú y pie con «Aprende» y «Mi cuenta»; «Aprende teoría» va a la ruta del nivel (C28, C32).
 
     Con `embed`, sin menú, pie ni script de cuenta (el reproductor va dentro de otra página).
     Sin `embed` y con `api_key`, suma el script de cuenta (favoritos, repertorios y preferencias);
     ese script no hace nada si la persona no tiene sesión.
     """
     text = page.decode("utf-8")
-    text = text.replace('href="aprender.html"', 'href="/aprende/"')
+    text = _learn_theory(text)
     if embed:
         return text.replace("</head>", EMBED_STYLE + "</head>", 1).encode("utf-8")
     if song_slug(path):

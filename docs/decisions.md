@@ -1355,3 +1355,8 @@ volver a aceptar. `ANALYTICS_HOSTS` pasa a `("saulapp-music.web.app", "acordia.i
 - **Sin cambios** en la Biblioteca, la ficha ni «Aprende teoría» (que hoy lleva todos al básico, C32).
 **Pruebas:** `test_level_drift_names_only_the_songs_whose_level_differs`, `test_a_drifted_level_only_warns_and_the_publication_is_still_served`, `test_which_level_section_says_the_level_is_calculated_not_chosen`; 672 pruebas.
 **Pendiente:** el e2e del CI del PR; revisar a ojo los textos nuevos; la guía de edición del control sin el campo `nivel`.
+
+## S122 · «Aprende teoría» va a la ruta del nivel del tema; los avanzados no tienen botón (2026-11-25)
+
+**Contexto:** C32 (control) pedía que cada tema enlace a la ruta de su nivel; hasta ahora todos iban al inicio de Aprende. El nivel ya se calcula (C56) y la ruta Intermedio existe (O24).
+**Decisión (del usuario):** `inicial` → `/aprende/#/basico`; `medio` → `/aprende/#/intermedio`; `avanzado` → **sin botón** (no hay ruta). Un tema sin nivel sigue yendo a `/aprende/`. Lo hace el site al servir (`songpage.decorate`), leyendo el nivel de la ficha de la propia página, también en `?embed=1`; la librería no cambia. Una ruta avanzada futura solo agrega una entrada en `LEARN_ROUTES`. Un test recorre las páginas reales y falla si la librería cambia la ficha o el botón.
