@@ -1330,3 +1330,8 @@ volver a aceptar. `ANALYTICS_HOSTS` pasa a `("saulapp-music.web.app", "acordia.i
 
 **Contexto:** `cancion.html` mostraba una canción ajena marcada «Ejemplo» (S2, V2 del control). La consulta legal (C55 del control) resolvió V2 para lo que publica Acordia (acordes y estructura sin letra ni melodía); el usuario decidió quitar el ejemplo en vez de revisar su caso.
 **Decisión:** se borra `web/cancion.html`; la dirección responde 404 como cualquier otra inexistente (no la enlaza nadie y estaba en `noindex`). Salen sus pruebas y las dos comprobaciones del smoke del pipeline. Las páginas de cada tema (`cancion-<tema>.html`) salen de la librería y no cambian.
+
+## S118 · «Mi cuenta» sin sesión salta directo a entrar (2026-11-25)
+
+**Contexto:** sin sesión, `mi-acordia.html` mostraba un mensaje con un botón «Entrar», que llevaba a `entrar.html`: dos pasos para lo mismo.
+**Decisión:** `mi-acordia.js` redirige con `location.replace("/entrar.html?volver=/mi-acordia.html")` cuando Firebase dice que no hay usuario; `entrar.js` ya devuelve a la página de origen al terminar y ya trae el título «Entra a tu cuenta» para ese caso. **Sin redirigir:** al cerrar sesión o borrar la cuenta (siguen con su mensaje, por `leaving`), si el inicio de sesión no está configurado y si falla la consulta de la cuenta. La pantalla «Entra» queda de respaldo. Sin bucle: `entrar` solo vuelve cuando hay sesión y consentimiento al día.

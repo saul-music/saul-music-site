@@ -276,7 +276,13 @@ function show(which, message = "") {
 }
 
 async function start(user) {
-  if (!user) { hint(false); return show("sin-sesion", "Entra para ver tu avance."); }
+  if (!user) {
+    hint(false);
+    // Sin sesión no hay nada que ver aquí: se va directo a entrar y se vuelve a esta página al terminar (`?volver`).
+    // Dejamos la pantalla de «Entra» solo de respaldo, por si el navegador no deja redirigir.
+    show("sin-sesion", "Entra para ver tu avance.");
+    return location.replace("/entrar.html?volver=/mi-acordia.html");
+  }
   hint(true);
   try {
     const consent = await (await api("consent")).json();
