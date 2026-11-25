@@ -1,7 +1,8 @@
 """Google Analytics 4 con consentimiento previo (S116, C51).
 
 El script `analitica.js` se inyecta al servir, solo en las páginas públicas y solo en los
-hosts de `ANALYTICS_HOSTS` (hoy vacío en producción = apagado: el HTML y la CSP no cambian).
+hosts de `ANALYTICS_HOSTS` (el host de pruebas y el dominio propio); fuera de la lista no cambia
+ni el HTML ni la CSP.
 No carga nada de Google hasta que la persona acepta en el banner. Nunca se mide en cuenta,
 `pedidos`, `ser-guia`, `cancion.html` ni `?embed=1`.
 """
@@ -16,7 +17,7 @@ MEASUREMENT_ID = (
 CONSENT_VERSION = "analitica-2026-11-25"  # una versión nueva vuelve a pedir la decisión
 # Hosts donde se mide. Se prueba primero en el de Hosting; `acordia.io` se agrega
 # con el aviso de privacidad publicado.
-ANALYTICS_HOSTS: tuple[str, ...] = ("saulapp-music.web.app",)
+ANALYTICS_HOSTS: tuple[str, ...] = ("saulapp-music.web.app", "acordia.io")
 
 SCRIPT_TAG = (
     f'<script src="/analitica.js" data-id="{MEASUREMENT_ID}" '

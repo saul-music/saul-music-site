@@ -1319,3 +1319,9 @@ y el aspecto del banner en un celular real. `/aprende/` no se mide (es estático
 hasta publicar el aviso de privacidad con su sección de analítica. Efecto colateral aceptado: en `web.app` el aviso aún dice «No usamos analítica» durante la prueba; solo
 la hace el equipo. Los datos de la prueba entran con el host `saulapp-music.web.app` y se pueden separar en los informes por nombre de host.
 
+**Actualización S116 (2026-11-25): `acordia.io` se mide.** La prueba en `web.app` salió bien (banner, `collect` y cookies `_ga*` comprobados con navegador y la visita
+vista en Tiempo real por el usuario). El banner pasa a un mensaje estándar de cookies, sin nombrar la herramienta (PR #147). El aviso de privacidad publica su sección
+propia «Cookies y medición de visitas» (`#analitica`: Google Analytics, opt-in, 2 meses, fuera de Chile, sin publicidad, retiro desde «Preferencias de cookies»), amplía
+la base legal y nombra a Cloudflare (DNS y reenvío de `contacto@acordia.io`). `NOTICE_VERSION` queda en v5: la sección es de cookies, no de datos de cuenta, y no pide
+volver a aceptar. `ANALYTICS_HOSTS` pasa a `("saulapp-music.web.app", "acordia.io")`; `www` redirige y `run.app` no se mide. Sigue pendiente la revisión legal del aviso (antes del 2027-10-15).
+
