@@ -16,7 +16,7 @@ MEASUREMENT_ID = (
 CONSENT_VERSION = "analitica-2026-11-25"  # una versión nueva vuelve a pedir la decisión
 # Hosts donde se mide. Se prueba primero en el de Hosting; `acordia.io` se agrega
 # con el aviso de privacidad publicado.
-ANALYTICS_HOSTS: tuple[str, ...] = ()
+ANALYTICS_HOSTS: tuple[str, ...] = ("saulapp-music.web.app",)
 
 SCRIPT_TAG = (
     f'<script src="/analitica.js" data-id="{MEASUREMENT_ID}" '

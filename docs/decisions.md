@@ -1314,3 +1314,8 @@ los creó infra (I27). El site es un repo público: el ID no es secreto (va en e
 **Sin comprobar hasta desplegar y activar un host:** que lleguen datos en tiempo real, que el host se lea bien en producción (`X-Forwarded-Host`, pendiente de S115),
 y el aspecto del banner en un celular real. `/aprende/` no se mide (es estático y vive en el repo de los juegos).
 
+**Actualización S116 (2026-11-25): prueba en `saulapp-music.web.app`.** Con S116 desplegado y verificado apagado (el HTML y la CSP no cambiaron en `acordia.io` ni en `web.app`),
+`ANALYTICS_HOSTS` pasa a `("saulapp-music.web.app",)` para probar con datos en tiempo real y comprobar `X-Forwarded-Host` en producción. **`acordia.io` sigue sin medirse**
+hasta publicar el aviso de privacidad con su sección de analítica. Efecto colateral aceptado: en `web.app` el aviso aún dice «No usamos analítica» durante la prueba; solo
+la hace el equipo. Los datos de la prueba entran con el host `saulapp-music.web.app` y se pueden separar en los informes por nombre de host.
+

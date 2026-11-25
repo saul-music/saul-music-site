@@ -16,7 +16,7 @@ SNIPPET = f'<script src="/analitica.js" data-id="{analytics.MEASUREMENT_ID}"'
 
 @pytest.fixture(scope="module")
 def off() -> TestClient:
-    return TestClient(create_app())  # el valor por defecto de producción
+    return TestClient(create_app(analytics_hosts=()))  # sin ningún host con medición
 
 
 @pytest.fixture(scope="module")
@@ -28,8 +28,11 @@ def song(client: TestClient) -> str:
     return client.get("/songs.json").json()[0]["slug"]
 
 
-def test_analytics_ships_off():
-    assert analytics.ANALYTICS_HOSTS == ()
+def test_production_measures_only_the_test_host_until_the_notice_is_published():
+    assert analytics.ANALYTICS_HOSTS == (TEST_HOST,)
+    default = TestClient(create_app())
+    assert SNIPPET in default.get("/", headers=ON).text
+    assert "analitica.js" not in default.get("/", headers=OTHER).text  # acordia.io: aún no
 
 
 @pytest.mark.parametrize("path", ["/", "/artistas.html", "/guias.html", "/privacidad.html"])
