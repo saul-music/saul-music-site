@@ -24,7 +24,7 @@ from fastapi import FastAPI, Request, Response
 from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException
 
-from musicsite import songpage
+from musicsite import seo, songpage
 from musicsite.accounts import (
     MAX_BODY_BIG,
     NOTICE_VERSION,
@@ -110,6 +110,7 @@ def create_app(
     refresh_seconds: float = 60,
     accounts: Accounts | None = None,
     firebase_api_key: str = "",
+    indexing: bool = seo.INDEXING_ENABLED,
 ) -> FastAPI:
     from musicsite import profes
     from musicsite.catalog import Catalog  # aquí y no arriba: profes importa este módulo
@@ -155,6 +156,8 @@ def create_app(
                 if request.url.path in ACCOUNT_PAGES:
                     value = LOGIN_CSP
             response.headers[name] = value
+        if not seo.is_indexable(request, enabled=indexing):  # S115: hasta lanzar, todo noindex
+            response.headers["X-Robots-Tag"] = "noindex, nofollow"
         return response
 
     @app.exception_handler(HTTPException)
@@ -166,6 +169,22 @@ def create_app(
 
     if accounts is not None:
         _register_me(app, accounts, known_song)
+
+    @app.get("/robots.txt", include_in_schema=False)
+    def robots(request: Request) -> Response:
+        return Response(seo.robots_txt(request, enabled=indexing), media_type="text/plain")
+
+    @app.get("/sitemap.xml", include_in_schema=False)
+    def sitemap() -> Response:
+        state = catalog.current()
+        published = {"/": state.index, "/artistas.html": state.artists, "/guias.html": state.guides}
+        # Sin publicación (modo git) la página sale de los archivos del sitio.
+        present = {
+            path: published.get(path) is not None or path in files for path in seo.STATIC_PAGES
+        }
+        extra = [path for path in seo.STATIC_PAGES if present[path]]
+        songs = [path for path in state.pages if seo.SONG_PATH.fullmatch(path)]
+        return Response(seo.sitemap_xml(songs, extra), media_type="application/xml")
 
     @app.api_route("/{name:path}", methods=["GET", "HEAD"], include_in_schema=False)
     def page(name: str, request: Request) -> Response:
@@ -201,7 +220,7 @@ def create_app(
                 if embed
                 else (LOGIN_CSP if firebase_api_key else HEADERS["Content-Security-Policy"])
             )
-            body = songpage.decorate(song, api_key=firebase_api_key, embed=embed)
+            body = songpage.decorate(song, api_key=firebase_api_key, embed=embed, path=path)
             return Response(
                 body, media_type=TYPES[".html"], headers={"Content-Security-Policy": csp}
             )
