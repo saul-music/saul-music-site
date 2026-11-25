@@ -208,3 +208,4 @@ AAAA-MM-DD · paso · qué se hizo · qué quedó pendiente · decisiones nuevas
 - 2026-11-25 · fix · el cejuelo de las figuras de «Cómo funciona» (`index.html`) traía trazos mal escritos (`M2018H100`, `M8.010H56.0`) que el navegador rechazaba en la consola; corregidos y con un test que valida los trazos SVG de todas las páginas estáticas.
 - 2026-11-25 · S117 · se retira `cancion.html` (el tema de ejemplo ajeno de S2): 404, sin pruebas ni smoke que lo nombren; las páginas de cada tema no cambian.
 - 2026-11-25 · S118 · «Mi cuenta» sin sesión redirige directo a `/entrar.html?volver=/mi-acordia.html` (antes mostraba una pantalla con un botón «Entrar»: dos pasos); cerrar sesión o borrar la cuenta no redirigen.
+- 2026-11-25 · S119 · pie de las nueve páginas del sitio con el correo para reclamos de derechos (`contacto@acordia.io`), no en las páginas de tema (C55, pregunta 15).

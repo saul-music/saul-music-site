@@ -1335,3 +1335,8 @@ volver a aceptar. `ANALYTICS_HOSTS` pasa a `("saulapp-music.web.app", "acordia.i
 
 **Contexto:** sin sesión, `mi-acordia.html` mostraba un mensaje con un botón «Entrar», que llevaba a `entrar.html`: dos pasos para lo mismo.
 **Decisión:** `mi-acordia.js` redirige con `location.replace("/entrar.html?volver=/mi-acordia.html")` cuando Firebase dice que no hay usuario; `entrar.js` ya devuelve a la página de origen al terminar y ya trae el título «Entra a tu cuenta» para ese caso. **Sin redirigir:** al cerrar sesión o borrar la cuenta (siguen con su mensaje, por `leaving`), si el inicio de sesión no está configurado y si falla la consulta de la cuenta. La pantalla «Entra» queda de respaldo. Sin bucle: `entrar` solo vuelve cuando hay sesión y consentimiento al día.
+
+## S119 · Correo para reclamos de derechos de autor en el pie del sitio (2026-11-25)
+
+**Contexto:** la consulta legal (C55 del control, pregunta 15) dijo que no hacen falta términos de uso y que basta **un correo para reclamos**.
+**Decisión:** una línea en el pie de las nueve páginas del sitio: «¿Crees que algo de aquí infringe un derecho tuyo? Escríbenos a contacto@acordia.io y lo revisamos.» Se reutiliza `contacto@acordia.io` (ya existe y se reenvía al buzón del equipo, infra I23); una dirección aparte sería otra regla de Email Routing sin beneficio hoy. **No va en cada tema:** las páginas de tema salen de la librería y el usuario prefirió el pie del sitio, no el de cada tema (un test lo fija). Aprende tiene su propio pie en otro repo y no lleva la línea.
