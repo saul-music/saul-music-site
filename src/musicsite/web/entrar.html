@@ -91,7 +91,7 @@
     .ac-email > .ac-link-button { justify-self: start; }
 
     .ac-login-trust {
-      list-style: none; margin: 0; padding: 1rem 0 0; display: grid; gap: .45rem;
+      list-style: none; margin: 1.5rem 0 0; padding: 1.25rem 0 0; display: grid; gap: .45rem;
       border-top: 1px solid var(--ac-line); font-size: .95rem;
     }
     .ac-login-trust li { display: flex; gap: .6rem; align-items: flex-start; }
@@ -102,6 +102,7 @@
       margin: 0; padding: .8rem 1rem; border-left: 3px solid var(--ac-second); border-radius: var(--ac-radius);
       background: rgba(var(--ac-second-rgb), .1); font-size: .95rem;
     }
+    .ac-login-aside .ac-login-free { margin-top: 1.25rem; }
     .ac-login-free a { white-space: nowrap; font-weight: 600; }
     .ac-login-free a::after { content: " →"; }
 
@@ -249,16 +250,6 @@
                 <button id="correo-otro" class="ac-link-button" type="button">Usar otro correo</button>
               </div>
             </div>
-            <ul class="ac-login-trust">
-              <li><svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Sin contraseña nueva que recordar.</li>
-              <li><svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>No publicamos nada en tus redes.</li>
-              <li><svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Tu cuenta es privada: solo tú ves tus temas y tu avance.</li>
-            </ul>
-            <p id="sin-cuenta" class="ac-login-free">
-              <strong>¿Solo quieres tocar?</strong> No necesitas cuenta: todos los temas de la Biblioteca se ven y se tocan
-              gratis, con su reproductor y el modo estudio, sin entrar.
-              <a href="index.html#biblioteca">Ir a la Biblioteca</a>
-            </p>
             <p class="ac-login-legal">Al continuar, Google recibe tu dirección IP para cargar el inicio de sesión y, si eliges el correo, te envía el enlace. Lee el <a href="privacidad.html">Aviso de privacidad</a>.</p>
           </div>
 
@@ -346,6 +337,16 @@
               <div><h3>Sigue donde quedaste</h3><p>Vuelve al último tema y a la última lección con un toque, en cualquier dispositivo.</p></div>
             </li>
           </ul>
+          <ul class="ac-login-trust">
+            <li><svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Sin contraseña nueva que recordar.</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>No publicamos nada en tus redes.</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Tu cuenta es privada: solo tú ves tus temas y tu avance.</li>
+          </ul>
+          <p id="sin-cuenta" class="ac-login-free">
+            <strong>¿Solo quieres tocar?</strong> No necesitas cuenta: todos los temas de la Biblioteca se ven y se tocan
+            gratis, con su reproductor y el modo estudio, sin entrar.
+            <a href="index.html#biblioteca">Ir a la Biblioteca</a>
+          </p>
         </aside>
 
       </div>

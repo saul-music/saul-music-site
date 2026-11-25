@@ -28,11 +28,20 @@ def song(client: TestClient) -> str:
     return client.get("/songs.json").json()[0]["slug"]
 
 
-def test_production_measures_only_the_test_host_until_the_notice_is_published():
-    assert analytics.ANALYTICS_HOSTS == (TEST_HOST,)
+def test_production_measures_the_test_host_and_the_own_domain_only():
+    assert analytics.ANALYTICS_HOSTS == (TEST_HOST, "acordia.io")
     default = TestClient(create_app())
-    assert SNIPPET in default.get("/", headers=ON).text
-    assert "analitica.js" not in default.get("/", headers=OTHER).text  # acordia.io: aún no
+    for host in (TEST_HOST, "acordia.io"):
+        assert SNIPPET in default.get("/", headers={"host": host}).text
+    for host in ("musicsite-ufi63f4rva-tl.a.run.app", "www.acordia.io"):
+        assert "analitica.js" not in default.get("/", headers={"host": host}).text
+
+
+def test_privacy_notice_explains_the_measurement_the_banner_links_to(off):
+    text = off.get("/privacidad.html").text
+    assert 'id="analitica"' in text and "Google Analytics" in text
+    assert "No usamos analítica" not in text
+    assert "Preferencias de cookies" in text
 
 
 @pytest.mark.parametrize("path", ["/", "/artistas.html", "/guias.html", "/privacidad.html"])
