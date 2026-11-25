@@ -20,10 +20,12 @@ import logging
 import re
 import threading
 import time
+import tomllib
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from pathlib import Path
 
+from acordia_render.dificultad import classify_song
 from acordia_render.songpages import apply_library, published_library_html, render_published
 
 from musicsite.artists import build_page_and_photos
@@ -31,6 +33,22 @@ from musicsite.artists import build_page_and_photos
 RELEASE = re.compile(r"releases/[0-9]{8}-[0-9]{6}-[0-9a-f]{4}")
 SLUG = re.compile(r"[a-z0-9]+(?:-[a-z0-9]+)*")
 log = logging.getLogger("musicsite.catalog")
+
+
+def level_drift(directory: Path) -> list[str]:
+    """Temas de una publicación cuyo `nivel` escrito no es el que da la regla (C56, RD54).
+
+    El nivel sale de la versión Original y lo escribe el admin al publicar; si alguien lo edita a
+    mano o la regla cambia sin republicar, difiere. Solo se avisa (la publicación igual sirve)."""
+    drifted = []
+    for path in sorted(directory.glob("*.toml")):
+        try:
+            data = tomllib.loads(path.read_text(encoding="utf-8"))
+        except OSError, tomllib.TOMLDecodeError:
+            continue  # la lectura o el formato malo los trata `_load`
+        if data.get("nivel", "") != classify_song(data).nivel:
+            drifted.append(path.stem)
+    return drifted
 
 
 @dataclass(frozen=True)
@@ -145,6 +163,8 @@ class Catalog:
             )  # una publicación descartada no cambia lo que se muestra
             raise
         self._songs = songs
+        if drift := level_drift(directory):  # solo los nombres de los temas, nada del contenido
+            log.warning("catálogo: nivel publicado distinto del calculado en %s", ", ".join(drift))
         return State("editorial", release, pages, index, artists, photos, guides)
 
     def _guides_page(self) -> bytes | None:

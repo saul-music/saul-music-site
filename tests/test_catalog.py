@@ -234,3 +234,34 @@ def test_a_discarded_publication_does_not_change_which_songs_the_guides_know(
     clock.now = 61
     client.get("/")
     assert set(profes._catalog) == {"otra-era"}  # lo anterior, no lo de la publicación descartada
+
+
+# --- nivel calculado de la Original (C56): el sitio avisa si el publicado difiere ---
+
+ORIGINAL = {"partitura": "A: G7 Dsus4 Cadd9 Em\n"}  # tres acordes de clase 1: medio
+
+
+def test_level_drift_names_only_the_songs_whose_level_differs(editorial):
+    from musicsite.catalog import level_drift
+
+    editorial.mkdir()
+    release = make_release(
+        editorial,
+        {
+            "al-dia": song_text("otra-era", slug="al-dia", intermedio=ORIGINAL, nivel="medio"),
+            "a-mano": song_text("otra-era", slug="a-mano", intermedio=ORIGINAL, nivel="avanzado"),
+        },
+    )
+    assert level_drift(editorial / release) == ["a-mano"]
+
+
+def test_a_drifted_level_only_warns_and_the_publication_is_still_served(editorial, caplog):
+    editorial.mkdir()
+    make_release(
+        editorial,
+        {"a-mano": song_text("otra-era", slug="a-mano", intermedio=ORIGINAL, nivel="avanzado")},
+    )
+    with caplog.at_level("WARNING", logger="musicsite.catalog"):
+        client = TestClient(create_app(editorial=editorial))
+        assert client.get("/cancion-a-mano.html").status_code == 200
+    assert any("nivel publicado distinto del calculado en a-mano" in m for m in caplog.messages)

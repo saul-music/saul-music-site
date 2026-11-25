@@ -4,6 +4,8 @@
 
 ## Paso actual
 
+- **Nivel calculado (S121, C56; 2026-11-25, rama `feat/nivel-calculado`):** «¿Qué nivel elijo?» explica la regla (se calcula de la versión Original, no se elige), el catálogo avisa en el log si el nivel de un tema publicado difiere del calculado (`level_drift`, sin tumbar la publicación) y el site sube a `acordia-render` 0.22.0. 672 pruebas. Los 50 temas publicados ya llevan el nivel calculado (M116). **Pendiente:** PR y CI, revisar los textos a ojo.
+
 **Etapa A cerrada (2026-10-30).** El sitio se sirve desde Cloud Run, `musicsite`, en
 `https://musicsite-ufi63f4rva-tl.a.run.app` (URL de `run.app`, sin dominio propio). GitHub Pages
 está desactivado. Siguiente: S2 (derechos de la canción de ejemplo) antes de anunciar, y decidir la

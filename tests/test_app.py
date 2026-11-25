@@ -293,3 +293,11 @@ def test_site_footer_has_the_copyright_claims_email(client, path):
 def test_song_pages_do_not_repeat_the_claims_line(client):
     slug = client.get("/songs.json").json()[0]["slug"]
     assert "infringe un derecho tuyo" not in client.get(f"/cancion-{slug}.html").text
+
+
+def test_which_level_section_says_the_level_is_calculated_not_chosen():
+    """C56: el nivel sale de la versión Original con una regla; el sitio no promete que se elige."""
+    html = TestClient(create_app()).get("/").text
+    section = html.split('id="dificultad"')[1].split("</section>")[0]
+    assert "no lo elegimos a mano" in section and "versión Original" in section
+    assert "Tres o más acordes distintos" in section  # el umbral de Avanzado
