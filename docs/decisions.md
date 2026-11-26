@@ -1360,3 +1360,11 @@ volver a aceptar. `ANALYTICS_HOSTS` pasa a `("saulapp-music.web.app", "acordia.i
 
 **Contexto:** C32 (control) pedía que cada tema enlace a la ruta de su nivel; hasta ahora todos iban al inicio de Aprende. El nivel ya se calcula (C56) y la ruta Intermedio existe (O24).
 **Decisión (del usuario):** `inicial` → `/aprende/#/basico`; `medio` → `/aprende/#/intermedio`; `avanzado` → **sin botón** (no hay ruta). Un tema sin nivel sigue yendo a `/aprende/`. Lo hace el site al servir (`songpage.decorate`), leyendo el nivel de la ficha de la propia página, también en `?embed=1`; la librería no cambia. Una ruta avanzada futura solo agrega una entrada en `LEARN_ROUTES`. Un test recorre las páginas reales y falla si la librería cambia la ficha o el botón.
+
+## S123 · El site sube a `acordia-render` 0.22.1: acordes `m9b5`, `9#11`, `7#11` y `maj7#5` (2026-11-26)
+
+Sin código propio: los acordes y su regla (RD55 de la librería) llegan con la dependencia. `C#m9(b5)` = C# E G B D#
+(también `C#m7b5(9)`, `C#m7(b5,9)`…), con forma propia obligatoria porque chords-db no lo trae; `D9(#11)` =
+`D7(9,#11)` = D F# A C E G#, `D7(#11)` (sin la 9ª) y `Cmaj7(#5)` = C E G# B (también `Cmaj7+`), con formas estándar de
+chords-db. Ninguno de los 50 temas publicados los usa todavía. Revisado a ojo por el usuario en una vista local con
+un tema de prueba que usaba los cuatro.
