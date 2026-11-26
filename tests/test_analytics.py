@@ -42,6 +42,17 @@ def test_privacy_notice_explains_the_measurement_the_banner_links_to(off):
     assert 'id="analitica"' in text and "Google Analytics" in text
     assert "No usamos analítica" not in text
     assert "Preferencias de cookies" in text
+    # S124: también dice qué uso se mide.
+    assert "si reproduces un tema o llegas a su final" in text
+    assert "lo que buscas en la Biblioteca" in text
+
+
+def test_the_script_sends_only_the_three_usage_events_and_knows_the_team_mark(on):
+    text = on.get("/analitica.js").text
+    assert '"acordia:uso"' in text
+    for name in ('"song_play"', '"song_complete"', '"search"', "search_term"):
+        assert name in text
+    assert '"interno"' in text and '"acordia-interno"' in text
 
 
 @pytest.mark.parametrize("path", ["/", "/artistas.html", "/guias.html", "/privacidad.html"])

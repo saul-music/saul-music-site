@@ -1368,3 +1368,30 @@ Sin código propio: los acordes y su regla (RD55 de la librería) llegan con la 
 `D7(9,#11)` = D F# A C E G#, `D7(#11)` (sin la 9ª) y `Cmaj7(#5)` = C E G# B (también `Cmaj7+`), con formas estándar de
 chords-db. Ninguno de los 50 temas publicados los usa todavía. Revisado a ojo por el usuario en una vista local con
 un tema de prueba que usaba los cuatro.
+
+## S124 · Medición mínima de uso: reproducir, terminar y buscar, y marca del equipo (2026-11-26)
+
+**Contexto:** C51 del control (Google Analytics con consentimiento previo) y su análisis (`docs/analisis-analitica.md`
+del control). El usuario prefirió empezar simple: tres eventos sin parámetros propios y sin dimensiones nuevas en la propiedad.
+**Decisión:**
+- `analitica.js` escucha `acordia:uso` (librería RD56, 0.23.0) y, **solo si la persona aceptó** y no retiró el permiso,
+  envía `song_play` (reproducir), `song_complete` (terminó la pasada) y `search` con `search_term`. El tema sale del título
+  de la página, que Analytics ya registra con cada evento.
+- La búsqueda se envía cuando se deja de escribir 1,5 s o al salir de la página, normalizada (minúsculas, sin tildes,
+  espacios simples, hasta 40 caracteres), una vez por término en la visita; se descarta si tiene menos de 2 caracteres,
+  una `@` o 6 dígitos o más (un correo o un teléfono).
+- **Marca del equipo:** `?interno=1` en cualquier página medida guarda `acordia-interno` en el navegador; desde ahí no hay
+  banner, ni enlace del pie, ni Google (y se borran las cookies `_ga*` si las había). `?interno=0` la quita. Va por dominio:
+  `acordia.io` y `saulapp-music.web.app` se marcan por separado. No usa direcciones IP ni configura nada en Analytics.
+- De paso: aceptar de nuevo en la misma página después de rechazar vuelve a medir (antes `ga-disable` quedaba puesto).
+- **Aviso de privacidad:** la sección `#analitica` dice que se envía «si reproduces un tema o llegas a su final, lo que
+  buscas en la Biblioteca». Misma finalidad que el banner («entender cómo se usa el sitio»): no cambia `NOTICE_VERSION`
+  ni la versión de la decisión guardada.
+**En dos pasos:** este PR sigue con `acordia-render` 0.22.1 (las credenciales de gcloud pedían volver a entrar y el lock
+necesita el índice privado), así que con él solo cambian el aviso y la marca del equipo; los eventos empiezan a salir con el
+PR que sube a 0.23.0. La integración se comprobó en local con la 0.23.0 construida desde el mismo commit: escribir
+«Javiéra» en el buscador real envía un solo `search` con «javiera» y Reproducir envía `song_play`.
+**Pruebas:** `tests/test_analytics.py` (el aviso nombra el uso; el script trae los tres eventos y la marca) y
+`tests/e2e/test_analitica.py` (sin permiso no sale nada; tras aceptar salen `song_play` y `song_complete`; la búsqueda sale
+una vez y normalizada; cortas, correos y teléfonos no salen y las largas se recortan; retirar el permiso corta los eventos;
+la marca del equipo no carga Google en otras páginas ni si había aceptado, y `?interno=0` devuelve el banner).
