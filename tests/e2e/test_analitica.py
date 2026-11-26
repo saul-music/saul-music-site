@@ -124,3 +124,112 @@ def test_embedded_song_never_asks(page: Page, url: str):
     page.wait_for_timeout(300)
     expect(page.get_by_role("dialog", name="Cookies")).to_have_count(0)
     assert calls == []
+
+
+# Eventos de uso (S124): la librería avisa `acordia:uso` (RD56) y analitica.js lo envía
+# solo con permiso.
+
+
+def uso(page: Page, action: str, **detail) -> None:
+    page.evaluate(
+        "d => document.dispatchEvent(new CustomEvent('acordia:uso', { detail: d }))",
+        {"action": action, **detail},
+    )
+
+
+def leave(page: Page) -> None:
+    """Salir de la página envía la búsqueda pendiente sin esperar."""
+    page.evaluate("window.dispatchEvent(new Event('pagehide'))")
+
+
+def events(page: Page) -> list:
+    return page.evaluate(
+        "(window.dataLayer || []).filter(a => a[0] === 'event').map(a => [a[1], a[2] || null])"
+    )
+
+
+def accept(page: Page, url: str) -> list[str]:
+    calls = watch(page, url)
+    page.goto(url + "/")
+    page.get_by_role("button", name="Aceptar").click()
+    gtag_loaded(page)
+    return calls
+
+
+def test_usage_events_wait_for_consent(page: Page, url: str):
+    calls = watch(page, url)
+    page.goto(url + "/")
+    uso(page, "play")
+    assert page.evaluate("typeof window.dataLayer") == "undefined"
+    page.get_by_role("button", name="Rechazar").click()
+    uso(page, "play")
+    uso(page, "search", term="camara", shown=1)
+    leave(page)
+    assert page.evaluate("typeof window.dataLayer") == "undefined"
+    assert calls == []
+
+
+def test_after_accepting_play_and_complete_are_sent(page: Page, url: str):
+    accept(page, url)
+    uso(page, "play")
+    uso(page, "complete")
+    uso(page, "otra-cosa")
+    assert events(page) == [["song_play", None], ["song_complete", None]]
+
+
+def test_a_search_is_sent_once_typing_stops_and_normalized(page: Page, url: str):
+    accept(page, url)
+    for term in ("Cá", "Cáma", "  Cámara   LENTA "):
+        uso(page, "search", term=term, shown=1)
+    assert events(page) == []  # todavía escribe
+    page.wait_for_timeout(1800)
+    assert events(page) == [["search", {"search_term": "camara lenta"}]]
+    uso(page, "search", term="cámara lenta", shown=1)
+    page.wait_for_timeout(1800)
+    assert len(events(page)) == 1  # el mismo término no se repite en la visita
+
+
+def test_short_or_personal_terms_are_never_sent_and_long_ones_are_cut(page: Page, url: str):
+    accept(page, url)
+    for term in ("a", "ana@correo.cl", "+56 9 1234 5678"):
+        uso(page, "search", term=term, shown=0)
+        leave(page)
+    assert events(page) == []
+    uso(page, "search", term="x" * 60, shown=0)
+    leave(page)
+    assert events(page) == [["search", {"search_term": "x" * 40}]]
+
+
+def test_withdrawing_the_permission_stops_the_usage_events(page: Page, url: str):
+    accept(page, url)
+    uso(page, "play")
+    page.get_by_role("link", name="Preferencias de cookies").click()
+    page.get_by_role("button", name="Rechazar").click()
+    uso(page, "play")
+    assert events(page) == [["song_play", None]]
+
+
+def test_a_team_browser_is_never_measured_until_unmarked(page: Page, url: str):
+    calls = watch(page, url)
+    page.goto(url + "/?interno=1")
+    page.wait_for_timeout(300)
+    expect(page.get_by_role("dialog", name="Cookies")).to_have_count(0)
+    expect(page.get_by_role("link", name="Preferencias de cookies")).to_have_count(0)
+    page.goto(url + "/guias.html")  # la marca queda en el navegador
+    page.wait_for_timeout(300)
+    expect(page.get_by_role("dialog", name="Cookies")).to_have_count(0)
+    uso(page, "play")
+    assert page.evaluate("typeof window.dataLayer") == "undefined"
+    assert calls == []
+    page.goto(url + "/?interno=0")
+    expect(page.get_by_role("dialog", name="Cookies")).to_be_visible()
+
+
+def test_marking_a_browser_that_had_accepted_stops_loading_google(page: Page, url: str):
+    calls = accept(page, url)
+    assert len(calls) == 1
+    page.goto(url + "/?interno=1")
+    page.wait_for_timeout(300)
+    expect(page.get_by_role("dialog")).to_have_count(0)
+    assert len(calls) == 1
+    assert page.evaluate("typeof window.dataLayer") == "undefined"
