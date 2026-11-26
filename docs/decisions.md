@@ -1395,3 +1395,14 @@ PR que sube a 0.23.0. La integración se comprobó en local con la 0.23.0 constr
 `tests/e2e/test_analitica.py` (sin permiso no sale nada; tras aceptar salen `song_play` y `song_complete`; la búsqueda sale
 una vez y normalizada; cortas, correos y teléfonos no salen y las largas se recortan; retirar el permiso corta los eventos;
 la marca del equipo no carga Google en otras páginas ni si había aceptado, y `?interno=0` devuelve el banner).
+
+## S125 · El site sube a `acordia-render` 0.24.0: Continuar o Reiniciar tras detener, y la medición de S124 empieza a salir (2026-11-26)
+
+Sin código propio. Llegan con la dependencia:
+- **Pausa (RD57, C57 del control):** detener a mitad del tema (también al bloquearse el teléfono) deja marcado el compás y
+  ofrece ▶ Continuar (retoma ese compás con su repetición y vuelta del loop) o ⏮ Reiniciar (desde «Desde aquí» o el
+  principio). Revisado a ojo por el usuario en una vista local con los temas publicados.
+- **Avisos de uso (RD56, 0.23.0):** es el segundo paso de S124. Desde aquí `analitica.js` recibe `acordia:uso` y, solo
+  con el permiso de la persona, envía `song_play`, `song_complete` y `search`. Continuar emite `resume`, que
+  `analitica.js` no envía: retomar no cuenta como otra reproducción. Decisión del usuario, consultada antes de subir.
+**Pruebas:** `pytest` (678) y las de navegador del site en local con la 0.24.0, en Chromium e iPhone 14 (127 cada uno).
