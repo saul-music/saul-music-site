@@ -1411,3 +1411,12 @@ Sin código propio. Llegan con la dependencia:
 
 Sin código propio. Llega con la dependencia (RD58, C59 del control; reemplaza S41): cada acorde suena con contrabajo,
 su raíz o, en `G/B`, la nota tras la barra. El usuario pidió ir directo a PR y producción, sin revisión a oído previa.
+
+## S127 · El site sube a `acordia-render` 0.26.0: crédito del autor de la transcripción (2026-11-27)
+
+Por C61 del control y RD59 de la librería. La página de cada tema muestra «Transcripción: Nombre» en la caja de datos,
+leído del `authors.json` que el admin escribe en cada publicación (research M124): el autor del tema si aceptó aparecer
+en el sitio y, si no, «Equipo Acordia». Las publicaciones anteriores no traen el archivo y quedan sin crédito. Sin
+código propio: la librería lo lee en `render_published`. **Prueba:** `test_the_song_page_credits_the_author_from_the_release`
+(autor visible, respaldo y publicación sin lista). **Pendiente:** verlo en producción cuando research publique con
+`authors.json`.

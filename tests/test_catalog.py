@@ -265,3 +265,43 @@ def test_a_drifted_level_only_warns_and_the_publication_is_still_served(editoria
         client = TestClient(create_app(editorial=editorial))
         assert client.get("/cancion-a-mano.html").status_code == 200
     assert any("nivel publicado distinto del calculado en a-mano" in m for m in caplog.messages)
+
+
+# --- crédito del autor de la transcripción (C61, RD59, S127) ---
+AUTHORS = {
+    "format": 1,
+    "authors": [
+        {"slug": "ana-perez", "name": "Ana Pérez"},
+        {"slug": "equipo-acordia", "name": "Equipo Acordia"},
+    ],
+    "default": "equipo-acordia",
+}
+
+
+def _with_author(slug: str) -> str:
+    data = tomllib.loads(song_text("otra-era"))
+    return song_text("otra-era", procedencia={**data.get("procedencia", {}), "autor": slug})
+
+
+def _credit(page: str) -> str | None:
+    import re
+
+    found = re.search(r"<dt[^>]*>Transcripción</dt><dd[^>]*>(.*?)</dd>", page)
+    return found.group(1) if found else None
+
+
+@pytest.mark.parametrize(
+    ("autor", "authors", "expected"),
+    [
+        ("ana-perez", AUTHORS, "Ana Pérez"),
+        ("no-visible", AUTHORS, "Equipo Acordia"),
+        ("ana-perez", None, None),  # publicación anterior a C61: sin crédito
+    ],
+)
+def test_the_song_page_credits_the_author_from_the_release(editorial, autor, authors, expected):
+    editorial.mkdir()
+    release = make_release(editorial, {"otra-era": _with_author(autor)})
+    if authors is not None:
+        (editorial / release / "authors.json").write_text(json.dumps(authors), encoding="utf-8")
+    page = TestClient(create_app(editorial=editorial)).get("/cancion-otra-era.html").text
+    assert _credit(page) == expected
