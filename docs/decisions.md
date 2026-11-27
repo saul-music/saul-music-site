@@ -1420,3 +1420,9 @@ en el sitio y, si no, «Equipo Acordia». Las publicaciones anteriores no traen 
 código propio: la librería lo lee en `render_published`. **Prueba:** `test_the_song_page_credits_the_author_from_the_release`
 (autor visible, respaldo y publicación sin lista). **Pendiente:** verlo en producción cuando research publique con
 `authors.json`.
+
+## S128 · Barra de reproducción en tres filas: `acordia-render` 0.27.0 (2026-11-27)
+
+El site sube a 0.27.0 (RD60 de la librería): reproducir, metrónomo y sonido en tres filas, «Reiniciar» con texto,
+«desde aquí» o el loop en su propio espacio y «Opciones» hasta 991 px. La prueba que limita el alto de la barra fija
+pasa de 35 % a 40 % (decisión del usuario).
