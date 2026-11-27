@@ -70,7 +70,7 @@ def test_guides_entry_changes_shape_but_is_never_shown_twice(song: Page):
     expect(help_button).to_have_attribute("href", re.compile(r"guias\.html\?tema=camara-lenta"))
     assert (
         song.locator(".ac-sticky-tools").bounding_box()["height"]
-        < song.viewport_size["height"] * 0.35
+        < song.viewport_size["height"] * 0.40  # tres filas (S128)
     )
     # De vuelta arriba: la franja otra vez y el botón se oculta.
     song.evaluate("window.scrollTo(0, 0)")
