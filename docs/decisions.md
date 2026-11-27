@@ -1406,3 +1406,8 @@ Sin código propio. Llegan con la dependencia:
   con el permiso de la persona, envía `song_play`, `song_complete` y `search`. Continuar emite `resume`, que
   `analitica.js` no envía: retomar no cuenta como otra reproducción. Decisión del usuario, consultada antes de subir.
 **Pruebas:** `pytest` (678) y las de navegador del site en local con la 0.24.0, en Chromium e iPhone 14 (127 cada uno).
+
+## S126 · El site sube a `acordia-render` 0.25.0: el contrabajo en todos los acordes (2026-11-27)
+
+Sin código propio. Llega con la dependencia (RD58, C59 del control; reemplaza S41): cada acorde suena con contrabajo,
+su raíz o, en `G/B`, la nota tras la barra. El usuario pidió ir directo a PR y producción, sin revisión a oído previa.
